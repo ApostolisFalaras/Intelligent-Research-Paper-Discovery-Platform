@@ -8,6 +8,7 @@ A full-stack web application for discovering and ranking research papers.
 - Node.js
 - PostgreSQL
 
+```
 project-root/
 │
 ├── client/        # React frontend (UI, components, pages, styling)
@@ -17,6 +18,7 @@ project-root/
 ├── docs/          # Project documentation (architecture, API specs, notes)
 ├── README.md      # Project overview, setup instructions, and milestones
 └── .gitignore     # Files and folders ignored by Git
+```
 
 ## Status
 🚧 Currently in active development
