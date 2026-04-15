@@ -1,9 +1,9 @@
 # 🧠 Intelligent Research Paper Discovery Platform
 
-## Overview
+## 📌 Overview
 A full-stack web application for discovering and ranking research papers.
 
-## Tech Stack
+## 🧩 Tech Stack
 - React
 - Node.js
 - PostgreSQL
@@ -20,13 +20,13 @@ project-root/
 └── .gitignore     # Files and folders ignored by Git
 ```
 
-## Status
+## 📊 Status
 🚧 Currently in active development
 
-## 📊 Planned Milestones
+## 🎯 Planned Milestones
 
 ### 🏗️ Architecture & Setup
-- [ ] Project initialization (frontend + backend)
+- [x] Project initialization (frontend + backend)
 - [ ] Database schema design (PostgreSQL)
 - [ ] Backend architecture (routes, controllers, services)
 - [ ] Frontend component structure
