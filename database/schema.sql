@@ -18,9 +18,9 @@ CREATE TABLE authors (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE paper_author (
-    paper_id INTEGER,
-    author_id INTEGER,
+CREATE TABLE paper_authors (
+    paper_id INTEGER NOT NULL,
+    author_id INTEGER NOT NULL,
     author_order INTEGER,
     PRIMARY KEY (paper_id, author_id),
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
@@ -28,10 +28,10 @@ CREATE TABLE paper_author (
 );
 
 CREATE TABLE citations (
-    citation_paper_id INTEGER,
+    citing_paper_id INTEGER,
     cited_paper_id INTEGER,
-    PRIMARY KEY (citation_paper_id, cited_paper_id)
-    FOREIGN KEY (citation_paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    PRIMARY KEY (citing_paper_id, cited_paper_id),
+    FOREIGN KEY (citing_paper_id) REFERENCES papers(id) ON DELETE CASCADE,
     FOREIGN KEY (cited_paper_id) REFERENCES papers(id) ON DELETE CASCADE
 );
 
@@ -51,7 +51,7 @@ CREATE TABLE folders (
     name TEXT NOT NULL,
     summary TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (user_id, name)
 );
 

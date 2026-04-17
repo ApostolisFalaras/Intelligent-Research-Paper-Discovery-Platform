@@ -15,6 +15,9 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# Docker
+docker-compose.yml
+
 # NODE / BACKEND (server)
 server/node_modules/
 server/dist/

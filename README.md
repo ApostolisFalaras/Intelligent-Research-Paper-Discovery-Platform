@@ -27,7 +27,7 @@ project-root/
 
 ### 🏗️ Architecture & Setup
 - [x] Project initialization (frontend + backend)
-- [ ] Database schema design (PostgreSQL)
+- [x] Database schema design (PostgreSQL)
 - [ ] Backend architecture (routes, controllers, services)
 - [ ] Frontend component structure
 
