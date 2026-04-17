@@ -1,5 +1,13 @@
 # Database Schema
 
+## Relationships
+- One paper -> many authors (via paper_authors)
+- One author -> many papers (via paper_authors)
+- Papers cite other papers (many-to-many via citations)
+- One user -> many folders (via folders)
+- One folder -> many papers (via folder_papers)
+
+
 ## papers (Central table)
 Central papers table
 

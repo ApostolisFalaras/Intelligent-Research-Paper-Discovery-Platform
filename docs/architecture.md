@@ -1,11 +1,16 @@
 # Architecture Overview
 
 ## Components
-- Client (React)
-- Server (Node.js + Express.js)
+- Frontend Client (React)
+
+- Backend Server (Node.js + Express.js)
+  - Routes define endpoints
+  - Controllers handle requests and responses
+  - Services handle core business logic and DB interactions.
+
 - Database (PostgreSQL)
 
-## Data Flow
+## Primary Data Flow
 1. User submits search query
 2. Backend processes query
 3. Database returns results
