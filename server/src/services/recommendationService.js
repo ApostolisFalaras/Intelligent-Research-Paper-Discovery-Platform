@@ -10,3 +10,6 @@ export async function fetchContentBasedRecommendations(paperId) {}
 
 // Fetch collaborative filtering recommendations based on users with similar interests
 export async function fetchUserBasedRecommendations(userId) {}
+
+// Fetch recommendations based on a particular topic
+export async function fetchTopicRecommendations(topic) {}

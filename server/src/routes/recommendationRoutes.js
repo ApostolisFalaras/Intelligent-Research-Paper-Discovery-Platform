@@ -1,7 +1,8 @@
 import express from "express";
 import { getHomeRecommendations, 
-         contentBasedRecommendations, 
-         userBasedRecommendations } from "./../controllers/recommendationController.js";
+         getContentBasedRecommendations, 
+         getUserBasedRecommendations,
+         getTopicRecommendations } from "./../controllers/recommendationController.js";
 
 const router = express.Router();
 
@@ -9,9 +10,12 @@ const router = express.Router();
 router.get("/home", getHomeRecommendations);
 
 // User views recommendations based on its history of papers they've viewed
-router.get("/content-based/:id", contentBasedRecommendations);
+router.get("/content-based/:id", getContentBasedRecommendations);
 
 // User views recommendations based on other users with similar interests
-router.get("/collaborative", userBasedRecommendations);
+router.get("/collaborative", getUserBasedRecommendations);
+
+// User views recommendations based on a particular topic
+router.get("/topic-based/:topic", getTopicRecommendations);
 
 export default router;
