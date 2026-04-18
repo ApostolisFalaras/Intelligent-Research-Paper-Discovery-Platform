@@ -31,6 +31,13 @@ project-root/
 - [x] Backend architecture (routes, controllers, services)
 - [ ] Frontend component structure
 
+### 📈 Dataset Preparation
+- [ ] Dataset selection
+- [ ] Dataset exploration
+- [ ] Data preprocessing (cleaning, normalization)
+- [ ] Data mapping to DB schema
+- [ ] Data insertion scripts (ETL)
+
 ### ⚙️ Core Features
 - [ ] Backend API setup
 - [ ] Frontend UI implementation
