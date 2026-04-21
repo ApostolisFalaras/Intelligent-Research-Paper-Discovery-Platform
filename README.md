@@ -23,7 +23,7 @@ project-root/
 ## 📊 Status
 🚧 Currently in active development
 
-Exploring solutions for extracting a representative small subset of ![OpenAlex](https://developers.openalex.org/api-reference/introduction) using its API..
+Exploring solutions for extracting a representative small subset of [OpenAlex](https://developers.openalex.org/api-reference/introduction) using its API..
 
 A potential schema expansion will be introduced due to OpenAlex's rich datasets
 
