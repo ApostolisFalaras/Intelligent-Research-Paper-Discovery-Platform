@@ -23,16 +23,20 @@ project-root/
 ## 📊 Status
 🚧 Currently in active development
 
+Exploring solutions for extracting a representative small subset of ![OpenAlex](https://developers.openalex.org/api-reference/introduction) using its API..
+
+A potential schema expansion will be introduced due to OpenAlex's rich datasets
+
 ## 🎯 Planned Milestones
 
 ### 🏗️ Architecture & Setup
 - [x] Project initialization (frontend + backend)
 - [x] Database schema design (PostgreSQL)
 - [x] Backend architecture (routes, controllers, services)
-- [ ] Frontend component structure
+- [x] Frontend component structure
 
 ### 📈 Dataset Preparation
-- [ ] Dataset selection
+- [x] Dataset selection (Subset of OpenAlex)
 - [ ] Dataset exploration
 - [ ] Data preprocessing (cleaning, normalization)
 - [ ] Data mapping to DB schema
