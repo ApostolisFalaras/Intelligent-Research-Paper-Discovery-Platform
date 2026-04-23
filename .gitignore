@@ -39,6 +39,12 @@ client/.vite/
 client/.env
 client/.env.*
 
+# Python environment
+scripts/venv/ 
+openalex-notes.txt
+scripts/retrieve_single_paper.py
+scripts/top100_topics.py
+
 # DATABASE
 # Local DB files
 *.sqlite
