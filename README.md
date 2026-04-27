@@ -23,6 +23,8 @@ project-root/
 ## 📊 Status
 🚧 Currently in active development
 
+In `fetch_works.py`:
+
 I choose to extract a subset of [OpenAlex](https://developers.openalex.org/api-reference/introduction), consisting of 1M papers across the top 100 most popular (in terms of total number of papers) topics.
 
 However, to balance older papers, which are usually more cited, and newer papers, which keep the dataset up with more recent scientific developments, I chose the classify the papers in 3 retrieval types/buckets for each topic:
@@ -32,7 +34,12 @@ However, to balance older papers, which are usually more cited, and newer papers
 
 In addition, having to account for the 10000 free daily Sort/Filter List OpenAlex API calls, I performed 100 API calls for each topic, and each one of those calls fetched 100 (maximum number allowed) papers.
 
-A potential schema expansion will be introduced due to OpenAlex's rich datasets
+In `preprocess_works.py`:
+
+I pre-processed the fetched Works tuple in the following steps:
+1. I normalized each tuple so that it contains metadata information regarding the topic it belongs in, the category (bucket) it was fetched for, its batch number, request and response metadata parameters. This way each tuple is self-contained and allows for easier tracing and debugging.
+2. For each topic, I created a unified `.jsonl` file that stores the normalized tuples for a particular topic from all its tuple buckets, and deduplicated the topic tuples during insertion.
+3. Finally, I created a global `.jsonl` file for all tuples of all topics, including a final deduplication step, since it's very possible that papers from one topic also belong in other topic categories.
 
 ## 🎯 Planned Milestones
 
@@ -45,7 +52,7 @@ A potential schema expansion will be introduced due to OpenAlex's rich datasets
 ### 📈 Dataset Preparation
 - [x] Dataset selection (Subset of OpenAlex)
 - [x] Dataset exploration & retrieval
-- [ ] Data preprocessing (cleaning, normalization)
+- [x] Data preprocessing (cleaning, normalization)
 - [ ] Data mapping to DB schema
 - [ ] Data insertion scripts (ETL)
 
