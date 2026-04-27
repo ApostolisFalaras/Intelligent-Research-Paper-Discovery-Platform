@@ -40,10 +40,19 @@ client/.env
 client/.env.*
 
 # Python environment
-scripts/venv/ 
-openalex-notes.txt
-scripts/retrieve_single_paper.py
-scripts/top100_topics.py
+__pycache__
+*.pyc
+
+# OpenAlex dataset
+openalex_data_pipeline/data/
+openalex_data_pipeline/checkpoints/
+openalex_data_pipeline/logs/
+openalex_data_pipeline/.venv/
+openalex_data_pipeline/.vscode/
+openalex_data_pipeline/.env
+
+openalex_data_pipeline/scripts/retrieve_single_paper.py
+openalex_data_pipeline/scripts/top100_topics.py
 
 # DATABASE
 # Local DB files

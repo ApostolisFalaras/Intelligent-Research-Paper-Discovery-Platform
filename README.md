@@ -23,7 +23,14 @@ project-root/
 ## 📊 Status
 🚧 Currently in active development
 
-Exploring solutions for extracting a representative small subset of [OpenAlex](https://developers.openalex.org/api-reference/introduction) using its API..
+I choose to extract a subset of [OpenAlex](https://developers.openalex.org/api-reference/introduction), consisting of 1M papers across the top 100 most popular (in terms of total number of papers) topics.
+
+However, to balance older papers, which are usually more cited, and newer papers, which keep the dataset up with more recent scientific developments, I chose the classify the papers in 3 retrieval types/buckets for each topic:
+- 70% of papers are the most cited papers a topic.
+- 20% of papers are the most recent papers in a topic.
+- 10% of papers are a combination og the most cited and recent (after 2020) papers in topic.
+
+In addition, having to account for the 10000 free daily Sort/Filter List OpenAlex API calls, I performed 100 API calls for each topic, and each one of those calls fetched 100 (maximum number allowed) papers.
 
 A potential schema expansion will be introduced due to OpenAlex's rich datasets
 
@@ -37,7 +44,7 @@ A potential schema expansion will be introduced due to OpenAlex's rich datasets
 
 ### 📈 Dataset Preparation
 - [x] Dataset selection (Subset of OpenAlex)
-- [ ] Dataset exploration
+- [x] Dataset exploration & retrieval
 - [ ] Data preprocessing (cleaning, normalization)
 - [ ] Data mapping to DB schema
 - [ ] Data insertion scripts (ETL)
