@@ -70,8 +70,11 @@ CREATE TABLE paper_authors (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
 
+    -- Used in cases where author id's are null, but we still need to display the author
+    author_order INT NOT NULL, 
+
     -- Author Info regarding the Paper
-    author_openalex_id TEXT NOT NULL,
+    author_openalex_id TEXT,
     author_display_name TEXT NOT NULL,
     author_orcid TEXT,
     author_position TEXT,
@@ -79,7 +82,7 @@ CREATE TABLE paper_authors (
     raw_author_name TEXT,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    UNIQUE(paper_id, author_openalex_id)
+    UNIQUE(paper_id, author_order)
 );
 
 -- Each Authorship is linked to multiple Institutions
@@ -88,7 +91,7 @@ CREATE TABLE paper_author_institutions (
     paper_author_id BIGINT NOT NULL,
 
     -- Institution Information regarding the Authorship
-    institution_openalex_id TEXT NOT NULL,
+    institution_openalex_id TEXT,
     institution_display_name TEXT NOT NULL,
     institution_ror TEXT, -- Research Organization Registry (ROR), global standardized ID for research institutions
     country_code TEXT,
@@ -96,11 +99,11 @@ CREATE TABLE paper_author_institutions (
     lineage TEXT[], -- The hierarchy of parent organizations that the institution belongs to
 
     FOREIGN KEY (paper_author_id) REFERENCES paper_authors(id) ON DELETE CASCADE,
-    UNIQUE(paper_author_id, institution_openalex_id)
+    UNIQUE(paper_author_id, institution_display_name)
 );
 
 -- Each Authorship is linked to multiple Affiliations
-CREATE TABLE paper_author_affiliation (
+CREATE TABLE paper_author_affiliations (
     id BIGSERIAL PRIMARY KEY,
     paper_author_id BIGINT NOT NULL,
 
@@ -117,7 +120,7 @@ CREATE TABLE paper_topics (
     paper_id BIGINT NOT NULL,
 
     -- Topic Information
-    topic_openalex_id TEXT NOT NULL, 
+    topic_openalex_id TEXT, 
     topic_display_name TEXT NOT NULL, -- Research Topic
     score NUMERIC(24,16), -- Denotes how much the paper fits in the current topic, values in [0,1]
 
@@ -131,7 +134,7 @@ CREATE TABLE paper_topics (
     is_primary_topic BOOLEAN DEFAULT FALSE,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    UNIQUE (paper_id, topic_openalex_id)
+    UNIQUE (paper_id, topic_display_name)
 );
 
 -- Each Paper has a set of related keywords that enhance the search capabilities of the application
@@ -184,7 +187,8 @@ CREATE TABLE paper_locations (
     is_primary BOOLEAN DEFAULT FALSE,
     is_best_oa BOOLEAN DEFAULT FALSE,
 
-    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    UNIQUE (paper_id, location_openalex_id)
 );
 
 -- Each Paper cites a sequence of other Papers
@@ -192,10 +196,10 @@ CREATE TABLE paper_references (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
 
-    referenced_works_openalex_id TEXT NOT NULL,
+    referenced_work_openalex_id TEXT NOT NULL,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    UNIQUE (paper_id, referenced_works_openalex_id)
+    UNIQUE (paper_id, referenced_work_openalex_id)
 );
 
 -- Each Paper is also associated with a set of Related Papers
@@ -203,10 +207,10 @@ CREATE TABLE paper_related (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
 
-    related_works_openalex_id TEXT NOT NULL,
+    related_work_openalex_id TEXT NOT NULL,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    UNIQUE(paper_id, related_works_openalex_id)
+    UNIQUE(paper_id, related_work_openalex_id)
 );
 
 -- Each Paper keeps additional info about the number of citations per year
