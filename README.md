@@ -41,6 +41,13 @@ I pre-processed the fetched Works tuple in the following steps:
 2. For each topic, I created a unified `.jsonl` file that stores the normalized tuples for a particular topic from all its tuple buckets, and deduplicated the topic tuples during insertion.
 3. Finally, I created a global `.jsonl` file for all tuples of all topics, including a final deduplication step, since it's very possible that papers from one topic also belong in other topic categories.
 
+In `ingest_works.py`:
+
+I access all the works tuples from the global `.jsonl` file and construct tuples that match the database schema. Then, I construct the insertion queries that ingest the tuples in the actual PostgreSQL tables.
+
+To speed up the ingestion process and reduce the database queries' performance overhead, I inserted works tuples in batches of `5000`. Each works batch was also used to insert data in the rest of the tables from the schema, and not just the `papers` table.
+
+
 ## 🎯 Planned Milestones
 
 ### 🏗️ Architecture & Setup
@@ -53,8 +60,8 @@ I pre-processed the fetched Works tuple in the following steps:
 - [x] Dataset selection (Subset of OpenAlex)
 - [x] Dataset exploration & retrieval
 - [x] Data preprocessing (cleaning, normalization)
-- [ ] Data mapping to DB schema
-- [ ] Data insertion scripts (ETL)
+- [x] Data mapping to DB schema
+- [x] Data insertion scripts (ETL)
 
 ### ⚙️ Core Features
 - [ ] Backend API setup
