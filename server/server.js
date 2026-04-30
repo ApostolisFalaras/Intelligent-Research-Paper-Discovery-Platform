@@ -1,6 +1,5 @@
+import "dotenv/config"; // side-effect import to setup process.env before app.js loads routes/controllers/services/repositories
 import app from "./src/app.js";
-import dotenv from "dotenv";
-dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 
