@@ -26,6 +26,65 @@ BATCH_SIZE = 5000
 LOG_FILE = LOG_DIR / "ingest_openalex_works.log"
 logger = get_logger("ingest_openalex", log_file=LOG_FILE)
 
+# --------- UTILITIES FOR NORMALIZING IDS ------------
+
+# For example, a work/paper "https://openalex.org/W2741809807" is normalized to "W2741809807".
+# The same principle applies to author, institution, source, topic ids
+def normalize_openalex_id(openalex_id: str) -> str:
+    if not openalex_id:
+        return
+    
+    prefixes = [
+        "https://openalex.org/domains/",
+        "https://openalex.org/fields/",
+        "https://openalex.org/subfields/",
+        "https://openalex.org/keywords/",
+        "https://openalex.org/", 
+        "http://openalex.org/",
+    ]
+    
+    for prefix in prefixes:
+        if openalex_id.startswith(prefix):
+            return openalex_id.removeprefix(prefix)
+    
+    return openalex_id
+
+# This performs the same normalization but for a list of openalex ids,
+# which appear in institution's lineage, affiliation's institutions ids, 
+# host organization, and host organization lineage
+def normalize_openalex_id_list(list_openalex_id: list[str]) -> list[str]:
+    if not list_openalex_id:
+        return []
+    
+    prefixes = [
+        "https://openalex.org/domains/",
+        "https://openalex.org/fields/",
+        "https://openalex.org/subfields/",
+        "https://openalex.org/keywords/",
+        "https://openalex.org/", 
+        "http://openalex.org/",
+    ]
+    
+    normalized_id_list = []
+    
+    for openalex_id in list_openalex_id:
+        if not openalex_id:
+            continue
+        
+        matched = False
+        
+        for prefix in prefixes:
+            if openalex_id.startswith(prefix):
+                normalized_id_list.append(openalex_id.removeprefix(prefix))
+                matched = True
+                break
+            
+        # If the id doesn't match any of the potential prefixes, use it as it is
+        if not matched:
+            normalized_id_list.append(openalex_id)
+                
+    return normalized_id_list
+
 # --------- DATASET BATCHES UTILITIES ------------
 
 # Generator that reads and returns a batch of input JSONL paper rows
@@ -55,14 +114,15 @@ def insert_papers(works_batch: list[dict], cur: cursor) -> dict:
     paper_rows = []
     
     for work in works_batch:
+        work_id = normalize_openalex_id(work.get("id"))
         
         # As a safety check, I make sure all nested fields contain actual data, or otherwise use {}
         # This also applies to all tuple construction processes in the below functions
         paper_rows.append((
-            work.get("id"),
+            work_id,
             work.get("doi"), 
             work.get("title") or work.get("display_name"), 
-            work.get("display_name") or work.get("title") or work.get("doi") or work.get("id"), 
+            work.get("display_name") or work.get("title") or work.get("doi") or work_id, 
             work.get("abstract_text"),
             work.get("publication_year"), 
             work.get("publication_date"), 
@@ -76,20 +136,20 @@ def insert_papers(works_batch: list[dict], cur: cursor) -> dict:
             (work.get("cited_by_percentile_year") or {}).get("min"),
             (work.get("cited_by_percentile_year") or {}).get("max"),
             work.get("referenced_works_count"),
-            ((work.get("primary_location") or {}).get("source") or {}).get("id"),
+            normalize_openalex_id(((work.get("primary_location") or {}).get("source") or {}).get("id")),
             ((work.get("primary_location") or {}).get("source") or {}).get("display_name"),
             ((work.get("primary_location") or {}).get("source") or {}).get("type"),
             (work.get("biblio") or {}).get("volume"),
             (work.get("biblio") or {}).get("issue"),
             (work.get("biblio") or {}).get("first_page"),
             (work.get("biblio") or {}).get("last_page"),
-            (work.get("primary_topic") or {}).get("id"),
+            normalize_openalex_id((work.get("primary_topic") or {}).get("id")),
             (work.get("primary_topic") or {}).get("display_name"),
-            ((work.get("primary_topic") or {}).get("domain") or {}).get("id"),
+            normalize_openalex_id(((work.get("primary_topic") or {}).get("domain") or {}).get("id")),
             ((work.get("primary_topic") or {}).get("domain") or {}).get("display_name"),
-            ((work.get("primary_topic") or {}).get("field") or {}).get("id"),
+            normalize_openalex_id(((work.get("primary_topic") or {}).get("field") or {}).get("id")),
             ((work.get("primary_topic") or {}).get("field") or {}).get("display_name"),
-            ((work.get("primary_topic") or {}).get("subfield") or {}).get("id"),
+            normalize_openalex_id(((work.get("primary_topic") or {}).get("subfield") or {}).get("id")),
             ((work.get("primary_topic") or {}).get("subfield") or {}).get("display_name"),
             work.get("locations_count"),
             work.get("countries_distinct_count"),
@@ -144,14 +204,16 @@ def insert_paper_authors(works_batch: list[dict], paper_ids: dict, cur: cursor) 
     paper_author_rows = {}
     
     for work in works_batch:
-        paper_id = paper_ids.get(work.get("id"))
+        work_id = normalize_openalex_id(work.get("id"))
+        paper_id = paper_ids.get(work_id)
+        
         if not paper_id:
-            logger.warning(f"Missing paper_id for {work.get('id')} while inserting authors.")
+            logger.warning(f"Missing paper_id for {work_id} while inserting authors.")
             continue
         
         for author_order, authorship in enumerate(work.get("authorships") or [], start=1):
             author = authorship.get("author") or {}
-            author_id = author.get("id")
+            author_id = normalize_openalex_id(author.get("id"))
             
             # We need to perform deduplication of paper_author tuples, since the same author 
             # can have multiple authorships for the same paper
@@ -210,11 +272,12 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
     }
     
     for work in work_batch or []:
-        paper_id = paper_ids.get(work.get("id"))
+        work_id = normalize_openalex_id(work.get("id"))
+        paper_id = paper_ids.get(work_id)
         
         # Safety check: If the paper doesn't have a valid id, we can't insert any data included in it
         if not paper_id:
-            logger.warning(f"Missing paper_id for {work.get('id')} while inserting authors.")
+            logger.warning(f"Missing paper_id for {work_id} while inserting authors.")
             continue
         
         # Setting up paper_author_institutions and paper_author_affiliations tuples
@@ -232,7 +295,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                 continue
             
             for institution in authorship.get("institutions") or []:
-                institution_id = institution.get("id")
+                institution_id = normalize_openalex_id(institution.get("id"))
                 institution_name = institution.get("display_name")
                 
                 if not institution_id and not institution_name:
@@ -249,7 +312,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                         institution.get("ror"),
                         institution.get("country_code"),
                         institution.get("type"),
-                        institution.get("lineage")
+                        normalize_openalex_id_list(institution.get("lineage"))
                     )
                 
             for affiliation in authorship.get("affiliations") or []:
@@ -265,18 +328,18 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                     tuple_batches["paper_author_affiliations_rows"][key] = (
                         paper_author_id,
                         affiliation.get("raw_affiliation_string"),
-                        affiliation.get("institution_ids")
+                        normalize_openalex_id_list(affiliation.get("institution_ids"))
                     )
                 
         # Setting up paper_topics tuples
         for topic in work.get("topics") or []:
-            topic_id = topic.get("id")
+            topic_id = normalize_openalex_id(topic.get("id"))
             topic_name = topic.get("display_name")
             
             if not topic_id and not topic_name:
                 continue
             
-            is_primary_topic = True if (work.get("primary_topic") or {}).get("id") == topic_id else False
+            is_primary_topic = True if normalize_openalex_id((work.get("primary_topic") or {}).get("id")) == topic_id else False
             
             key = (paper_id, topic_id or topic_name)
             
@@ -286,11 +349,11 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                     topic_id,
                     topic_name or "Unknown Topic",
                     topic.get("score"),
-                    (topic.get("domain") or {}).get("id"),
+                    normalize_openalex_id((topic.get("domain") or {}).get("id")),
                     (topic.get("domain") or {}).get("display_name"),
-                    (topic.get("field") or {}).get("id"),
+                    normalize_openalex_id((topic.get("field") or {}).get("id")),
                     (topic.get("field") or {}).get("display_name"),
-                    (topic.get("subfield") or {}).get("id"),
+                    normalize_openalex_id((topic.get("subfield") or {}).get("id")),
                     (topic.get("subfield") or {}).get("display_name"),
                     is_primary_topic
                 )
@@ -307,7 +370,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
             if key not in tuple_batches["paper_keywords_rows"]:
                 tuple_batches["paper_keywords_rows"][key] = (
                     paper_id,
-                    keyword.get("id"),
+                    normalize_openalex_id(keyword.get("id")),
                     keyword.get("display_name"),
                     keyword.get("score")
                 )
@@ -316,7 +379,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
         for location in work.get("locations") or []:
             location_id = location.get("id")
             if not location_id:
-                logger.warning(f"Missing location_id for {work.get('id')} paper.")
+                logger.warning(f"Missing location_id for {work_id} paper.")
                 continue
             
             key = (paper_id, location_id)
@@ -333,16 +396,16 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                     location.get("is_oa"),
                     location.get("landing_page_url"),
                     location.get("pdf_url"),
-                    source.get("id"),
+                    normalize_openalex_id(source.get("id")),
                     source.get("display_name"),
                     source.get("issn_l"),
                     source.get("issn"),
                     source.get("is_oa"),
                     source.get("is_in_doaj"),
                     source.get("is_core"),
-                    source.get("host_organization"),
+                    normalize_openalex_id(source.get("host_organization")),
                     source.get("host_organization_name"),
-                    source.get("host_organization_lineage"),
+                    normalize_openalex_id_list(source.get("host_organization_lineage")),
                     source.get("type"),
                     location.get("license"),
                     location.get("license_id"),
@@ -365,7 +428,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
             if key not in tuple_batches["paper_references_rows"]:
                 tuple_batches["paper_references_rows"][key] = (
                     paper_id,
-                    reference
+                    normalize_openalex_id(reference)
                 )
         
         # Setting up paper_related tuples
@@ -378,7 +441,7 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
             if key not in tuple_batches["paper_related_rows"]:
                 tuple_batches["paper_related_rows"][key] = (
                     paper_id,
-                    related
+                    normalize_openalex_id(related)
                 )
         
         # Setting up paper_counts_by_year tuples
