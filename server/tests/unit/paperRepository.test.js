@@ -17,26 +17,6 @@ describe("fetchPaperById", () => {
         vi.clearAllMocks();
     });
 
-    it("Queries the 'papers' table and returns null for an non-existent openalex id", async () => {
-        pool.query.mockResolvedValue({ 
-            rows: [], 
-        });
-
-        const result = await fetchPaperById("W123");
-
-        // Verifying pool.query parameters
-        const [query, params] = pool.query.mock.calls[0];
-
-        expect(query).toContain("SELECT *");
-        expect(query).toContain("FROM papers");
-        expect(query).toContain("WHERE openalex_id = $1");
-        expect(query).toContain("LIMIT 1;");
-        expect(params).toEqual(["W123"]);
-
-        expect(pool.query).toHaveBeenCalledTimes(1);
-        expect(result).toBeNull();
-    });
-
     it("Queries the 'papers' table and returns the paper for a valid openalex id", async () => {
         pool.query.mockResolvedValue({
             rows: [
@@ -170,5 +150,33 @@ describe("fetchPaperById", () => {
 
         expect(pool.query).toHaveBeenCalledTimes(1);
         expect(result).toEqual(expectedOutput);
+    });
+
+
+    it("Queries the 'papers' table and returns null for an non-existent openalex id", async () => {
+        pool.query.mockResolvedValue({ 
+            rows: [], 
+        });
+
+        const result = await fetchPaperById("W123");
+
+        // Verifying pool.query parameters
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT *");
+        expect(query).toContain("FROM papers");
+        expect(query).toContain("WHERE openalex_id = $1");
+        expect(query).toContain("LIMIT 1;");
+        expect(params).toEqual(["W123"]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+        expect(result).toBeNull();
+    });
+
+
+    it("Queries the 'papers' table and an unexpected error occurs", async () => {
+        pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+        const result = await expect(fetchPaperById("W2741809807")).rejects.toThrow("Database query failed.");
     });
 });

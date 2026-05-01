@@ -1,22 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import request from "supertest";
 
-// Mock the repository function the fetches a paper by id
-vi.mock("./../../src/repositories/paperRepository.js", () => ({
+// Mock the DB pool's query method the queries the PostgreSQL DB for a paper with a particular id
+vi.mock("./../../src/repositories/paperRepository.js", () => ({ 
     fetchPaperById: vi.fn(),
 }));
 
 // Import after to replace the real function with the mock function
-import { fetchPaperById } from "./../../src/repositories/paperRepository.js";
-import { getPaperById } from "./../../src/services/paperService.js";
+import { fetchPaperById } from "../../src/repositories/paperRepository";
+import app from "./../../src/app.js";
 
-
-describe("getPaperById", () => {
-    // Reseting the mock's call history before every test
+describe("GET /api/papers/:id", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("Returns a paper and maps it to a formatted paper DTO", async () => {
+    it("Returns 200 and the paper when found", async () => {
         fetchPaperById.mockResolvedValue({
             id: "386866",
             openalex_id: "W2741809807",
@@ -65,12 +64,11 @@ describe("getPaperById", () => {
             is_retracted: false,
             is_paratext: false,
             openalex_created_at: new Date("2025-10-09T21:00:00.000Z"),
-            openalex_updated_at: new Date("2026-04-26T05:31:28.666Z")
+            openalex_updated_at: new Date("2026-04-26T05:31:28.666Z"),
         });
-        
-        const result = await getPaperById("W2741809807");
 
-        const expectedOutput = {
+        // The route's expected data output
+        const expectedResponseData = {
             id: "W2741809807",
             internalId: "386866",
             doi: "https://doi.org/10.7717/peerj.4375",
@@ -91,7 +89,7 @@ describe("getPaperById", () => {
                 issue: null,
                 pages: "e4375"
             },
-            "topic": {
+            topic: {
                 id: "T10102",
                 name: "scientometrics and bibliometrics research",
                 domain: "Social Sciences",
@@ -122,30 +120,42 @@ describe("getPaperById", () => {
                 "pubmed"
             ],
             flags: {
-                isRetracted: false,
-                isParatext: false
+                "isRetracted": false,
+                "isParatext": false
             },
             metadata: {
-                openalexCreatedAt: new Date("2025-10-09T21:00:00.000Z"),
-                openalexUpdatedAt: new Date("2026-04-26T05:31:28.666Z"),
+                openalexCreatedAt: "2025-10-09T21:00:00.000Z",
+                openalexUpdatedAt: "2026-04-26T05:31:28.666Z"
             }
         };
 
+        const response = await request(app).get("/api/papers/W2741809807").expect(200);
+
         expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(expectedOutput);
+
+        expect(response.body.status).toBe("success");
+        expect(response.body.data).toEqual(expectedResponseData);
     });
 
-    
-    it("Returns null when paper doesn't exist", async () => {
+    it("Returns 404 when the paper doesn't exist", async () => {
         fetchPaperById.mockResolvedValue(null);
 
-        // Testing invalid paper ID input
-        const result = await getPaperById("W123");
-        
+        const response = await request(app).get("/api/papers/W123").expect(404);
+
         expect(fetchPaperById).toHaveBeenCalledWith("W123");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
-        expect(result).toBeNull();
+
+        expect(response.body.status).toBe("error");
+        expect(response.body.message).toBe("Paper not found");
     });
 
+    it("Returns 500 when the server fails", async () => {
+        fetchPaperById.mockRejectedValue(new Error("Unexpected failure"));
+
+        const response = await request(app).get("/api/papers/W2741809807").expect(500);
+
+        expect(response.body.status).toBe("error");
+        expect(response.body.message).toBe("Internal server error");
+    });
 });
