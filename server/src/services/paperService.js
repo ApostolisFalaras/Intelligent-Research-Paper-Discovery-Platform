@@ -22,7 +22,7 @@ export async function getPaperById(id) {
 
         publication: {
             year: paper.publication_year,
-            date: paper.publication_date.toISOString().slice(0,10), // Extract YYYY-MM-DD from Date object
+            date: (new Date(paper.publication_date)).toISOString().slice(0,10), // Extract YYYY-MM-DD from Date object
             type: paper.paper_type,
             language: paper.language,
         },
