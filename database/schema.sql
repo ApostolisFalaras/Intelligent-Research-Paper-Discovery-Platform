@@ -9,7 +9,11 @@ CREATE TABLE papers (
     display_name TEXT NOT NULL, -- display-safe title from OpenAlex
     abstract TEXT,
     
-    search_vector tsvector, -- used in Full-Text Search
+    -- used in Full-Text Search, generated automatically for each tuple
+    search_vector tsvector GENERATED ALWAYS AS (
+        setweight(to_tsvector('english', COALESCE('title', 'display_name', '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE('abstract', '')), 'B')
+    ) STORED, 
 
     -- Publication Metadata
     publication_year INTEGER,
