@@ -8,6 +8,8 @@ CREATE TABLE papers (
     title TEXT,
     display_name TEXT NOT NULL, -- display-safe title from OpenAlex
     abstract TEXT,
+    
+    search_vector tsvector, -- used in Full-Text Search
 
     -- Publication Metadata
     publication_year INTEGER,
@@ -276,6 +278,9 @@ CREATE INDEX idx_papers_primary_topic ON papers(primary_topic_display_name);
 CREATE INDEX idx_papers_primary_domain ON papers(primary_domain_display_name);
 CREATE INDEX idx_papers_primary_field ON papers(primary_field_display_name);
 CREATE INDEX idx_papers_primary_subfield ON papers(primary_subfield_display_name);
+
+-- GIN Index used to speed up Full-Text Search
+CREATE INDEX idx_papers_search_vector ON papers USING GIN (search_vector);
 
 -- Indexes for paper_authors table
 CREATE INDEX idx_paper_authors_paper_id ON paper_authors(paper_id);
