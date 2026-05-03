@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-// Mock the DB pool's query method the queries the PostgreSQL DB for a paper with a particular id
+// Mock the paper repository function that queries the PostgreSQL DB for a paper with a particular id
 vi.mock("./../../src/repositories/paperRepository.js", () => ({ 
     fetchPaperById: vi.fn(),
 }));

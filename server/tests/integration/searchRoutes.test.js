@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-// Mock the DB pool's query method the queries the PostgreSQL DB for a paper with a particular id
+// Mock the search repository function that queries the PostgreSQL DB for a paper with a particular id
 vi.mock("./../../src/repositories/searchRepository.js", () => ({
     searchPapersByTextQuery: vi.fn()
 }));
@@ -119,6 +119,13 @@ describe("GET /api/search/?q=<search-query>", () => {
         expect(response.body.data).toEqual([]);
     });
 
+
+    it("Returns 400 when the 'q' query parameter is missing", async () => {
+        const response = await request(app).get("/api/search/").query({q: "   "}).expect(400);
+
+        expect(response.body.status).toBe("error");
+        expect(response.body.message).toBe("Search query is required");
+    });
 
     it("Returns 500 when the server fails", async () => {
         searchPapersByTextQuery.mockRejectedValue(new Error("Unexpected failure"));
