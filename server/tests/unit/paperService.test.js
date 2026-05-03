@@ -148,4 +148,10 @@ describe("getPaperById", () => {
         expect(result).toBeNull();
     });
 
+    it("Propagates repository error", async () => {
+        fetchPaperById.mockRejectedValue(new Error("Database query failed."));
+
+        await expect(getPaperById("W2741809807")).rejects.toThrow("Database query failed.");
+    });
+
 });
