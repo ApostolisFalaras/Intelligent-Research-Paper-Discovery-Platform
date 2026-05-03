@@ -5,9 +5,9 @@ export async function getPaperByIdController(req, res) {
     try {
         // TODO: AUTHENTICATION
         
+        // Validate input id
         const paperId = req.params.id;
 
-        // Validate input id
         if (!paperId || typeof paperId !== "string") {
             return res.status(400).json({
                 status: "error",
@@ -17,7 +17,7 @@ export async function getPaperByIdController(req, res) {
 
         const paper = await getPaperById(paperId);
 
-        // Validate if resource exists
+        // Validate if the paper exists
         if (!paper) {
             return res.status(404).json({
                 status: "error",
@@ -33,7 +33,7 @@ export async function getPaperByIdController(req, res) {
 
     } catch (error) {
         // Internal server error
-        console.error("Controller Error:", error);
+        console.error("Paper Controller Error:", error);
 
         return res.status(500).json({
             status: "error",

@@ -1,12 +1,34 @@
-import { fetchPapers } from "./../services/searchService.js";
+import { searchPapers } from "./../services/searchService.js";
 
 // Perform a user's query from the main search bar
-export async function searchPapers(req, res) {
+export async function searchPapersController(req, res) {
     try {
-        const filters = req.query;
-        const papers = await fetchPapers(filters);
-        res.status(200).json(papers);
+        // TODO: AUTHENTICATION
+
+        // Validate search bar's input query
+        const { q } = req.query;
+
+        if (!q || q.trim().length === 0) {
+            return res.status(400).json({
+                status: "error",
+                message: "Search query is required"
+            });
+        }
+
+        const papers = await searchPapers(q);
+
+        res.status(200).json({
+            status: "success",
+            data: papers
+        });
+    
     } catch (error) {
-        res.status(500).json({error: "Failed to fetch search results"});
+        // Internal server error
+        console.error("Search Controller Error:", error);
+
+        return res.status(500).json({
+            status: "error",
+            message: "Internal server error"
+        });
     }
 }

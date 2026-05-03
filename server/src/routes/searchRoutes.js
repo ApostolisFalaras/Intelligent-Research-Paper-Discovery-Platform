@@ -1,9 +1,9 @@
 import express from "express";
-import { searchPapers } from "./../controllers/searchController.js";
+import { searchPapersController } from "./../controllers/searchController.js";
 
 const router = express.Router();
 
 // User performs a search query in the main search bar
-router.get("/", searchPapers);
+router.get("/", searchPapersController);
 
 export default router;
