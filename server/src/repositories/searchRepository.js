@@ -47,7 +47,7 @@ export async function searchPapersByTextQuery(query) {
 
     try {
         const result = await pool.query(sqlQuery, [query]);
-        return result.rows || null;
+        return result.rows;
     } catch (error) {
         console.error("Database Error:", error);
         throw new Error("Database query failed."); // DB error, the controller throws a 500 error
