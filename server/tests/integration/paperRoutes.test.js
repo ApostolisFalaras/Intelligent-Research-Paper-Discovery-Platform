@@ -11,6 +11,7 @@ import { fetchPaperById } from "../../src/repositories/paperRepository";
 import app from "./../../src/app.js";
 
 describe("GET /api/papers/:id", () => {
+    // Reseting the mock's call history before every test
     beforeEach(() => {
         vi.clearAllMocks();
     });
