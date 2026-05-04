@@ -13,7 +13,7 @@ import { getPaperById } from "./../../src/services/paperService.js";
 describe("getPaperById", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("Returns a paper and maps it to a formatted paper DTO", async () => {
@@ -137,15 +137,20 @@ describe("getPaperById", () => {
     });
 
     
-    it("Returns null when paper doesn't exist", async () => {
-        fetchPaperById.mockResolvedValue(null);
+    it("Throws a 400 AppError when input id is invalid", async () => {
+        await expect(getPaperById(123)).rejects.toThrow("Invalid paper Id");
 
+        // The invalid id is rejected before the repository function is called
+        expect(fetchPaperById).not.toHaveBeenCalled();    
+    });
+
+
+    it("Throws a 404 AppError when paper doesn't exist", async () => {
         // Testing invalid paper ID input
-        const result = await getPaperById("W123");
+        await expect(getPaperById("W123")).rejects.toThrow("Paper not found");
         
         expect(fetchPaperById).toHaveBeenCalledWith("W123");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
-        expect(result).toBeNull();
     });
 
     

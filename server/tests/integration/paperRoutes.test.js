@@ -13,7 +13,7 @@ import app from "./../../src/app.js";
 describe("GET /api/papers/:id", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("Returns 200 and the paper when found", async () => {
@@ -147,7 +147,7 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperById).toHaveBeenCalledWith("W123");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
 
-        expect(response.body.status).toBe("error");
+        expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Paper not found");
     });
 
@@ -157,6 +157,6 @@ describe("GET /api/papers/:id", () => {
         const response = await request(app).get("/api/papers/W2741809807").expect(500);
 
         expect(response.body.status).toBe("error");
-        expect(response.body.message).toBe("Internal server error");
+        expect(response.body.message).toBe("Unexpected failure");
     });
 });

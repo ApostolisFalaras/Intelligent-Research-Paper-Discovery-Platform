@@ -12,7 +12,7 @@ import { searchPapers } from "./../../src/services/searchService.js";
 describe("searchPapers", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("Returns an array of papers and maps them to an array of formatted DTOs", async () => {
@@ -56,7 +56,7 @@ describe("searchPapers", () => {
             }
         ]);
 
-        const results = await searchPapers("Machine Learning");
+        const results = await searchPapers({q: "Machine Learning"});
 
         const expectedOutput = [
             {
@@ -107,7 +107,7 @@ describe("searchPapers", () => {
     it("Returns an empty array when query doesn't retrieve any papers", async () => {
         searchPapersByTextQuery.mockResolvedValue([]);
 
-        const results = await searchPapers("unknown query");
+        const results = await searchPapers({q: "unknown query"});
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith("unknown query");
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
@@ -120,7 +120,7 @@ describe("searchPapers", () => {
         // we assume a query with no retrieved results for simplicity
         searchPapersByTextQuery.mockResolvedValue([]);
 
-        const results = await searchPapers("  unknown query   ");
+        const results = await searchPapers({q: "  unknown query   "});
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith("unknown query");
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
@@ -128,9 +128,23 @@ describe("searchPapers", () => {
     });
 
 
+    it("Throws a 400 AppError when input q is missing", async () => {
+        await expect(searchPapers({q: ""})).rejects.toThrow("Search query is required");
+
+        expect(searchPapersByTextQuery).not.toHaveBeenCalled();
+    });
+
+
+    it("Throws a 400 AppError when input q is whitespaces", async () => {
+        await expect(searchPapers({q: "    "})).rejects.toThrow("Search query is required");
+
+        expect(searchPapersByTextQuery).not.toHaveBeenCalled();
+    });
+
+
     it("Propagates repository error", async () => {
         searchPapersByTextQuery.mockRejectedValue(new Error("Database query failed."));
 
-        await expect(searchPapers("machine learning")).rejects.toThrow("Database query failed.");
+        await expect(searchPapers({q: "machine learning"})).rejects.toThrow("Database query failed.");
     });
 });

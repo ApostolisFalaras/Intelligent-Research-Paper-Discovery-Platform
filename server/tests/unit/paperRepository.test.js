@@ -14,7 +14,7 @@ import { fetchPaperById } from "./../../src/repositories/paperRepository.js";
 describe("fetchPaperById", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("Queries the 'papers' table and returns the paper for a valid openalex id", async () => {
@@ -177,6 +177,6 @@ describe("fetchPaperById", () => {
     it("Queries the 'papers' table and an unexpected error occurs", async () => {
         pool.query.mockRejectedValue(new Error("Unexpected DB error"));
 
-        const result = await expect(fetchPaperById("W2741809807")).rejects.toThrow("Database query failed.");
+        const result = await expect(fetchPaperById("W2741809807")).rejects.toThrow("Unexpected DB error");
     });
 });

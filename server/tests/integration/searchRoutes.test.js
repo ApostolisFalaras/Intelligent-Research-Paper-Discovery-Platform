@@ -123,7 +123,7 @@ describe("GET /api/search/?q=<search-query>", () => {
     it("Returns 400 when the 'q' query parameter is missing", async () => {
         const response = await request(app).get("/api/search/").query({q: "   "}).expect(400);
 
-        expect(response.body.status).toBe("error");
+        expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Search query is required");
     });
 
@@ -133,7 +133,7 @@ describe("GET /api/search/?q=<search-query>", () => {
         const response = await request(app).get("/api/search/").query({q: "Machine Learning"}).expect(500);
 
         expect(response.body.status).toBe("error");
-        expect(response.body.message).toBe("Internal server error");
+        expect(response.body.message).toBe("Unexpected failure");
     });
 
 });

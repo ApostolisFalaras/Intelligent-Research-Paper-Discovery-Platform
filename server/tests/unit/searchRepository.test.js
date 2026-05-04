@@ -14,7 +14,7 @@ import { searchPapersByTextQuery } from "../../src/repositories/searchRepository
 describe("searchPapersByTextQuery", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
-        vi.clearAllMocks();
+        vi.resetAllMocks();
     });
 
     it("Queries the database with the search query and returns rows", async () => {
@@ -104,8 +104,8 @@ describe("searchPapersByTextQuery", () => {
 
 
     it("An unexpected database error occurs", async () => {
-        pool.query.mockRejectedValue(new Error("Database query failed."));
+        pool.query.mockRejectedValue(new Error("Unexpected DB error"));
 
-        const result = await expect(searchPapersByTextQuery("Machine Learning")).rejects.toThrow("Database query failed.");
+        const result = await expect(searchPapersByTextQuery("Machine Learning")).rejects.toThrow("Unexpected DB error");
     });
 });
