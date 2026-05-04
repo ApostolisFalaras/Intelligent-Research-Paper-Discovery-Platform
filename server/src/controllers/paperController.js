@@ -1,29 +1,11 @@
 import { getPaperById, getPaperRecommendations } from "./../services/paperService.js";
 
 // Retrieves a single paper from its url when accessed
-export async function getPaperByIdController(req, res) {
+export async function getPaperByIdController(req, res, next) {
     try {
         // TODO: AUTHENTICATION
-        
-        // Validate input id
-        const paperId = req.params.id;
 
-        if (!paperId || typeof paperId !== "string") {
-            return res.status(400).json({
-                status: "error",
-                message: "Invalid paper Id"
-            });
-        }
-
-        const paper = await getPaperById(paperId);
-
-        // Validate if the paper exists
-        if (!paper) {
-            return res.status(404).json({
-                status: "error",
-                message: "Paper not found"
-            });
-        }
+        const paper = await getPaperById(req.params.id);
         
         // Successful retrieval of paper
         return res.status(200).json({
@@ -32,13 +14,7 @@ export async function getPaperByIdController(req, res) {
         });
 
     } catch (error) {
-        // Internal server error
-        console.error("Paper Controller Error:", error);
-
-        return res.status(500).json({
-            status: "error",
-            message: "Internal server error"
-        });
+        next(error);
     }
 }
 

@@ -45,11 +45,9 @@ export async function searchPapersByTextQuery(query) {
         LIMIT 25;
     `;
 
-    try {
-        const result = await pool.query(sqlQuery, [query]);
-        return result.rows;
-    } catch (error) {
-        console.error("Database Error:", error);
-        throw new Error("Database query failed."); // DB error, the controller throws a 500 error
-    }
+    // Any potential DB errors propagate to the controller, 
+    // and are handled by the global error-handling middleware
+    const result = await pool.query(sqlQuery, [query]);
+    return result.rows;
+    
 }

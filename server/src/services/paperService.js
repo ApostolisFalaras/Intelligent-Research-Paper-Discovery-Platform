@@ -1,13 +1,20 @@
 import { fetchPaperById } from "./../repositories/paperRepository.js";
 import { formatPage } from "./../utils/formatPages.js";
+import { AppError } from "./../utils/AppError.js";
 
 // Fetch a paper with a particular "id" 
 export async function getPaperById(id) {
+
+    // Validate paper id
+    if (!id || typeof id !== "string") {
+        throw new AppError("Invalid paper Id", 400);
+    }
+
     const paper = await fetchPaperById(id);
     
-    // If paper doesn't exist, controller will return 404 error
+    // Validate if the paper exists
     if (!paper)
-        return null;
+        throw new AppError("Paper not found", 404);
 
     // Paper Data Transfer Object (DTO)
     // Grouping paper fields into logical units so that the client can display them appropriately

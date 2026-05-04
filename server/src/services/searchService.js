@@ -1,7 +1,16 @@
 import { searchPapersByTextQuery } from "./../repositories/searchRepository.js";
+import { AppError } from "./../utils/AppError.js";
 
 export async function searchPapers(query) {
-    const papers = await searchPapersByTextQuery(query.trim());
+
+     // Validate search bar's input query
+    const { q } = query;
+
+    if (!q || q.trim().length === 0) {
+        throw new AppError("Search query is required", 400);
+    }
+
+    const papers = await searchPapersByTextQuery(q.trim());
 
     // Papers Data Transfer Object (DTO)
     const papersDTO = [];

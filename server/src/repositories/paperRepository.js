@@ -9,12 +9,8 @@ export async function fetchPaperById(id) {
         LIMIT 1;
     `;
 
-    try {
-        const result = await pool.query(sqlQuery, [id]);
-        return result.rows[0] || null;
-    } 
-    catch (error) {
-        console.error("Database Error:", error);
-        throw new Error("Database query failed."); // DB error, the controller throws a 500 error
-    }
+    // Any potential DB errors propagate to the controller, 
+    // and are handled by the global error-handling middleware
+    const result = await pool.query(sqlQuery, [id]);
+    return result.rows[0] || null;
 }

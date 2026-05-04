@@ -4,6 +4,7 @@ import searchRouter from "./routes/searchRoutes.js";
 import recommendationsRouter from "./routes/recommendationRoutes.js";
 import authorRouter from "./routes/authorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
 
@@ -21,5 +22,7 @@ app.use("/api/users", userRouter);
 app.get("/", (req, res) => {
     res.send("API is running");
 });
+
+app.use(errorHandler);
 
 export default app;

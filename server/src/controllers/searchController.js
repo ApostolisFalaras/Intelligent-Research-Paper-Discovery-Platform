@@ -1,21 +1,12 @@
 import { searchPapers } from "./../services/searchService.js";
+import { AppError } from "./../utils/AppError.js";
 
 // Perform a user's query from the main search bar
-export async function searchPapersController(req, res) {
+export async function searchPapersController(req, res, next) {
     try {
         // TODO: AUTHENTICATION
 
-        // Validate search bar's input query
-        const { q } = req.query;
-
-        if (!q || q.trim().length === 0) {
-            return res.status(400).json({
-                status: "error",
-                message: "Search query is required"
-            });
-        }
-
-        const papers = await searchPapers(q);
+        const papers = await searchPapers(req.query);
 
         res.status(200).json({
             status: "success",
@@ -23,12 +14,6 @@ export async function searchPapersController(req, res) {
         });
     
     } catch (error) {
-        // Internal server error
-        console.error("Search Controller Error:", error);
-
-        return res.status(500).json({
-            status: "error",
-            message: "Internal server error"
-        });
+        next(error);
     }
 }
