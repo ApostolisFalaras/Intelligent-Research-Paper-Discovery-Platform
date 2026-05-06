@@ -298,6 +298,10 @@ CREATE INDEX idx_paper_author_institutions_display_name ON paper_author_institut
 CREATE INDEX idx_paper_author_institutions_openalex_id ON paper_author_institutions(institution_openalex_id)
 WHERE institution_openalex_id IS NOT NULL;
 CREATE INDEX idx_paper_author_institutions_country ON paper_author_institutions(country_code);
+CREATE INDEX idx_paper_author_institutions_paper_author_id ON paper_author_institutions(paper_author_id);
+
+-- Indexes for paper_author_affiliations table
+CREATE INDEX idx_paper_author_affiliations_paper_author_id ON paper_author_affiliations(paper_author_id);
 
 -- Indexes for paper_topics table
 CREATE INDEX idx_paper_topics_paper_id ON paper_topics(paper_id);
