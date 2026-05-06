@@ -590,6 +590,28 @@ def insert_remaining_tables_tuples(tuple_batches: dict, cur: cursor) -> None:
             """,
             tuple_batches["paper_counts_by_year_rows"].values()
         )
+        
+        
+# --------- DATA VALIDATION UTILITIES ----------
+
+MIN_PUBL_YEAR = 1800
+MAX_PUBL_YEAR = 2026
+
+# Validate that the paper publication year is between 1800 and 2026
+def has_valid_publication_year(work: dict) -> bool:
+    publication_year = work.get("publication_year")
+    
+    # If publ. year doesn't exist
+    if publication_year is None:
+        return False
+    
+    try:
+        # Checking if publ. year is a number
+        publication_year = int(publication_year)
+    except (TypeError, ValueError):
+        return False
+    
+    return MIN_PUBL_YEAR <= publication_year <= MAX_PUBL_YEAR
     
     
 # --------- DATASET INGESTION ----------
@@ -622,6 +644,20 @@ def ingest() -> None:
             total_batches += 1
             total_works += len(batch)
             logger.info(f"Batch {batch_number}: started with {len(batch)} works.")
+            
+            # Rejecting Papers whose publication year is outside the range [1800,2026]
+            original_batch_size = len(batch)
+            batch = [work for work in batch if has_valid_publication_year(work)]
+            skipped_count = original_batch_size - len(batch)
+            
+            logger.info(
+                f"Batch {batch_number}: started with {original_batch_size} works, "
+                f"skipped_invalid_year={skipped_count}, valid={len(batch)}"   
+            )
+            
+            if not batch:
+                logger.info(f"Batch {batch_number}: no valid works, skipping...")
+                continue
             
             # Insert batch of papers
             paper_ids = insert_papers(batch, cur)
