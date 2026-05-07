@@ -41,7 +41,7 @@ function validateSearchFilters(searchFilters) {
     const query = parseStringFilter(searchFilters.query, "query");
 
     if (!query)
-        throw new AppError("Provide a search query", 400);
+        throw new AppError("Search query is required", 400);
     
     // Pagination filters
     const page = parseIntegerFilter(searchFilters.page, "page") ?? 1;
@@ -86,11 +86,6 @@ function validateSearchFilters(searchFilters) {
     const topicId = parseStringFilter(searchFilters.topicId, "topicId");
     if (topicId !== null && !topicId.startsWith("T"))
         throw new AppError("'topicId' has invalid ID format", 400);
-
-    // Source filter
-    const sourceId = parseStringFilter(searchFilters.sourceId, "sourceId");
-    if (sourceId !== null && !sourceId.startsWith("S"))
-        throw new AppError("'sourceId' has invalid ID format", 400);
 
     // Author filter
     const authorName = parseStringFilter(searchFilters.authorName, "authorId");
