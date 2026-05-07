@@ -1,6 +1,20 @@
 import pool from "./../config/db.js";
 
-export async function searchPapersByTextQuery(query) {
+export async function searchPapersByTextQuery(filters) {
+    
+    const values = [filters.query];
+
+    // Create WHERE clause by concatenating the specified filters with the AND operator
+    const whereClause = buildWHEREClause(filters, values).join(" AND ");
+    // Construct the ORDER BY clause
+    const orderByClause = buildORDERBYClause(filters);
+
+    values.push(filters.limit);
+    const limitIndex = values.length; // value for the query '$' parameters
+
+    values.push(filters.offset);
+    const offsetIndex = values.length; // value for the query '$' parameters
+
     // Query to extract the minimum info needed to present the result paper cards.
     // Also performs a left join with "paper_authors" in order to mention a few of the authors in the paper card.
     const sqlQuery = `
@@ -39,15 +53,92 @@ export async function searchPapersByTextQuery(query) {
         FROM papers p
         LEFT JOIN paper_authors pa ON pa.paper_id = p.id
 
-        WHERE p.search_vector @@ websearch_to_tsquery('english', $1)
+        WHERE ${whereClause}
         GROUP BY p.id
-        ORDER BY rank DESC, p.cited_by_count DESC NULLS LAST
-        LIMIT 25;
+        ${orderByClause}
+        LIMIT $${limitIndex}
+        OFFSET $${offsetIndex};
     `;
 
     // Any potential DB errors propagate to the controller, 
     // and are handled by the global error-handling middleware
-    const result = await pool.query(sqlQuery, [query]);
+    const result = await pool.query(sqlQuery, values);
     return result.rows;
-    
+}
+
+// Build a dynamic WHERE clause based on the arbitrary user selection of filters
+function buildWHEREClause(filters, values) {
+    const whereClause = ["p.search_vector @@ websearch_to_tsquery('english', $1)"];
+
+    // For each of the following filters, if one doesn't exist (null), it's skipped
+    // Otherwise, the filter portion of the WHERE clause is appended in the list
+
+    if (filters.fromYear !== null) {
+        values.push(filters.fromYear);
+        whereClause.push(`p.publication_year >= $${values.length}`);
+    }
+
+    if (filters.toYear !== null) {
+        values.push(filters.toYear);
+        whereClause.push(`p.publication_year <= $${values.length}`);
+    }
+
+    if (filters.language !== null) {
+        values.push(filters.language);
+        whereClause.push(`p.language_text = $${values.length}`);
+    }
+
+    if (filters.paperType !== null) {
+        values.push(filters.paperType);
+        whereClause.push(`p.paper_type = $${values.length}`);
+    }
+
+    if (filters.minCitations !== null) {
+        values.push(filters.minCitations);
+        whereClause.push(`p.cited_by_count >= $${values.length}`);
+    }
+
+    if (filters.topicId !== null) {
+        values.push(filters.topicId);
+        whereClause.push(`p.primary_topic_openalex_id = $${values.length}`);
+    }
+
+    if (filters.authorName !== null) {
+        values.push(filters.authorName);
+        whereClause.push(`pa.author_display_name = $${values.length}`);
+    }
+
+    // Don't check, since isOpenAccess is true by default
+    values.push(filters.isOpenAccess);
+    whereClause.push(`p.is_open_access = $${values.length}`);
+
+    if (filters.hasContentPDF !== null) {
+        values.push(filters.hasContentPDF);
+        whereClause.push(`p.has_content_pdf = $${values.length}`);
+    }
+
+    // Don't check, since isOpenAccess is false by default
+    values.push(filters.isRetracted);
+    whereClause.push(`p.is_retracted = $${values.length}`);
+
+    return whereClause;
+}
+
+// Build the ORDER BY clause based on the primary sort filter
+function buildORDERBYClause(filters) {
+
+    // For each case provide secondary sorting filters
+    switch (filters.sort) {
+        case "citations":
+            return `ORDER BY p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
+        case "impact":
+            return `ORDER BY p.fwci DESC NULLS LAST, p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
+        case "year_desc":
+            return `ORDER BY p.publication_year DESC NULLS LAST, rank DESC NULLS LAST`;
+        case "year_asc":
+            return `ORDER BY p.publication_year ASC NULLS LAST, rank DESC NULLS LAST`;
+        case "relevance":
+        case "default":
+            return `ORDER BY rank DESC NULLS LAST, p.cited_by_count DESC NULLS LAST`;
+    }
 }
