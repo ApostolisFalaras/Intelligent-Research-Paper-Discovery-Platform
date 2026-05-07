@@ -91,7 +91,7 @@ function validateSearchFilters(searchFilters) {
     const authorName = parseStringFilter(searchFilters.authorName, "authorId");
 
     // Open-Access filter
-    const isOpenAccess = parseBooleanFilter(searchFilters.isOpenAccess, "IsOpenAccess") ?? true; 
+    const isOpenAccess = parseBooleanFilter(searchFilters.isOpenAccess, "isOpenAccess") ?? true; 
     
     // Sorting filter
     const sort = searchFilters.sort ?? "relevance";
