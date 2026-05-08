@@ -139,6 +139,8 @@ describe("GET /api/papers/:id", () => {
         expect(response.body.data).toEqual(expectedResponseData);
     });
 
+    // ------------- USER ERRORS ---------------
+
     it("Returns 404 when the paper doesn't exist", async () => {
         fetchPaperById.mockResolvedValue(null);
 
@@ -151,10 +153,15 @@ describe("GET /api/papers/:id", () => {
         expect(response.body.message).toBe("Paper not found");
     });
 
+    // -------------- DATABASE ERRORS --------------
+
     it("Returns 500 when the server fails", async () => {
         fetchPaperById.mockRejectedValue(new Error("Unexpected failure"));
 
         const response = await request(app).get("/api/papers/W2741809807").expect(500);
+
+        expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
+        expect(fetchPaperById).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("error");
         expect(response.body.message).toBe("Unexpected failure");

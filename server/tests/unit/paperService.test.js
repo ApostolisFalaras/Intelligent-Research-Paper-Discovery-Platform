@@ -136,6 +136,7 @@ describe("getPaperById", () => {
         expect(result).toEqual(expectedOutput);
     });
 
+    // ------------ USER ERRORS --------------
     
     it("Throws a 400 AppError when input id is invalid", async () => {
         await expect(getPaperById(123)).rejects.toThrow("Invalid paper Id");
@@ -153,10 +154,14 @@ describe("getPaperById", () => {
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
     });
 
-    
+    // ------------ DATABASE ERRORS --------------
+
     it("Propagates repository error", async () => {
         fetchPaperById.mockRejectedValue(new Error("Database query failed."));
 
         await expect(getPaperById("W2741809807")).rejects.toThrow("Database query failed.");
+
+        expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
+        expect(fetchPaperById).toHaveBeenCalledTimes(1);
     });
 });

@@ -152,7 +152,7 @@ describe("fetchPaperById", () => {
         expect(result).toEqual(expectedOutput);
     });
 
-
+    
     it("Queries the 'papers' table and returns null for an non-existent openalex id", async () => {
         pool.query.mockResolvedValue({ 
             rows: [], 
@@ -173,10 +173,22 @@ describe("fetchPaperById", () => {
         expect(result).toBeNull();
     });
 
+    // ------------- DATABASE ERRORS --------------
 
     it("Queries the 'papers' table and an unexpected error occurs", async () => {
         pool.query.mockRejectedValue(new Error("Unexpected DB error"));
 
         const result = await expect(fetchPaperById("W2741809807")).rejects.toThrow("Unexpected DB error");
+
+        // Verifying pool.query parameters
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT *");
+        expect(query).toContain("FROM papers");
+        expect(query).toContain("WHERE openalex_id = $1");
+        expect(query).toContain("LIMIT 1;");
+        expect(params).toEqual(["W2741809807"]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
     });
 });
