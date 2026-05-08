@@ -26,6 +26,7 @@ export async function searchPapersByTextQuery(filters) {
             p.abstract, 
             p.publication_year, 
             p.cited_by_count,
+            p.fwci,
             p.primary_source_display_name,
             p.primary_topic_display_name,
             p.is_open_access,

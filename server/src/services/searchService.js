@@ -21,6 +21,7 @@ export async function searchPapers(queryParams) {
             abstract: paper.abstract,
             publicationYear: paper.publication_year,
             citedByCount: paper.cited_by_count,
+            fwci: Number(paper.fwci),
             primarySource: paper.primary_source_display_name,
             primaryTopic: paper.primary_topic_display_name,
             isOpenAccess: paper.is_open_access,
