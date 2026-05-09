@@ -1,16 +1,11 @@
 import express from "express";
-import { register, login, getProfile, getHistory, getFolders } from "./../controllers/userController.js";
+import { register, login, getMe, getHistory, getFolders } from "./../controllers/userController.js";
 
 const router = express.Router();
 
-// User signs up in the app
-router.post("/register", register);
-
-// User logins in the app
-router.post("/login", login);
 
 // User views their profile
-router.get("/me", getProfile);
+router.get("/me", getMe);
 
 // User views their search history
 router.get("/me/history", getHistory);
