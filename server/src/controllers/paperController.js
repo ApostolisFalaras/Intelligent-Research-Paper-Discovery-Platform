@@ -3,8 +3,6 @@ import { getPaperById, getPaperRecommendations } from "./../services/paperServic
 // Retrieves a single paper from its url when accessed
 export async function getPaperByIdController(req, res, next) {
     try {
-        // TODO: AUTHENTICATION
-
         const paper = await getPaperById(req.params.id);
         
         // Successful retrieval of paper

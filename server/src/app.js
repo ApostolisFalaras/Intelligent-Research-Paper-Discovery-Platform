@@ -4,12 +4,17 @@ import searchRouter from "./routes/searchRoutes.js";
 import recommendationsRouter from "./routes/recommendationRoutes.js";
 import authorRouter from "./routes/authorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
+import authRouter from "./routes/authRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import { sessionMiddleware } from "./config/session.js";
 
 const app = express();
 
 // Parse request JSON body in the req.body field 
 app.use(express.json());
+
+// Append session data to request, through req.session 
+app.use(sessionMiddleware);
 
 // Redirect every request to the appropriate router based on the URL prefix
 app.use("/api/papers", paperRouter);
@@ -17,6 +22,7 @@ app.use("/api/search", searchRouter);
 app.use("/api/recommendations", recommendationsRouter);
 app.use("/api/authors", authorRouter);
 app.use("/api/users", userRouter);
+app.use("/api/auth", authRouter);
 
 
 app.get("/", (req, res) => {

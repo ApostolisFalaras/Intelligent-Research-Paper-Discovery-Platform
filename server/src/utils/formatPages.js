@@ -1,3 +1,4 @@
+// Format page numbers as firstPage-lastPage when the user views a paper
 export function formatPage(firstPage, lastPage) {
     if (!firstPage && !lastPage)
         return null;
