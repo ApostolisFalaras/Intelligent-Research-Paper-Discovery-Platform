@@ -1,6 +1,7 @@
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import pool from "./db.js";
+import "dotenv/config";
 
 // Create a session store class that is compatible with express-session
 const PgSession = connectPgSimple(session);
