@@ -1,7 +1,7 @@
 import { fetchAuthorById } from "./../services/authorService.js";
 
 // Retrieve an author's profile info
-export async function getAuthor(req, res) {
+export async function getAuthorByIdController(req, res) {
     try {
         const authorId = req.params.id;
         const author = await fetchAuthorById(authorId);

@@ -40,17 +40,16 @@ export async function register(credentials) {
     if (!username || !email || !password)
         throw new AppError("'username', 'email' and 'password' are required", 400);
 
-
-    // Checking if a registered user has taken up the input email
-    const existingUserWithEmail = await fetchUserByEmail(email);
-    if (existingUserWithEmail)
-        throw new AppError("'email' is already registered", 409);
-
+    
     // Checking if a registered user has taken up the input username
     const existingUserWithUsername = await fetchUserByUsername(username);
     if (existingUserWithUsername)
         throw new AppError("'username' is already registered", 409);
 
+    // Checking if a registered user has taken up the input email
+    const existingUserWithEmail = await fetchUserByEmail(email);
+    if (existingUserWithEmail)
+        throw new AppError("'email' is already registered", 409);
 
     // Hash the password and store the user in the DB
     const passwordHash = await bcryptjs.hash(password, 12);

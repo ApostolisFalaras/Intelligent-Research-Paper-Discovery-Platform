@@ -1,4 +1,4 @@
-import { registerUser, loginUser, getUserMe, getUserHistory, getUserFolders } from "./../services/userService.js";
+import { getUserMe, getUserHistory, getUserFolders } from "./../services/userService.js";
 
 // User accesses their profile
 export async function getMe(req, res) {

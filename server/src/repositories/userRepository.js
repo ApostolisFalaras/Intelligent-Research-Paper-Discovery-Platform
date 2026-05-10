@@ -27,7 +27,7 @@ export async function fetchUserByEmail(email) {
 // Create user upon registration
 export async function createUser(credentials) {
     const sqlQuery = `
-        INSERT INTO users (username, email, password_hash)
+        INSERT INTO users (id, username, email)
         VALUES ($1, $2, $3)
         RETURNING id, username, email, created_at;
     `;

@@ -1,9 +1,9 @@
 import express from "express";
-import { getAuthor } from "./../controllers/authorController.js";
+import { getAuthorByIdController } from "./../controllers/authorController.js";
 
 const router = express.Router();
 
 // User view an author's profile 
-router.get("/:id", getAuthor);
+router.get("/:id", getAuthorByIdController);
 
 export default router;

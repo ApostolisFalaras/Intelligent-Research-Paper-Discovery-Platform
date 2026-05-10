@@ -1,8 +1,7 @@
 import express from "express";
-import { register, login, getMe, getHistory, getFolders } from "./../controllers/userController.js";
+import { getMe, getHistory, getFolders } from "./../controllers/userController.js";
 
 const router = express.Router();
-
 
 // User views their profile
 router.get("/me", getMe);
