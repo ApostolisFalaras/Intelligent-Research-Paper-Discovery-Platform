@@ -9,7 +9,7 @@ export async function fetchUserByUsername(username) {
     `;
 
     const result = await pool.query(sqlQuery, [username]);
-    return result.rows[0];
+    return result.rows[0] ?? null;
 }
 
 // Fetch user data based on the user's unique email
@@ -27,7 +27,7 @@ export async function fetchUserByEmail(email) {
 // Create user upon registration
 export async function createUser(credentials) {
     const sqlQuery = `
-        INSERT INTO users (id, username, email)
+        INSERT INTO users (username, email, password_hash)
         VALUES ($1, $2, $3)
         RETURNING id, username, email, created_at;
     `;
