@@ -40,6 +40,17 @@ export async function registerController(req, res, next) {
 
 // User logs out
 export async function logoutController(req, res, next) {
+    // Case when session already doesn't exist
+    if (!req.session) {
+        res.clearCookie("sid");
+
+        return res.status(200).json({
+            status: "success",
+            message: "Logged out successfully"
+        });
+    }
+
+    // Case when session exists
     req.session.destroy((error) => {
         if (error)
             return next(error);
