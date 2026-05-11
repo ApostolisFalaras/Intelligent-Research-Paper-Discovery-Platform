@@ -8,7 +8,7 @@ vi.mock("./../../src/config/db.js", () => ({
 }));
 
 import pool from "./../../src/config/db.js";
-import { fetchUserByUsername, fetchUserByEmail, createUser } from "./../../src/repositories/userRepository.js";
+import { fetchUserByUsername, fetchUserByEmail, createUser, fetchUserById } from "./../../src/repositories/userRepository.js";
 
 
 const mockResolvedUser = {
@@ -26,6 +26,23 @@ const mockResolvedUser = {
     updated_at: "2026-05-09 16:58:35.442164+03"
 };
 
+// It's the same as the mockResolvedUser but without the password_hash, 
+// since this object is meant to be displayed in the user profile
+const mockResolvedProfile = {
+    id: 1,
+    username: "ApostolisCoder",
+    email: "apostolisCoder@email.com",
+    first_name: "Apostolis",
+    last_name: "Falaras",
+    affiliation: "None",
+    role: "Full-Stack Software Engineer",
+    bio: "Junior Full-Stack Engineer currently studying Node.js and React",
+    avatar_url: "None",
+    created_at: "2026-05-09 16:58:35.442164+03",
+    updated_at: "2026-05-09 16:58:35.442164+03"
+};
+
+
 const registrationCredentials = {
     username: "ApostolisCoder",
     email: "apostolisCoder@email.com",
@@ -42,6 +59,27 @@ const registrationCredentials = {
 describe("userRepository", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+    });
+
+    // ------------ USER RETRIEVAL BASED ON ID -------------
+    it("Fetch a user based on their id", async () => {
+        pool.query.mockResolvedValue({
+            rows: [ mockResolvedProfile ]
+        });
+
+        const expectedOutput = mockResolvedProfile;
+
+        const result = await fetchUserById(1);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at");
+        expect(query).toContain("FROM users");
+        expect(query).toContain("WHERE id = $1;");
+        expect(params).toEqual([1]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+        expect(result).toEqual(expectedOutput);
     });
 
     // ------------ USER RETRIEVAL BASED ON USERNAME -------------
@@ -93,8 +131,27 @@ describe("userRepository", () => {
 
     // ------------- RETRIEVAL OF NULL WHEN USER DOESNT EXIST -------------
 
-    // Retrieval be username
-    it("Returning null when user doesn't exist for username", async () => {
+    // Retrieval by id
+    it("Returning null when user doesn't exist for an id", async () => {
+        pool.query.mockResolvedValue({
+            rows: []
+        });
+
+        const result = await fetchUserById(2);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at");
+        expect(query).toContain("FROM users");
+        expect(query).toContain("WHERE id = $1;");
+        expect(params).toEqual([2]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+        expect(result).toBe(null);
+    });
+
+    // Retrieval by username
+    it("Returning null when user doesn't exist for a username", async () => {
         pool.query.mockResolvedValue({
             rows: []
         });
@@ -194,6 +251,22 @@ describe("userRepository", () => {
     });
 
     // ----------- PROPAGATE DB ERROR ---------------
+
+    it("fetchUserById propagates DB error", async () => {
+        pool.query.mockRejectedValue(new Error("Database query failed"));
+
+        await expect(fetchUserById(1)).rejects.toThrow("Database query failed");
+
+        const [query, params] = pool.query.mock.calls[0];
+        
+        expect(query).toContain("SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at");
+        expect(query).toContain("FROM users");
+        expect(query).toContain("WHERE id = $1;");
+        expect(params).toEqual([1]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+
+    });
 
     it("fetchUserByUsername propagates DB error", async () => {
         pool.query.mockRejectedValue(new Error("Database query failed"));

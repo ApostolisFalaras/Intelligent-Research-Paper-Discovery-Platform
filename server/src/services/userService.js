@@ -6,7 +6,7 @@ export async function getUserMe(id) {
 
     // Validate user id
     if (!id || typeof id !== "number") {
-        throw new AppError("Invalid user id", 400);
+        throw new AppError("Missing/Invalid user id", 400);
     }
 
     const userProfile = await fetchUserById(id);

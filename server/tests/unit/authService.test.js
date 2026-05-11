@@ -65,7 +65,7 @@ describe("authService", () => {
 
     // ----------- FAILED LOGIN -------------
 
-    it("User provides wrong username during login", async () => {
+    it("Throws 401 as the user provides wrong username during login", async () => {
         fetchUserByUsername.mockResolvedValue(null);
 
         const  credentials = { username: "ApostolisCoding", password: "postgresUSER" };
@@ -76,7 +76,7 @@ describe("authService", () => {
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
     });
 
-    it("User provides wrong password during login", async () => {
+    it("Throws 401 as the user provides wrong password during login", async () => {
         fetchUserByUsername.mockResolvedValue(mockResolvedUser);
 
         // Wrong password corresponds to different hash
@@ -132,7 +132,7 @@ describe("authService", () => {
 
     // ---------- FAILED REGISTRATION ------------
 
-    it("User provides already taken username", async () => {
+    it("Throws a 409 AppError as the user provides already taken username", async () => {
         // The retrieved user signals that the username is alredy taken
         fetchUserByUsername.mockResolvedValue(mockResolvedUser);
 
@@ -152,7 +152,7 @@ describe("authService", () => {
         expect(createUser).not.toHaveBeenCalled();
     });
 
-    it("User provides already taken email", async () => {
+    it("Throws a 409 AppError aUser provides already taken email", async () => {
         // Username not taken
         fetchUserByUsername.mockResolvedValue(null);
         // Email taken by retrieved user
@@ -202,6 +202,8 @@ describe("authService", () => {
         expect(fetchUserByEmail).toHaveBeenCalledWith(registrationCredentials.email);
         expect(fetchUserByEmail).toHaveBeenCalledTimes(1);
     });
+
+    // 
 
 });
 
