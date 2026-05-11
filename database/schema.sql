@@ -239,7 +239,12 @@ CREATE TABLE users (
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    affiliation TEXT,
+    role TEXT,
     bio TEXT,
+    avatar_url TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
@@ -264,6 +269,17 @@ CREATE TABLE user_folder_papers (
     PRIMARY KEY (folder_id, paper_id),
     FOREIGN KEY (folder_id) REFERENCES user_folders(id) ON DELETE CASCADE,
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
+-- Implementation of user search history records
+CREATE TABLE user_search_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    query TEXT NOT NULL,
+    filters JSONB,
+    result_count INTEGER,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- INDEXES (for potential filtering fields)
@@ -339,3 +355,6 @@ CREATE INDEX idx_paper_counts_by_year_year ON paper_counts_by_year(year);
 -- Indexes for user_folders & user_folder_papers table
 CREATE INDEX idx_user_folders_user_id ON user_folders(user_id);
 CREATE INDEX idx_user_folder_papers_paper_id ON user_folder_papers(paper_id);
+
+-- Indexes for user_search_history
+CREATE INDEX idx_user_search_history_user_id_created_at ON user_search_history(user_id, created_at DESC);
