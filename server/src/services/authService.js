@@ -54,7 +54,17 @@ export async function register(credentials) {
     // Hash the password and store the user in the DB
     const passwordHash = await bcryptjs.hash(password, 12);
 
-    const user = await createUser({ username, email, passwordHash });
+    const user = await createUser({ 
+        username: username, 
+        email: email, 
+        password_hash: passwordHash,
+        first_name: credentials.firstName,
+        last_name: credentials.lastName,
+        affiliation: credentials.affiliation,
+        role: credentials.role,
+        bio: credentials.bio,
+        avatar_url: credentials.avatarURL
+    });
 
     return {
         id: user.id,

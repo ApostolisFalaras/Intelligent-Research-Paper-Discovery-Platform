@@ -10,6 +10,34 @@ vi.mock("./../../src/repositories/userRepository.js", () => ({
 import { fetchUserByUsername, fetchUserByEmail, createUser } from "./../../src/repositories/userRepository.js";
 import app from "./../../src/app.js";
 
+
+const mockResolvedUser = {
+    id: 1,
+    username: "ApostolisCoder",
+    email: "apostolisCoder@email.com",
+    password_hash: "$2b$12$UMTLXzUIPGvMbmnMtjvW4u43BQXoZG6oKK3Yhm.ai9kclBAB/0xD6",
+    first_name: "Apostolis",
+    last_name: "Falaras",
+    affiliation: "None",
+    role: "Full-Stack Software Engineer",
+    bio: "Junior Full-Stack Engineer currently studying Node.js and React",
+    avatar_url: "None",
+    created_at: "2026-05-09 16:58:35.442164+03",
+    updated_at: "2026-05-09 16:58:35.442164+03"
+};
+
+const registrationCredentials = {
+    username: "ApostolisCoder",
+    email: "apostolisCoder@email.com",
+    password: "postgresUSER",
+    firstName: "Apostolis",
+    lastName: "Falaras",
+    affiliation: "None",
+    role: "Full-Stack Software Engineer",
+    bio: "Junior Full-Stack Engineer currently studying Node.js and React",
+    avatarURL: "None"
+};
+
 describe("POST /api/auth/login", () => {
     beforeEach(() => {
         vi.resetAllMocks();
@@ -18,17 +46,9 @@ describe("POST /api/auth/login", () => {
     // ---------- SUCCESSFUL LOGIN -----------
 
     it("Returns 200 when the user is authenticated", async () => {
-        fetchUserByUsername.mockResolvedValue({
-            id: "1",
-            username: "ApostolisCoder",
-            email: "apostolisCoding@gmail.com",
-            password_hash: "$2b$12$6mrBtyPnCn3nE6u11dQpJewrK6tLb3LtOxHuJ8djrh9YsF.C8jKnS",
-            bio: null,
-            created_at: "2026-05-09 16:58:35.442164+03",
-            updated_at: "2026-05-09 16:58:35.442164+03"
-        });
+        fetchUserByUsername.mockResolvedValue(mockResolvedUser);
 
-        const credentials = { username: "apostolisCoder", password: "postgresUser" }
+        const credentials = { username: "apostolisCoder", password: "postgresUSER" }
 
         const response = await request(app).post("/api/auth/login").send(credentials).expect(200);
 
@@ -38,9 +58,9 @@ describe("POST /api/auth/login", () => {
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
             user: {
-                id: "1",
+                id: 1,
                 username: "ApostolisCoder",
-                email: "apostolisCoding@gmail.com"
+                email: "apostolisCoder@email.com"
             }   
         });
     });
@@ -50,7 +70,10 @@ describe("POST /api/auth/login", () => {
     it("Returns 400 when the password is missing", async () => {
         // I choose a missing password
         // Although the same applies for a missing username
-        const credentials = { username: "ApostolisCoder" };
+        const credentials = {
+            ...registrationCredentials,
+            password: null
+        };
 
         const response = await request(app).post("/api/auth/login").send(credentials).expect(400);
 
@@ -63,19 +86,14 @@ describe("POST /api/auth/login", () => {
     // ------------ WRONG USERNAME/PASSWORD -> 401 NOT AUTHENTICATED --------------
 
     it("Returns 401 when the password is wrong", async () => {
-        fetchUserByUsername.mockResolvedValue({
-            id: "1",
-            username: "ApostolisCoder",
-            email: "apostolisCoding@gmail.com",
-            password_hash: "$2b$12$6mrBtyPnCn3nE6u11dQpJewrK6tLb3LtOxHuJ8djrh9YsF.C8jKnS",
-            bio: null,
-            created_at: "2026-05-09 16:58:35.442164+03",
-            updated_at: "2026-05-09 16:58:35.442164+03"
-        });
+        fetchUserByUsername.mockResolvedValue(mockResolvedUser);
 
         // I choose a wrong password
         // Although the same can apply to a wrong username
-        const credentials = { username: "ApostolisCoder", password: "POSTGRESUSER" }; // real password: postgresUser
+        const credentials = { 
+            ...registrationCredentials,
+            password: "POSTGREsUSER"
+        }; // real password: postgresUser
 
         const response = await request(app).post("/api/auth/login").send(credentials).expect(401);
 
@@ -91,11 +109,9 @@ describe("POST /api/auth/login", () => {
     it("Returns 500 when the DB failed unexpectedly", async () => {
         fetchUserByUsername.mockRejectedValue(new Error("Database query failed"));
 
-        const credentials = { username: "apostolisCoder", password: "postgresUser" };
+        const response = await request(app).post("/api/auth/login").send(registrationCredentials).expect(500);
 
-        const response = await request(app).post("/api/auth/login").send(credentials).expect(500);
-
-        expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("error");
@@ -115,32 +131,21 @@ describe("POST /api/auth/register", () => {
         // Registration succeeds when no current user has the newly-inserted username & email
         fetchUserByUsername.mockResolvedValue(null);
         fetchUserByEmail.mockResolvedValue(null);
-        createUser.mockResolvedValue({
-            id: 1,
-            username: "ApostolisCoder",
-            email: "apostolisCoding@gmail.com",
-            created_at: "2026-05-09 16:58:35.442164+03"
-        });
+        createUser.mockResolvedValue(mockResolvedUser);
 
-        const credentials = { 
-            username: "ApostolisCoder", 
-            email: "apostolisCoding@gmail.com",
-            password: "postgresUser"
-        };
+        const response = await request(app).post("/api/auth/register").send(registrationCredentials).expect(201);
 
-        const response = await request(app).post("/api/auth/register").send(credentials).expect(201);
-
-        expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
-        expect(fetchUserByEmail).toHaveBeenCalledWith(credentials.email);
+        expect(fetchUserByEmail).toHaveBeenCalledWith(registrationCredentials.email);
         expect(fetchUserByEmail).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
             user: {
                 id: 1,
-                username: credentials.username,
-                email: credentials.email,
+                username: registrationCredentials.username,
+                email: registrationCredentials.email,
             }
         });
     });
@@ -151,7 +156,10 @@ describe("POST /api/auth/register", () => {
         
         // I choose a missing password
         // But the same can apply for username and email
-        const credentials = { username: "ApostolisCoder", email: "apostolisCoding@gmail.com" };
+        const credentials = { 
+            ...registrationCredentials,
+            password: null
+        };
 
         const response = await request(app).post("/api/auth/register").send(credentials).expect(400);
 
@@ -167,25 +175,11 @@ describe("POST /api/auth/register", () => {
 
     it("Returns 409 when the username already exists", async () => {
         // Username matches with a user
-        fetchUserByUsername.mockResolvedValue({
-            id: "1",
-            username: "ApostolisCoder",
-            email: "apostolisCoding@gmail.com",
-            password_hash: "$2b$12$6mrBtyPnCn3nE6u11dQpJewrK6tLb3LtOxHuJ8djrh9YsF.C8jKnS",
-            bio: null,
-            created_at: "2026-05-09 16:58:35.442164+03",
-            updated_at: "2026-05-09 16:58:35.442164+03"
-        });
+        fetchUserByUsername.mockResolvedValue(mockResolvedUser);
 
-        const credentials = { 
-            username: "ApostolisCoder",  // existing username,
-            email: "apostolisCoding@hotmail.com",
-            password: "postgresUSER"
-        };
+        const response = await request(app).post("/api/auth/register").send(registrationCredentials).expect(409);
 
-        const response = await request(app).post("/api/auth/register").send(credentials).expect(409);
-
-        expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("fail");
@@ -198,27 +192,13 @@ describe("POST /api/auth/register", () => {
         // Username doesn't match with any user
         fetchUserByUsername.mockResolvedValue(null);
         // But the email matches with an existing user
-        fetchUserByEmail.mockResolvedValue({
-            id: "1",
-            username: "ApostolisCoder",
-            email: "apostolisCoding@gmail.com",
-            password_hash: "$2b$12$6mrBtyPnCn3nE6u11dQpJewrK6tLb3LtOxHuJ8djrh9YsF.C8jKnS",
-            bio: null,
-            created_at: "2026-05-09 16:58:35.442164+03",
-            updated_at: "2026-05-09 16:58:35.442164+03"
-        });
+        fetchUserByEmail.mockResolvedValue(mockResolvedUser);
 
-        const credentials = { 
-            username: "ApostolisCoding",  
-            email: "apostolisCoding@gmail.com", // existing email
-            password: "postgresUSER"
-        };
+        const response = await request(app).post("/api/auth/register").send(registrationCredentials).expect(409);
 
-        const response = await request(app).post("/api/auth/register").send(credentials).expect(409);
-
-        expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
-        expect(fetchUserByEmail).toHaveBeenCalledWith(credentials.email);
+        expect(fetchUserByEmail).toHaveBeenCalledWith(registrationCredentials.email);
         expect(fetchUserByEmail).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("fail");
@@ -233,15 +213,9 @@ describe("POST /api/auth/register", () => {
         // And on the insertion query in the users table. For simplicity, I choose the 1st check
         fetchUserByUsername.mockRejectedValue(new Error("Database query failed"));
 
-        const credentials = { 
-            username: "ApostolisCoding",  
-            email: "apostolisCoding@gmail.com", 
-            password: "postgresUser"
-        };
+        const response = await request(app).post("/api/auth/register").send(registrationCredentials).expect(500);
 
-        const response = await request(app).post("/api/auth/register").send(credentials).expect(500);
-
-        expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("error");

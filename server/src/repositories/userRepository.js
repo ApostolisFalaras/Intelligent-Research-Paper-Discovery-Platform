@@ -27,14 +27,24 @@ export async function fetchUserByEmail(email) {
 // Create user upon registration
 export async function createUser(credentials) {
     const sqlQuery = `
-        INSERT INTO users (username, email, password_hash)
-        VALUES ($1, $2, $3)
-        RETURNING id, username, email, created_at;
+        INSERT INTO users (username, email, password_hash, 
+                           first_name, last_name, affiliation, role, bio, avatar_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, username, email;
     `;
 
-    const result = await pool.query(
-        sqlQuery, 
-        [credentials.username, credentials.email, credentials.passwordHash]
-    );
+    const values = [
+        credentials.username,
+        credentials.email,
+        credentials.password_hash,
+        credentials.first_name,
+        credentials.last_name,
+        credentials.affiliation,
+        credentials.role,
+        credentials.bio,
+        credentials.avatar_url
+    ];
+    
+    const result = await pool.query(sqlQuery, values);
     return result.rows[0] ?? null;
 }
