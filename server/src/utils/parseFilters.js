@@ -1,3 +1,4 @@
+import { AppError } from "./../utils/AppError.js";
 
 // Functions that parse search filters on,
 // i) the search operation, or

@@ -1,5 +1,5 @@
 import express from "express";
-import { getMe, getHistory, getFolders } from "./../controllers/userController.js";
+import { getMe, getSearchHistory, getFolders } from "./../controllers/userController.js";
 
 const router = express.Router();
 
@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/me", getMe);
 
 // User views their search history
-router.get("/me/history", getHistory);
+router.get("/me/search-history", getSearchHistory);
 
 // User views their folders
 router.get("/me/folders", getFolders);

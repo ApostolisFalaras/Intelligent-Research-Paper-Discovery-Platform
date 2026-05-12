@@ -1,5 +1,6 @@
 import pool from "./../config/db.js";
 
+
 // Fetch user data based on the user's unique id 
 export async function fetchUserById(id) {
     
