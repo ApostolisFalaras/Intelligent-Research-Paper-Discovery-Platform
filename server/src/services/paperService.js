@@ -18,7 +18,7 @@ export async function getPaperById(id) {
 
     // Paper Data Transfer Object (DTO)
     // Grouping paper fields into logical units so that the client can display them appropriately
-    const paperDTO = {
+    return {
         id: paper.openalex_id,
         internalId: paper.id,
         doi: paper.doi,
@@ -82,8 +82,6 @@ export async function getPaperById(id) {
             openalexUpdatedAt: paper.openalex_updated_at
         },
     };
-
-    return paperDTO;
 }
 
 // Fetch recommendations based on a paper with a particular id
