@@ -1,5 +1,6 @@
 import { searchPapersByTextQuery } from "./../repositories/searchRepository.js";
 import { AppError } from "./../utils/AppError.js";
+import { parseStringFilter, parseIntegerFilter, parseBooleanFilter } from "./../utils/parseFilters.js";
 import { ALLOWED_SORT_TYPES, ALLOWED_LANGUAGES, ALLOWED_PAPER_TYPES } from "./../utils/searchConstants.js";
 
 export async function searchPapers(queryParams) {
@@ -119,54 +120,4 @@ function validateSearchFilters(searchFilters) {
         limit,  // Acts like papers/page filter
         offset: (page - 1) * limit
     }
-}
-
-// Validate string filters (query, topicId, sourceId, authorId)
-function parseStringFilter(filter, name) {
-    if (filter === undefined || filter === null || filter === "")
-        return null;
-
-    // If it exists, make sure its data type is string
-    if (typeof filter !== "string") {
-        throw new AppError(`'${name}' must be a string`, 400);
-    }
-
-    // Remove leading and trailing whitespace
-    const trimmedFilter = filter.trim();
-    if (trimmedFilter === "") {
-        return null;
-    }
-
-    return trimmedFilter;
-}
-
-// Validate integer filters (page, limit, fromYear, toYear, minCitations)
-function parseIntegerFilter(filter, name) {
-    if (filter === undefined || filter === null || filter === "")
-        return null;
-
-    // The number might be enclosed in a string, e.g,. "2"
-    const parsedFilter = Number(filter);
-
-    // If it's a number, make sure it's not a floating-point number
-    if (!Number.isInteger(parsedFilter)) {
-        throw new AppError(`'${name}' must be an integer`, 400);
-    }
-
-    return parsedFilter;
-}
-
-// Validate boolean filters (isOpenAccess)
-function parseBooleanFilter(filter, name) {
-    if (filter === undefined || filter === null || filter === "")
-        return null;
-
-    if (filter === "true" || filter === true)
-        return true;
-
-    if (filter === "false" || filter === false)
-        return false;
-
-    // At this point, we certainly have an invalid non-boolean value
-    throw new AppError(`'${name}' must be either true or false`, 400);
 }
