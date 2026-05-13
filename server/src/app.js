@@ -7,7 +7,7 @@ import userRouter from "./routes/userRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
-import { authMiddleware } from "./middlewares/authMiddleware.js";
+import { authMiddleware, optionalAuthMiddleware } from "./middlewares/authMiddleware.js";
 
 const app = express();
 
@@ -20,15 +20,13 @@ app.use(sessionMiddleware);
 // Redirect every request to the appropriate router based on the URL prefix
 app.use("/api/auth", authRouter);
 
-app.use("/api/search", searchRouter);
+app.use("/api/search", optionalAuthMiddleware, searchRouter);
 app.use("/api/papers", paperRouter);
 app.use("/api/authors", authorRouter);
 
 // To perform user- and recommendation-related operations, the user needs to be authenticated
 app.use("/api/users", authMiddleware, userRouter);
 app.use("/api/recommendations", authMiddleware, recommendationsRouter);
-
-
 
 
 app.get("/", (req, res) => {

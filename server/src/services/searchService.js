@@ -1,18 +1,31 @@
 import { searchPapersByTextQuery } from "./../repositories/searchRepository.js";
+import { addToSearchHistory } from "../repositories/userHistoryRepository.js";
 import { AppError } from "./../utils/AppError.js";
 import { parseStringFilter, parseIntegerFilter, parseBooleanFilter } from "./../utils/parseFilters.js";
 import { ALLOWED_SORT_TYPES, ALLOWED_LANGUAGES, ALLOWED_PAPER_TYPES } from "./../utils/searchConstants.js";
 
-export async function searchPapers(queryParams) {
+export async function searchPapers(user_id, queryParams) {
 
     // Validate search bar's input query & filters
     const filters = validateSearchFilters(queryParams)
     
     const papers = await searchPapersByTextQuery(filters);
     
-    // Papers Data Transfer Object (DTO)
-    const papersDTO = [];
+    // Add query to the user search history, only if the user is logged in
+    const { query, page, limit, offset, ...searchHistoryFilters } = filters;
+
+    // If the user is logged in, add search query as a record to user search history
+    if (user_id) {
+        try {
+            await addToSearchHistory(user_id, query, searchHistoryFilters, papers.length);
+        } catch (error) {
+            // Failing to add the record in the search history 
+            // should not interrupt the search operation
+            console.error("Failed to save search history", error);
+        }
+    }
     
+    // Papers Data Transfer Object (DTO)
     return papers.map((paper) => ({
         id: paper.openalex_id,
         internalId: paper.id,
@@ -30,8 +43,6 @@ export async function searchPapers(queryParams) {
         authorCount: Number(paper.author_count),
         authorsPreview: paper.authors_preview,
     }));
-
-    return papersDTO;
 }
 
 // Validates each search parameter only if it exists. If it doesn't exist, move to the next one.

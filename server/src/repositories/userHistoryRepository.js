@@ -14,3 +14,17 @@ export async function fetchUserSearchHistory(id, pagination) {
     const result = await pool.query(sqlQuery, [id, pagination.limit, pagination.offset]);
     return result.rows;
 }
+
+// Add record to user search history
+export async function addToSearchHistory(userId, query, filters, resultCount) {
+    // Returning the IDs to verify in the unit tests
+    const sqlQuery = `
+        INSERT INTO user_search_history (user_id, query, filters, result_count)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, user_id;
+    `;
+
+    // filters filed is of type JSONB, requires filters to be stringifyied
+    const result = await pool.query(sqlQuery, [userId, query, JSON.stringify(filters), resultCount]);
+    return result.rows[0];
+}
