@@ -57,8 +57,8 @@ export async function getUserSearchHistory(id, filters) {
 
 // Helper function
 function validatePagination(paginationFilters) {
-    const page = parseIntegerFilter(paginationFilters.page, "page") ?? 1;
-    const limit = parseIntegerFilter(paginationFilters.limit, "limit") ?? 25;
+    const page = parseIntegerFilter(paginationFilters?.page, "page") ?? 1;
+    const limit = parseIntegerFilter(paginationFilters?.limit, "limit") ?? 25;
 
     if (page < 1)
         throw new AppError("'page' must be greater than or equal to 1", 400);
@@ -80,7 +80,7 @@ export async function deleteUserSearchHistoryById(user_id, id) {
         throw new AppError("Missing/Invalid user id", 400);
     }
 
-    const parsedId = parseIntegerFilter(id);
+    const parsedId = parseIntegerFilter(id, "id");
 
     // Validate search history record id
     if (!parsedId || typeof parsedId !== "number") {
@@ -91,6 +91,7 @@ export async function deleteUserSearchHistoryById(user_id, id) {
 
     if (deletedRows === 0)
         throw new AppError("Search history record not found", 404);
+
 }
 
 // User fetches their folders

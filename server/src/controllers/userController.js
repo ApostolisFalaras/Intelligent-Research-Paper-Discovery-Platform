@@ -42,7 +42,7 @@ export async function deleteSearchHistoryController(req, res, next) {
 
         res.status(200).json({
             status: "success",
-
+            message: "Search history record deleted successfully",
         });
     } catch (error) {
         next(error);
