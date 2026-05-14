@@ -28,3 +28,14 @@ export async function addToSearchHistory(userId, query, filters, resultCount) {
     const result = await pool.query(sqlQuery, [userId, query, JSON.stringify(filters), resultCount]);
     return result.rows[0];
 }
+
+// Deletes record from user search history
+export async function deleteFromSearchHistory(userId, id) {
+    const sqlQuery = `
+        DELETE FROM user_search_history
+        WHERE user_id = $1 AND id = $2;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, id]);
+    return result.rowCount;
+}

@@ -1,11 +1,10 @@
 import { fetchUserById } from "./../repositories/userRepository.js";
-import { fetchUserSearchHistory } from "./../repositories/userHistoryRepository.js";
+import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
 import { parseIntegerFilter } from "../utils/parseFilters.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile page
 export async function getUserMe(id) {
-
     // Validate user id
     if (!id || typeof id !== "number") {
         throw new AppError("Missing/Invalid user id", 400);
@@ -58,7 +57,6 @@ export async function getUserSearchHistory(id, filters) {
 
 // Helper function
 function validatePagination(paginationFilters) {
-
     const page = parseIntegerFilter(paginationFilters.page, "page") ?? 1;
     const limit = parseIntegerFilter(paginationFilters.limit, "limit") ?? 25;
 
@@ -73,6 +71,26 @@ function validatePagination(paginationFilters) {
         limit,
         offset: (page - 1) * limit
     };
+}
+
+// User deletes a single search history record by if
+export async function deleteUserSearchHistoryById(user_id, id) {
+    // Validate user id
+    if (!user_id || typeof user_id !== "number") {
+        throw new AppError("Missing/Invalid user id", 400);
+    }
+
+    const parsedId = parseIntegerFilter(id);
+
+    // Validate search history record id
+    if (!parsedId || typeof parsedId !== "number") {
+        throw new AppError("Missing/Invalid search history record id", 400);
+    }
+
+    const deletedRows = await deleteFromSearchHistory(user_id, id);
+
+    if (deletedRows === 0)
+        throw new AppError("Search history record not found", 404);
 }
 
 // User fetches their folders
