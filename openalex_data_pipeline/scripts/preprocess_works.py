@@ -111,7 +111,7 @@ def build_topic_jsonl(topic_dir: Path) -> Path:
     total_written = 0
     
     # We open the output .jsonl file
-    """with open(output_file, "w", encoding="utf-8") as output:
+    with open(output_file, "w", encoding="utf-8") as output:
         
         # We extract the works records from each batch file of each bucket type
         for bucket, batch_file in iter_batch_files(topic_dir):
@@ -147,7 +147,7 @@ def build_topic_jsonl(topic_dir: Path) -> Path:
                 total_written += 1
                 
         logger.info(f"{topic_id}: raw={total_raw}, written={total_written}, duplicates={total_duplicates}")
-        """
+        
     return output_file
     
         
