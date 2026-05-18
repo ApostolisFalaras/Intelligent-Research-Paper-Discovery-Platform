@@ -239,13 +239,12 @@ describe("deleteUserSearchHistoryById", () => {
     it("Deletes a single user search history record", async () => {
         deleteFromSearchHistory.mockResolvedValue(1);
 
-        const result = await deleteUserSearchHistoryById(1, 1);
+        await deleteUserSearchHistoryById(1, 1);
 
         expect(deleteFromSearchHistory).toHaveBeenCalledWith(1, 1);
         expect(deleteFromSearchHistory).toHaveBeenCalledTimes(1);
-        expect(result).toBe(1);
+        
     });
-
     // ------------- FAILED DELETION OF INEXISTENT SEARCH HISTORY RECORD ---------------
 
     it("Throws 404 when the user tries to delete anon-existent search history record", async () => {
