@@ -9,12 +9,17 @@ vi.mock("./../../src/repositories/userRepository.js", () => ({
 // Middleware has to be mocked to authenticate the only existing user in the current tests
 let mockAuthenticatedUser = {id: 1};
 
-vi.mock("./../../src/middlewares/authMiddleware.js", () => ({
-    authMiddleware: (req, res, next) => {
-        req.user = mockAuthenticatedUser,
-        next();
+vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
+    const actual = await importOriginal();
+
+    return {
+        ...actual,
+        authMiddleware: (req, res, next) => {
+            req.user = mockAuthenticatedUser;
+            next();
+        }
     }
-}));
+});
 
 import { fetchUserById } from "./../../src/repositories/userRepository.js"; 
 import { authMiddleware } from "./../../src/middlewares/authMiddleware.js";
