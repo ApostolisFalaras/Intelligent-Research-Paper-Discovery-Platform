@@ -1,11 +1,11 @@
-import { AppError } from "./../utils/AppError.js";
+import { AppError } from "./AppError.js";
 
 // Functions that parse search filters on,
 // i) the search operation, or
 // ii) on filtering records from the user's search history
 
-// Validate string filters (query, topicId, sourceId, authorId)
-export function parseStringFilter(filter, name) {
+// Validate string data fields (query, topicId, sourceId, authorId)
+export function parseString(filter, name) {
     if (filter === undefined || filter === null || filter === "")
         return null;
 
@@ -23,8 +23,8 @@ export function parseStringFilter(filter, name) {
     return trimmedFilter;
 }
 
-// Validate integer filters (page, limit, fromYear, toYear, minCitations)
-export function parseIntegerFilter(filter, name) {
+// Validate integer data fields (page, limit, fromYear, toYear, minCitations)
+export function parseInteger(filter, name) {
     if (filter === undefined || filter === null || filter === "")
         return null;
 
@@ -39,8 +39,8 @@ export function parseIntegerFilter(filter, name) {
     return parsedFilter;
 }
 
-// Validate boolean filters (isOpenAccess)
-export function parseBooleanFilter(filter, name) {
+// Validate boolean data fields (isOpenAccess)
+export function parseBoolean(filter, name) {
     if (filter === undefined || filter === null || filter === "")
         return null;
 

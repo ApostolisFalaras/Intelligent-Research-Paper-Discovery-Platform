@@ -1,7 +1,7 @@
 import { searchPapersByTextQuery } from "./../repositories/searchRepository.js";
 import { addToSearchHistory } from "../repositories/userHistoryRepository.js";
 import { AppError } from "./../utils/AppError.js";
-import { parseStringFilter, parseIntegerFilter, parseBooleanFilter } from "./../utils/parseFilters.js";
+import { parseString, parseInteger, parseBoolean } from "../utils/parseData.js";
 import { ALLOWED_SORT_TYPES, ALLOWED_LANGUAGES, ALLOWED_PAPER_TYPES } from "./../utils/searchConstants.js";
 
 export async function searchPapers(user_id, queryParams) {
@@ -48,14 +48,14 @@ export async function searchPapers(user_id, queryParams) {
 // Validates each search parameter only if it exists. If it doesn't exist, move to the next one.
 function validateSearchFilters(searchFilters) {
     // Main search query
-    const query = parseStringFilter(searchFilters.query, "query");
+    const query = parseString(searchFilters.query, "query");
 
     if (!query)
         throw new AppError("Search query is required", 400);
     
     // Pagination filters
-    const page = parseIntegerFilter(searchFilters.page, "page") ?? 1;
-    const limit = parseIntegerFilter(searchFilters.limit, "limit") ?? 25;
+    const page = parseInteger(searchFilters.page, "page") ?? 1;
+    const limit = parseInteger(searchFilters.limit, "limit") ?? 25;
 
     if (page < 1)
         throw new AppError("'page' must be greater than or equal to 1", 400);
@@ -64,8 +64,8 @@ function validateSearchFilters(searchFilters) {
         throw new AppError("'limit' must be between 1 and 100", 400);
 
     // publication Year range filter
-    const fromYear = parseIntegerFilter(searchFilters.fromYear, "fromYear");
-    const toYear = parseIntegerFilter(searchFilters.toYear, "toYear");
+    const fromYear = parseInteger(searchFilters.fromYear, "fromYear");
+    const toYear = parseInteger(searchFilters.toYear, "toYear");
 
     if (fromYear !== null && fromYear < 1800)
         throw new AppError("'fromYear' must be greater than or equal to 1800", 400);
@@ -77,31 +77,31 @@ function validateSearchFilters(searchFilters) {
         throw new AppError("'fromYear' cannot be greater than 'toYear'", 400);
 
     // language filter
-    const language = parseStringFilter(searchFilters.language, "language");
+    const language = parseString(searchFilters.language, "language");
     if (language !== null && !ALLOWED_LANGUAGES.includes(language))
         throw new AppError("Invalid 'language' parameter", 400);
 
     // paper type filter
-    const paperType = parseStringFilter(searchFilters.paperType, "paperType");
+    const paperType = parseString(searchFilters.paperType, "paperType");
     if (paperType !== null && !ALLOWED_PAPER_TYPES.includes(paperType))
         throw new AppError("Invalid 'paperType' parameter", 400);
 
 
     // minimum Citations filter
-    const minCitations = parseIntegerFilter(searchFilters.minCitations, "minCitations");
+    const minCitations = parseInteger(searchFilters.minCitations, "minCitations");
     if (minCitations !== null && minCitations < 0) 
         throw new AppError("'minCitations' cannot be negative", 400);
 
     // Topic filter
-    const topicId = parseStringFilter(searchFilters.topicId, "topicId");
+    const topicId = parseString(searchFilters.topicId, "topicId");
     if (topicId !== null && !topicId.startsWith("T"))
         throw new AppError("'topicId' has invalid ID format", 400);
 
     // Author filter
-    const authorName = parseStringFilter(searchFilters.authorName, "authorId");
+    const authorName = parseString(searchFilters.authorName, "authorId");
 
     // Open-Access filter
-    const isOpenAccess = parseBooleanFilter(searchFilters.isOpenAccess, "isOpenAccess") ?? true; 
+    const isOpenAccess = parseBoolean(searchFilters.isOpenAccess, "isOpenAccess") ?? true; 
     
     // Sorting filter
     const sort = searchFilters.sort ?? "relevance";
@@ -109,10 +109,10 @@ function validateSearchFilters(searchFilters) {
         throw new AppError("Invalid 'sort' paramater", 400);
 
     // has-Pdf filter
-    const hasContentPDF = parseBooleanFilter(searchFilters.hasContentPDF, "hasContentPDF");
+    const hasContentPDF = parseBoolean(searchFilters.hasContentPDF, "hasContentPDF");
 
     // default is-retracted filter
-    const isRetracted = parseBooleanFilter(searchFilters.isRetracted, "isRetracted") ?? false;
+    const isRetracted = parseBoolean(searchFilters.isRetracted, "isRetracted") ?? false;
 
     return {
         query,
