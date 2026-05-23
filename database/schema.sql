@@ -256,6 +256,7 @@ CREATE TABLE user_folders (
     user_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     summary TEXT,
+    paper_count INTEGER DEFAULT 0,
     is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
     visibility TEXT NOT NULL DEFAULT 'private',
     color TEXT,

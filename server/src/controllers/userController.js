@@ -1,5 +1,5 @@
-import { getUserMe, getUserSearchHistory, 
-         deleteUserSearchHistoryById, getProjectFoldersById } from "./../services/userService.js";
+import { getUserMe, getUserSearchHistory, deleteUserSearchHistoryById, 
+         getProjectFoldersById, createProjectFolderById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -50,7 +50,7 @@ export async function deleteSearchHistoryController(req, res, next) {
 }
 
 // User views its folders
-export async function getFoldersController(req, res) {
+export async function getFoldersController(req, res, next) {
     try {
         // req.user.id exists since the user is authenticated
         const projectFolders = await getProjectFoldersById(req.user.id);
@@ -58,6 +58,22 @@ export async function getFoldersController(req, res) {
         res.status(200).json({
             status: "success",
             data: projectFolders,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User creates a new project folder
+export async function createFolderController(req, res, next) {
+    try {
+        // req.user.id exists because the user is authenticated
+        // req.body contains the project folder metadata
+        await createProjectFolderById(req.user.id, req.body);
+
+        res.status(201).json({
+            status: "success",
+            message: "Project folder created successfully"
         });
     } catch (error) {
         next(error);

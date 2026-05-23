@@ -1,17 +1,17 @@
 import { fetchUserById } from "./../repositories/userRepository.js";
 import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
-import { fetchProjectFoldersById } from "../repositories/userFolderRepository.js";
-import { parseIntegerFilter } from "../utils/parseFilters.js";
+import { fetchProjectFoldersById, createProjectFolder } from "../repositories/userFolderRepository.js";
+import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
+
+// Helper function that parses User id
 
 // User accesses their profile page
 export async function getUserMe(id) {
     // Validate user id
-    if (!id || typeof id !== "number") {
-        throw new AppError("Missing/Invalid user id", 400);
-    }
+    const parsedId = parseUserId(id);
 
-    const userProfile = await fetchUserById(id);
+    const userProfile = await fetchUserById(parsedId);
 
     // Validate if user profile exists for the provided user id
     if (!userProfile)
@@ -34,32 +34,30 @@ export async function getUserMe(id) {
 
 // User fetches their search history
 export async function getUserSearchHistory(id, filters) {
-
     // Validate user id
-    if (!id || typeof id !== "number")
-        throw new AppError("Missing/Invalid user id", 400);
+    const parsedId = parseUserId(id);
 
     // Validate pagination filters
     const pagination = validatePagination(filters);
 
-    const searchHistory = await fetchUserSearchHistory(id, pagination);
+    const searchHistory = await fetchUserSearchHistory(parsedId, pagination);
 
     // Converting search history records to a DTO
     return searchHistory.map((record) => ({
-            id: record.id,
-            userId: record.user_id,
-            query: record.query,
-            filters: record.filters,
-            resultCount: record.result_count,
-            createdAt: record.created_at
-        }));
+        id: record.id,
+        userId: record.user_id,
+        query: record.query,
+        filters: record.filters,
+        resultCount: record.result_count,
+        createdAt: record.created_at
+    }));
 
 }
 
 // Helper function
 function validatePagination(paginationFilters) {
-    const page = parseIntegerFilter(paginationFilters?.page, "page") ?? 1;
-    const limit = parseIntegerFilter(paginationFilters?.limit, "limit") ?? 25;
+    const page = parseInteger(paginationFilters?.page, "page") ?? 1;
+    const limit = parseInteger(paginationFilters?.limit, "limit") ?? 25;
 
     if (page < 1)
         throw new AppError("'page' must be greater than or equal to 1", 400);
@@ -77,16 +75,7 @@ function validatePagination(paginationFilters) {
 // User deletes a single search history record by if
 export async function deleteUserSearchHistoryById(user_id, id) {
     // Validate user id
-    if (!user_id || typeof user_id !== "number") {
-        throw new AppError("Missing/Invalid user id", 400);
-    }
-
-    const parsedId = parseIntegerFilter(id, "id");
-
-    // Validate search history record id
-    if (!parsedId || typeof parsedId !== "number") {
-        throw new AppError("Missing/Invalid search history record id", 400);
-    }
+    const parsedUserId = parseUserId(user_id);
 
     const deletedRows = await deleteFromSearchHistory(user_id, id);
 
@@ -98,19 +87,14 @@ export async function deleteUserSearchHistoryById(user_id, id) {
 // User fetches their folders
 export async function getProjectFoldersById(id) {
     // Validate user id
-    if (!id || typeof id !== "number")
-        throw new AppError("Missing/Invalid user id", 400);
-
-    const parsedId = parseIntegerFilter(id, "id");
-
-    if (!parsedId || typeof parsedId !== "number")
-        throw new AppError("Missing/Invalid user id", 400);
+    const parsedId = parseUserId(id);
 
     const userProjectFolders = await fetchProjectFoldersById(id);
 
     return userProjectFolders.map((folder) => ({
         id: folder.id,
         userId: folder.user_id,
+        name: folder.name,
         summary: folder.summary,
         paperCount: folder.paperCount,
         isPinned: folder.is_pinned,
@@ -121,4 +105,34 @@ export async function getProjectFoldersById(id) {
         updatedAt: folder.updated_at
     }));
 
+}
+
+// User creates a new project folder
+export async function createProjectFolderById(id, folderData) {
+    // Validate user id
+    const parsedId = parseUserId(id);
+
+    // Validate project folder metadata
+    const parsedFolderData = validateProjectFolderData(folderData);
+
+    const insertedFolders = await createProjectFolder(parsedId, parsedFolderData);
+
+    if (insertedFolders === 0)
+        throw new AppError("Project folder was not inserted", 404);
+}
+
+// Helper function that validates the new project folder's metadata
+function validateProjectFolderData(folderData) {
+    const name = parseString(folderData.name, "name");
+    if (!name)
+        throw new AppError("'name' is required", 400);
+
+    return {
+        name,
+        summary: parseString(folderData?.summary, "summary"),
+        visibility: parseString(folderData?.visibility, "visibility") ?? "private",
+        color: parseString(folderData?.color, "color"),
+        icon: parseString(folderData?.icon, "icon"),
+        isPinned: parseBoolean(folderData?.isPinned, "is_pinned") ?? false
+    };
 }

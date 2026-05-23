@@ -53,3 +53,19 @@ export function parseBoolean(filter, name) {
     // At this point, we certainly have an invalid non-boolean value
     throw new AppError(`'${name}' must be either true or false`, 400);
 }
+
+// Validate user ID
+export function parseUserId(id) {
+    if (!id || typeof id !== "number") {
+        throw new AppError("Missing/Invalid user id", 400);
+    }
+
+    const parsedId = parseInteger(id, "id");
+
+    // Validate search history record id
+    if (!parsedId || typeof parsedId !== "number") {
+        throw new AppError("Missing/Invalid search history record id", 400);
+    }
+
+    return parsedId;
+}

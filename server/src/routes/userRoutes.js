@@ -2,7 +2,8 @@ import express from "express";
 import { getMe, 
          getSearchHistoryController, 
          deleteSearchHistoryController, 
-         getFoldersController } from "./../controllers/userController.js";
+         getFoldersController,
+         createFolderController } from "./../controllers/userController.js";
 
 const router = express.Router();
 
@@ -15,7 +16,10 @@ router.get("/me/search-history", getSearchHistoryController);
 // User deletes a single search history record
 router.delete("/me/search-history/:id", deleteSearchHistoryController);
 
-// User views their folders
+// User views their project folders
 router.get("/me/folders", getFoldersController);
+
+// User creates a new project folder
+router.post("/me/folders", createFolderController);
 
 export default router;
