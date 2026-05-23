@@ -1,5 +1,8 @@
 import express from "express";
-import { getMe, getSearchHistoryController, deleteSearchHistoryController, getFolders } from "./../controllers/userController.js";
+import { getMe, 
+         getSearchHistoryController, 
+         deleteSearchHistoryController, 
+         getFoldersController } from "./../controllers/userController.js";
 
 const router = express.Router();
 
@@ -13,6 +16,6 @@ router.get("/me/search-history", getSearchHistoryController);
 router.delete("/me/search-history/:id", deleteSearchHistoryController);
 
 // User views their folders
-router.get("/me/folders", getFolders);
+router.get("/me/folders", getFoldersController);
 
 export default router;

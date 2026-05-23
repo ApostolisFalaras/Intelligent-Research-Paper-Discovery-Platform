@@ -1,5 +1,5 @@
 import { getUserMe, getUserSearchHistory, 
-         deleteUserSearchHistoryById, getUserFolders } from "./../services/userService.js";
+         deleteUserSearchHistoryById, getProjectFoldersById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -50,4 +50,16 @@ export async function deleteSearchHistoryController(req, res, next) {
 }
 
 // User views its folders
-export async function getFolders(req, res) {}
+export async function getFoldersController(req, res) {
+    try {
+        // req.user.id exists since the user is authenticated
+        const projectFolders = await getProjectFoldersById(req.user.id);
+
+        res.status(200).json({
+            status: "success",
+            data: projectFolders,
+        });
+    } catch (error) {
+        next(error);
+    }
+}

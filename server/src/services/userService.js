@@ -1,5 +1,6 @@
 import { fetchUserById } from "./../repositories/userRepository.js";
 import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
+import { fetchProjectFoldersById } from "../repositories/userFolderRepository.js";
 import { parseIntegerFilter } from "../utils/parseFilters.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -95,4 +96,29 @@ export async function deleteUserSearchHistoryById(user_id, id) {
 }
 
 // User fetches their folders
-export async function getUserFolders(id) {}
+export async function getProjectFoldersById(id) {
+    // Validate user id
+    if (!id || typeof id !== "number")
+        throw new AppError("Missing/Invalid user id", 400);
+
+    const parsedId = parseIntegerFilter(id, "id");
+
+    if (!parsedId || typeof parsedId !== "number")
+        throw new AppError("Missing/Invalid user id", 400);
+
+    const userProjectFolders = await fetchProjectFoldersById(id);
+
+    return userProjectFolders.map((folder) => ({
+        id: folder.id,
+        userId: folder.user_id,
+        summary: folder.summary,
+        paperCount: folder.paperCount,
+        isPinned: folder.is_pinned,
+        color: folder.color,
+        visibility: folder.visibility,
+        icon: folder.icon,
+        createdAt: folder.created_at,
+        updatedAt: folder.updated_at
+    }));
+
+}
