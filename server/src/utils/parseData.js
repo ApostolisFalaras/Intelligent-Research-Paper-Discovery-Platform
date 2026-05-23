@@ -57,14 +57,14 @@ export function parseBoolean(filter, name) {
 // Validate user ID
 export function parseUserId(id) {
     if (!id || typeof id !== "number") {
-        throw new AppError("Missing/Invalid user id", 400);
+        throw new AppError("Missing/Invalid user_id", 400);
     }
 
-    const parsedId = parseInteger(id, "id");
+    const parsedId = parseInteger(id, "user_id");
 
     // Validate search history record id
     if (!parsedId || typeof parsedId !== "number") {
-        throw new AppError("Missing/Invalid search history record id", 400);
+        throw new AppError("Missing/Invalid user_id", 400);
     }
 
     return parsedId;

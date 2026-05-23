@@ -1,5 +1,9 @@
-import { getUserMe, getUserSearchHistory, deleteUserSearchHistoryById, 
-         getProjectFoldersById, createProjectFolderById } from "./../services/userService.js";
+import { getUserMe, 
+         getUserSearchHistory, 
+         deleteUserSearchHistoryById, 
+         getProjectFoldersById, 
+         createProjectFolderById, 
+         deleteProjectFolderById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -74,6 +78,20 @@ export async function createFolderController(req, res, next) {
         res.status(201).json({
             status: "success",
             message: "Project folder created successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User removes a project folder
+export async function deleteFolderController(req, res, next) {
+    try {
+        await deleteProjectFolderById(req.user.id, req.params.id);
+
+        res.status(200).json({
+            status: "success",
+            message: "Project folder deleted successfully"
         });
     } catch (error) {
         next(error);

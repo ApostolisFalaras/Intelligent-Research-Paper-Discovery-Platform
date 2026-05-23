@@ -1,6 +1,6 @@
 import { fetchUserById } from "./../repositories/userRepository.js";
 import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
-import { fetchProjectFoldersById, createProjectFolder } from "../repositories/userFolderRepository.js";
+import { fetchProjectFoldersById, createProjectFolder, deleteProjectFolder } from "../repositories/userFolderRepository.js";
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -33,9 +33,9 @@ export async function getUserMe(id) {
 }
 
 // User fetches their search history
-export async function getUserSearchHistory(id, filters) {
+export async function getUserSearchHistory(userId, filters) {
     // Validate user id
-    const parsedId = parseUserId(id);
+    const parsedId = parseUserId(userId);
 
     // Validate pagination filters
     const pagination = validatePagination(filters);
@@ -85,11 +85,11 @@ export async function deleteUserSearchHistoryById(user_id, id) {
 }
 
 // User fetches their folders
-export async function getProjectFoldersById(id) {
+export async function getProjectFoldersById(userId) {
     // Validate user id
-    const parsedId = parseUserId(id);
+    const parsedId = parseUserId(userId);
 
-    const userProjectFolders = await fetchProjectFoldersById(id);
+    const userProjectFolders = await fetchProjectFoldersById(parsedId);
 
     return userProjectFolders.map((folder) => ({
         id: folder.id,
@@ -108,9 +108,9 @@ export async function getProjectFoldersById(id) {
 }
 
 // User creates a new project folder
-export async function createProjectFolderById(id, folderData) {
+export async function createProjectFolderById(userId, folderData) {
     // Validate user id
-    const parsedId = parseUserId(id);
+    const parsedId = parseUserId(userId);
 
     // Validate project folder metadata
     const parsedFolderData = validateProjectFolderData(folderData);
@@ -118,7 +118,7 @@ export async function createProjectFolderById(id, folderData) {
     const insertedFolders = await createProjectFolder(parsedId, parsedFolderData);
 
     if (insertedFolders === 0)
-        throw new AppError("Project folder was not inserted", 404);
+        throw new AppError("Project folder was not inserted", 500);
 }
 
 // Helper function that validates the new project folder's metadata
@@ -135,4 +135,16 @@ function validateProjectFolderData(folderData) {
         icon: parseString(folderData?.icon, "icon"),
         isPinned: parseBoolean(folderData?.isPinned, "is_pinned") ?? false
     };
+}
+
+
+export async function deleteProjectFolderById(userId, folderId) {
+    // Validate user & project folder id
+    const parsedUserId = parseUserId(userId);
+    const parsedFolderId = parseInteger(folderId, "Folder Id");
+
+    const deletedFolders = await deleteProjectFolder(parsedUserId, parsedFolderId);
+
+    if (deletedFolders === 0)
+        throw new AppError("Project folder not found", 404);
 }
