@@ -256,7 +256,12 @@ CREATE TABLE user_folders (
     user_id INTEGER NOT NULL,
     name TEXT NOT NULL,
     summary TEXT,
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    visibility TEXT NOT NULL DEFAULT 'private',
+    color TEXT,
+    icon TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (user_id, name)
 );
