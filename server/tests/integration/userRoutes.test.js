@@ -81,7 +81,7 @@ describe("fetchUserById", () => {
         expect(fetchUserById).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("Missing/Invalid user id");
+        expect(response.body.message).toBe("Missing/Invalid user_id");
     });
 
     // ------------- AUTHENTICATED USER ID NOT A NUMBER -> 400 BAD REQUEST --------------
@@ -94,7 +94,7 @@ describe("fetchUserById", () => {
         expect(fetchUserById).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("Missing/Invalid user id");
+        expect(response.body.message).toBe("Missing/Invalid user_id");
     });
 
     // ------------- AUTHENTICATED USER ID MISSING FROM DB -> 404 NOT FOUND --------------
