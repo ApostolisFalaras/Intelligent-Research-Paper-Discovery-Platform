@@ -72,10 +72,13 @@ function validatePagination(paginationFilters) {
     };
 }
 
-// User deletes a single search history record by if
+// User deletes a single search history record by id
 export async function deleteUserSearchHistoryById(user_id, id) {
     // Validate user id
     const parsedUserId = parseUserId(user_id);
+
+    if (!id || typeof id !== "number")
+        throw new AppError("Missing/Invalid search history record id", 400);
 
     const deletedRows = await deleteFromSearchHistory(user_id, id);
 
@@ -96,7 +99,7 @@ export async function getProjectFoldersById(userId) {
         userId: folder.user_id,
         name: folder.name,
         summary: folder.summary,
-        paperCount: folder.paperCount,
+        paperCount: folder.paper_count,
         isPinned: folder.is_pinned,
         color: folder.color,
         visibility: folder.visibility,
