@@ -624,6 +624,14 @@ describe("patchProjectFolderById", () => {
 
         expect(updateProjectFolder).not.toHaveBeenCalled();
     });
+
+    it("Throws 400 when no modified fields were provided", async () => {
+        await expect(patchProjectFolderById(1, 2, {}))
+        .rejects
+        .toThrow("No modified fields were provided");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
     
     it("Throws 404 when the project folder doesn't exist", async () => {
         updateProjectFolder.mockResolvedValue(0);
