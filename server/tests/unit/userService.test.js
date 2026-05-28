@@ -13,13 +13,14 @@ vi.mock("./../../src/repositories/userHistoryRepository.js", () => ({
 vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
     fetchProjectFoldersById: vi.fn(),
     createProjectFolder: vi.fn(),
+    updateProjectFolder: vi.fn(),
     deleteProjectFolder: vi.fn()
 }));
 
 import { fetchUserById } from "./../../src/repositories/userRepository.js";
-import { createProjectFolderById, deleteProjectFolderById, deleteUserSearchHistoryById, getProjectFoldersById, getUserMe, getUserSearchHistory } from "./../../src/services/userService.js";
+import { createProjectFolderById, deleteProjectFolderById, deleteUserSearchHistoryById, getProjectFoldersById, getUserMe, getUserSearchHistory, patchProjectFolderById } from "./../../src/services/userService.js";
 import { addToSearchHistory, deleteFromSearchHistory, fetchUserSearchHistory } from "../../src/repositories/userHistoryRepository.js";
-import { fetchProjectFoldersById, createProjectFolder, deleteProjectFolder } from "../../src/repositories/userFolderRepository.js";
+import { fetchProjectFoldersById, createProjectFolder, deleteProjectFolder, updateProjectFolder } from "../../src/repositories/userFolderRepository.js";
 
 const mockResolvedUser = {
     id: 1,
@@ -547,6 +548,94 @@ describe("createProjectFolderById", () => {
         expect(createProjectFolder).toHaveBeenCalledWith(1, newProjectFolder);
         expect(createProjectFolder).toHaveBeenCalledTimes(1);
     });
+});
+
+
+// Updating 4 out of 6 metadata fields
+const updateData = {
+    name: "Cyber Security",
+    summary: "This project folder refers to cybersecurity topics including....",
+    color: "blue",
+    visibility: "shared"
+};
+
+describe("patchProjectFolderById", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    // --------- SUCCESSFUL UPDATE OF PROJECT FOLDER METADATA ---------
+
+    it("Updates project folder metadata", async () => {
+        updateProjectFolder.mockResolvedValue(1);
+
+        const result = await patchProjectFolderById(1, 2, updateData);
+
+        expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+        expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+    });
+
+    // ---------- ERROR CASES ----------
+
+    it("Throws 400 when user id is missing", async () => {
+        await expect(patchProjectFolderById(null, 2, updateData))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when user id is invalid", async () => {
+        await expect(patchProjectFolderById("one", 2, updateData))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when project folder id is missing", async () => {
+        await expect(patchProjectFolderById(1, null, updateData))
+        .rejects
+        .toThrow("Project folder id is required");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when project folder id is invalid", async () => {
+        await expect(patchProjectFolderById(1, "one", updateData))
+        .rejects
+        .toThrow("'Folder Id' must be an integer");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when 'isPinned' is non-boolean", async () => {
+        await expect(patchProjectFolderById(1, 2, {...updateData, isPinned: "yes"}))
+        .rejects
+        .toThrow("'isPinned' must be either true or false");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when 'visibility' is invalid", async () => {
+        await expect(patchProjectFolderById(1, 2, {...updateData, visibility: "shared_to_all"}))
+        .rejects
+        .toThrow("Invalid 'visibility' value");
+
+        expect(updateProjectFolder).not.toHaveBeenCalled();
+    });
+    
+    it("Throws 403 when the project folder doesn't exist", async () => {
+        updateProjectFolder.mockResolvedValue(0);
+
+        await expect(patchProjectFolderById(1, 2, updateData))
+        .rejects
+        .toThrow("Project folder not found");
+
+        expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+        expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+    });
+    
 });
 
 

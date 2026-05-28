@@ -156,6 +156,13 @@ export async function patchProjectFolderById(userId, folderId, updates) {
         throw new AppError("Project folder id is required", 400);
     }
 
+    // Checking validity of "isPinned" & "visibility" values
+    updates.isPinned = parseBoolean(updates.isPinned, "isPinned");
+    
+    const allowedVisibility = ["public", "shared", "private"];
+    if (updates.visibility !== undefined && !allowedVisibility.includes(updates.visibility))
+        throw new AppError("Invalid 'visibility' value", 400);
+
     const updatedFolders = await updateProjectFolder(parsedUserId, parsedFolderId, updates);
     
     if (updatedFolders === 0)
@@ -172,15 +179,6 @@ export async function deleteProjectFolderById(userId, folderId) {
     if (!parsedFolderId || parsedFolderId < 1) {
         throw new AppError("Project folder id is required", 400);
     }
-
-    // Checking validity of "isPinned" & "visibility" values
-    if (updates.isPinned !== undefined && typeof updates.isPinned !== "boolean")
-        throw new AppError("'isPinned' must be boolean", 400);
-    
-    const allowedVisibility = ["public", "shared", "private"];
-    if (updates.visibility !== undefined && !allowedVisibility.includes(updates.visibility))
-        throw new AppError("Invalid 'visibility' value", 400);
-
 
     const deletedFolders = await deleteProjectFolder(parsedUserId, parsedFolderId);
 
