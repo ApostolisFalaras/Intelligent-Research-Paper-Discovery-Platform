@@ -289,7 +289,7 @@ describe("deleteUserSearchHistoryById", () => {
     it("Throws 400 when the search history record id is missing", async () => {
         await expect(deleteUserSearchHistoryById(1, null))
         .rejects
-        .toThrow("Missing/Invalid search history record id");
+        .toThrow("'history record id' must be an integer");
 
         expect(deleteFromSearchHistory).not.toHaveBeenCalled();
     });
@@ -297,7 +297,7 @@ describe("deleteUserSearchHistoryById", () => {
     it("Throws 400 when the search history record id is invalid", async () => {
         await expect(deleteUserSearchHistoryById(1, "first"))
         .rejects
-        .toThrow("Missing/Invalid search history record id");
+        .toThrow("'history record id' must be an integer");
 
         expect(deleteFromSearchHistory).not.toHaveBeenCalled();
     });

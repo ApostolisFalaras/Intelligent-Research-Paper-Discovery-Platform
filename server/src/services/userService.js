@@ -77,7 +77,11 @@ export async function deleteUserSearchHistoryById(user_id, id) {
     // Validate user id
     const parsedUserId = parseUserId(user_id);
 
-    const parsedRecordId = parseInteger(id);
+    const parsedRecordId = parseInteger(id, "history record id");
+
+    if (!parsedRecordId || parsedRecordId < 1) {
+        throw new AppError("Search history record id is required", 400);
+    }
 
     const deletedRows = await deleteFromSearchHistory(parsedUserId, parsedRecordId);
 
