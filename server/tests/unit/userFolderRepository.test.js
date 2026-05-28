@@ -9,6 +9,7 @@ vi.mock("./../../src/config/db.js", () => ({
 import pool from "./../../src/config/db.js";
 import { fetchProjectFoldersById,
 	     createProjectFolder,
+		 updateProjectFolder,
 		 deleteProjectFolder } from "./../../src/repositories/userFolderRepository.js";
 
 
@@ -203,6 +204,92 @@ describe("createProjectFolder", () => {
     });
 });
 
+
+// Updating 4 out of 6 metadata fields
+const updateData = {
+    name: "Cyber Security",
+    summary: "This project folder refers to cybersecurity topics including....",
+    color: "blue",
+    visibility: "shared"
+};
+
+function expectUpdateFolderQuery(query, numFields) {
+	expect(query).toContain("UPDATE user_folders");
+	expect(query).toContain("SET");
+	expect(query).toContain("updated_at = CURRENT_TIMESTAMP");
+	expect(query).toContain(`WHERE user_id = $${numFields-1} AND id = $${numFields}`);
+}
+
+describe("updateProjectFolder", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// ---------- SUCCESSFUL PROJECT FOLDER UPDATE ------------
+
+	it("Updates project folder data", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 1
+		});
+
+		const result = await updateProjectFolder(1, 2, updateData);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		// Using the number of fields to determine the last two database protocol placeholders, e.g. $4, $5,...
+		const numFields = Object.keys(params).length;
+		expectUpdateFolderQuery(query, numFields);
+
+		expect(params).toEqual([
+			updateData.name, updateData.summary, updateData.visibility, updateData.color, 1, 2
+		]);
+		expect(result).toBe(1);
+	});
+
+	// ---------- UNSUCCESSFUL PROJECT FOLDER UPDATE WHEN FOLDER DOESN'T EXIST ------------
+
+	it("Returns 0 when project folder doesn't exist", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 0
+		});
+
+		const result = await updateProjectFolder(1, 2, updateData);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		// Using the number of fields to determine the last two database protocol placeholders, e.g. $4, $5,...
+		const numFields = Object.keys(params).length;
+		expectUpdateFolderQuery(query, numFields);
+
+		expect(params).toEqual([
+			updateData.name, updateData.summary, updateData.visibility, updateData.color, 1, 2
+		]);
+		expect(result).toBe(0);
+	});
+
+
+	// ------------- PROPAGATES DATABASE ERROR ---------------
+
+    it("An unexpected database error occurs", async () => {
+        pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+        await expect(updateProjectFolder(1, 2, updateData))
+        .rejects.
+        toThrow("Unexpected DB error");
+
+        // Although not neccesary, when pool.query fails
+        // Validating the query structure and the query parameter
+        const [query, params] = pool.query.mock.calls[0];
+
+        // Using the number of fields to determine the last two database protocol placeholders, e.g. $4, $5,...
+		const numFields = Object.keys(params).length;
+		expectUpdateFolderQuery(query, numFields);
+
+		expect(params).toEqual([
+			updateData.name, updateData.summary, updateData.visibility, updateData.color, 1, 2
+		]);
+    });
+});
 
 
 // Helper function for query structure validation

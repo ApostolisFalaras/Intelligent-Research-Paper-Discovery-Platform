@@ -625,7 +625,7 @@ describe("patchProjectFolderById", () => {
         expect(updateProjectFolder).not.toHaveBeenCalled();
     });
     
-    it("Throws 403 when the project folder doesn't exist", async () => {
+    it("Throws 404 when the project folder doesn't exist", async () => {
         updateProjectFolder.mockResolvedValue(0);
 
         await expect(patchProjectFolderById(1, 2, updateData))
