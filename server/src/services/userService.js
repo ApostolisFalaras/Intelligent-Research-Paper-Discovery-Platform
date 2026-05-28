@@ -77,7 +77,7 @@ export async function deleteUserSearchHistoryById(user_id, id) {
     // Validate user id
     const parsedUserId = parseUserId(user_id);
 
-    const parsedRecordId = parseInteger(id, "history record id");
+    const parsedRecordId = parseInteger(id, 'history record id');
 
     if (!parsedRecordId || parsedRecordId < 1) {
         throw new AppError("Search history record id is required", 400);
@@ -148,6 +148,10 @@ export async function deleteProjectFolderById(userId, folderId) {
     // Validate user & project folder id
     const parsedUserId = parseUserId(userId);
     const parsedFolderId = parseInteger(folderId, "Folder Id");
+
+    if (!parsedFolderId || parsedFolderId < 1) {
+        throw new AppError("Project folder id is required", 400);
+    }
 
     const deletedFolders = await deleteProjectFolder(parsedUserId, parsedFolderId);
 

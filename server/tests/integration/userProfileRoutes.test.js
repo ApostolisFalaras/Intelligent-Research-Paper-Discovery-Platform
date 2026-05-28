@@ -6,6 +6,7 @@ vi.mock("./../../src/repositories/userRepository.js", () => ({
 }));
 
 
+
 // Middleware has to be mocked to authenticate the only existing user in the current tests
 let mockAuthenticatedUser = {id: 1};
 
@@ -21,9 +22,10 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
     }
 });
 
-import { fetchUserById } from "./../../src/repositories/userRepository.js"; 
-import { authMiddleware } from "./../../src/middlewares/authMiddleware.js";
-import app from "./../../src/app.js";
+import { fetchUserById } from "../../src/repositories/userRepository.js"; 
+import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
+import app from "../../src/app.js";
+
 
 const mockResolveUserProfile = {
     id: 1,
@@ -40,7 +42,7 @@ const mockResolveUserProfile = {
     updated_at: "2026-05-09 16:58:35.442164+03"
 };
 
-describe("fetchUserById", () => {
+describe("GET /api/users/me", () => {
     beforeEach(() => {
         vi.resetAllMocks();
         mockAuthenticatedUser = {id: 1};

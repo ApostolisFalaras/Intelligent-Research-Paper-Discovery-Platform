@@ -61,7 +61,9 @@ export async function getFoldersController(req, res, next) {
 
         res.status(200).json({
             status: "success",
-            data: projectFolders,
+            data: {
+                folders: projectFolders
+            },
         });
     } catch (error) {
         next(error);
