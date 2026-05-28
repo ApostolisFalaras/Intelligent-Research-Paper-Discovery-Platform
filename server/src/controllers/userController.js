@@ -3,6 +3,7 @@ import { getUserMe,
          deleteUserSearchHistoryById, 
          getProjectFoldersById, 
          createProjectFolderById, 
+         patchProjectFolderById,
          deleteProjectFolderById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -81,6 +82,21 @@ export async function createFolderController(req, res, next) {
             status: "success",
             message: "Project folder created successfully"
         });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User updates a project folder's metadata
+export async function patchFolderController(req, res, next) {
+    try {
+        await patchProjectFolderById(req.user.id, req.params.id, req.body);
+
+        res.status(200).json({
+            status: "success",
+            message: "Project folder updated successfully"
+        });
+
     } catch (error) {
         next(error);
     }

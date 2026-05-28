@@ -33,6 +33,66 @@ export async function createProjectFolder(userId, folderData) {
     return result.rowCount;
 }
 
+// Update a project folder
+export async function updateProjectFolder(userId, folderId, updates) {
+    const setClauseConditions = [];
+    let index = 1;
+
+    const values = [];
+
+    if (updates.name !== undefined) { 
+        setClauseConditions.push(`name = $${index}`); 
+        values.push(updates.name);
+        index += 1; 
+    }
+
+    if (updates.summary !== undefined) { 
+        setClauseConditions.push(`summary = $${index}`); 
+        values.push(updates.summary);
+        index += 1; 
+    }
+
+    if (updates.visibility !== undefined) { 
+        setClauseConditions.push(`visibility = $${index}`); 
+        values.push(updates.visibility);
+        index += 1; 
+    }
+
+    if (updates.color !== undefined) { 
+        setClauseConditions.push(`color = $${index}`); 
+        values.push(updates.color);
+        index += 1; 
+    }
+
+    if (updates.icon !== undefined) { 
+        setClauseConditions.push(`icon = $${index}`);
+        values.push(updates.icon);
+        index += 1; 
+    }
+
+    if (updates.isPinned !== undefined) { 
+        setClauseConditions.push(`is_pinned = $${index}`);
+        values.push(updates.isPinned); 
+        index += 1; 
+    }    
+
+    if (setClauseConditions.length === 0) {
+        throw new AppError("No valid fields provided for update", 400);
+    }
+
+    const setClause = setClauseConditions.join(", ");
+
+    const sqlQuery = `
+        UPDATE user_folders
+        SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $${index} AND id = $${index + 1};
+    `;
+
+    const result = await pool.query(sqlQuery, [...values, userId, folderId]);
+    return result.rowCount;
+}
+
+
 // Delete a project folder
 export async function deleteProjectFolder(userId, folderId) {
     const sqlQuery = `

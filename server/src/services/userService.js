@@ -1,6 +1,9 @@
 import { fetchUserById } from "./../repositories/userRepository.js";
 import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
-import { fetchProjectFoldersById, createProjectFolder, deleteProjectFolder } from "../repositories/userFolderRepository.js";
+import { fetchProjectFoldersById, 
+         createProjectFolder, 
+         updateProjectFolder,
+         deleteProjectFolder } from "../repositories/userFolderRepository.js";
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -144,6 +147,23 @@ function validateProjectFolderData(folderData) {
 }
 
 
+// User updates a project folder
+export async function patchProjectFolderById(userId, folderId, updates) {
+    const parsedUserId = parseUserId(userId);
+    const parsedFolderId = parseInteger(folderId, "Folder Id");
+
+    if (!parsedFolderId || parsedFolderId < 1) {
+        throw new AppError("Project folder id is required", 400);
+    }
+
+    const updatedFolders = await updateProjectFolder(parsedUserId, parsedFolderId, updates);
+    
+    if (updatedFolders === 0)
+        throw new AppError("Project folder not found", 404);
+}
+
+
+// User deletes a project folder
 export async function deleteProjectFolderById(userId, folderId) {
     // Validate user & project folder id
     const parsedUserId = parseUserId(userId);
@@ -152,6 +172,15 @@ export async function deleteProjectFolderById(userId, folderId) {
     if (!parsedFolderId || parsedFolderId < 1) {
         throw new AppError("Project folder id is required", 400);
     }
+
+    // Checking validity of "isPinned" & "visibility" values
+    if (updates.isPinned !== undefined && typeof updates.isPinned !== "boolean")
+        throw new AppError("'isPinned' must be boolean", 400);
+    
+    const allowedVisibility = ["public", "shared", "private"];
+    if (updates.visibility !== undefined && !allowedVisibility.includes(updates.visibility))
+        throw new AppError("Invalid 'visibility' value", 400);
+
 
     const deletedFolders = await deleteProjectFolder(parsedUserId, parsedFolderId);
 

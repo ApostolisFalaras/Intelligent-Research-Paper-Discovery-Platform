@@ -4,6 +4,7 @@ import { getMe,
          deleteSearchHistoryController, 
          getFoldersController,
          createFolderController,
+         patchFolderController,
          deleteFolderController } from "./../controllers/userController.js";
 
 const router = express.Router();
@@ -22,6 +23,9 @@ router.get("/me/folders", getFoldersController);
 
 // User creates a new project folder
 router.post("/me/folders", createFolderController);
+
+// Updates a folder's metadata
+router.patch("/me/folders/:id", patchFolderController);
 
 // User removes a project folder
 router.delete("/me/folders/:id", deleteFolderController);
