@@ -23,8 +23,8 @@ const mockResolvedProjectFolders = [
         color: "blue",
         icon: "no-icon",
         paper_count: 0,
-        created_at: "2026-05-23 16:20:16.759277+03",
-        updated_at: "2026-05-23 16:20:16.759277+03"
+        created_at: new Date("2026-05-23 16:20:16.759277+03"),
+        updated_at: new Date("2026-05-23 16:20:16.759277+03")
 	},
 	{
 		id: 2,
@@ -36,8 +36,8 @@ const mockResolvedProjectFolders = [
         color: "red",
         icon: "no-icon",
         paper_count: 0,
-        created_at: "2026-05-23 16:20:16.759277+03",
-        updated_at: "2026-05-23 16:20:16.759277+03"
+        created_at: new Date("2026-05-23 16:20:16.759277+03"),
+        updated_at: new Date("2026-05-23 16:20:16.759277+03")
 	}
 ];
 
