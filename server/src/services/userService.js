@@ -156,8 +156,12 @@ export async function patchProjectFolderById(userId, folderId, updates) {
         throw new AppError("Project folder id is required", 400);
     }
 
+    // Checking if any modified parameter exists
+    if (!updates || Object.keys(updates).length === 0) {
+        throw new AppError("No modified fields were provided", 400);
+    }
     // Checking validity of "isPinned" & "visibility" values
-    updates.isPinned = parseBoolean(updates.isPinned, "isPinned");
+    parseBoolean(updates.isPinned, "isPinned");
     
     const allowedVisibility = ["public", "shared", "private"];
     if (updates.visibility !== undefined && !allowedVisibility.includes(updates.visibility))

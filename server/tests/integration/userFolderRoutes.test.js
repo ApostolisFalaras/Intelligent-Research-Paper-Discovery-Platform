@@ -4,6 +4,7 @@ import request from "supertest";
 vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
     fetchProjectFoldersById: vi.fn(),
 	createProjectFolder: vi.fn(),
+	updateProjectFolder: vi.fn(),
 	deleteProjectFolder: vi.fn()
 }));
 
@@ -25,6 +26,7 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
 
 import { fetchProjectFoldersById,
 	     createProjectFolder,
+		 updateProjectFolder,
 		 deleteProjectFolder } from "../../src/repositories/userFolderRepository.js"; 
 import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
 import app from "../../src/app.js";
@@ -239,6 +241,157 @@ describe("POST /api/users/me/folders", () => {
 	});
 });
 
+
+// Updating 4 out of 6 metadata fields
+const updateData = {
+    name: "Cyber Security",
+    summary: "This project folder refers to cybersecurity topics including....",
+    color: "blue",
+    visibility: "shared"
+};
+
+describe("PATCH /api/user/me/folders/:id", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		mockAuthenticatedUser = {id: 1};
+	});
+
+	// ---------- SUCCESSFUL PROJECT FOLDER UPDATE ----------
+
+	it("Returns 200 when a project folder is successfully updated", async () => {
+		updateProjectFolder.mockResolvedValue(1);
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send(updateData)
+		.expect(200);
+
+		expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+		expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("success");
+		expect(response.body.message).toBe("Project folder updated successfully");
+	});
+
+	// ---------- UNSUCCESSFUL PROJECT FOLDER UPDATE ----------
+
+	it("Returns 404 when a project folder doesn't exist", async () => {
+		updateProjectFolder.mockResolvedValue(0);
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send(updateData)
+		.expect(404);
+
+		expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+		expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Project folder not found");
+	});
+
+	// ---------- MISSING PROJECT FOLDER ID ----------
+
+	it("Returns 400 when project folder id is missing", async () => {
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/abc")
+		.send(updateData)
+		.expect(400);		
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("'Folder Id' must be an integer");
+	});
+
+	it("Returns 400 when project folder id is invalid", async () => {
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/0")
+		.send(updateData)
+		.expect(400);		
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Project folder id is required");
+	});
+
+	// ---------- MISSING USER ID ----------
+
+	it("Returns 400 when user id is missing", async () => {
+		mockAuthenticatedUser = {id: null};
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send(updateData)
+		.expect(400);		
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Missing/Invalid user_id");
+	});
+
+	// ---------- INVALID UPDATE PARAMETERS ---------
+
+	it("Returns 400 when isPinned is not a boolean value", async () => {
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send({
+			...updateData,
+			isPinned: "yes"
+		})
+		.expect(400);
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("'isPinned' must be either true or false");
+	});
+
+	it("Returns 400 when visibility is invalid", async () => {
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send({
+			...updateData,
+			visibility: "shared_to_all"
+		})
+		.expect(400);
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Invalid 'visibility' value");
+	});
+
+	it("Returns 400 when visibility is invalid", async () => {
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send({})
+		.expect(400);
+
+		expect(updateProjectFolder).not.toHaveBeenCalled();
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("No modified fields were provided");
+	});
+
+	// ---------- DATABASE ERROR ----------
+
+	it("Returns 500 when there's an unexpected DB error", async () => {
+		updateProjectFolder.mockRejectedValue(new Error("Database error occurred"));
+
+		const response = await request(app)
+		.patch("/api/users/me/folders/2")
+		.send(updateData)
+		.expect(500);
+
+		expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+		expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("error");
+		expect(response.body.message).toEqual("Database error occurred");		
+	});
+});
 
 describe("DELETE /api/users/me/folders/:id", () => {
     beforeEach(() => {
