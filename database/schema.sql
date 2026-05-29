@@ -269,6 +269,7 @@ CREATE TABLE user_folders (
 
 -- Implementation of the many-to-many paper-folder relationship
 CREATE TABLE user_folder_papers (
+    user_id INTEGER NOT NULL,
     folder_id INTEGER NOT NULL,
     paper_id BIGINT NOT NULL,
     added_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
