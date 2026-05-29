@@ -103,3 +103,15 @@ export async function deleteProjectFolder(userId, folderId) {
     const result = await pool.query(sqlQuery, [userId, folderId]);
     return result.rowCount;
 }
+
+// Fetches the papers of a particular project folder
+export async function fetchPapersFromFolderById(userId, folderId) {
+    const sqlQuery = `
+        SELECT *
+        FROM user_folder_papers
+        WHERE user_id = $1 AND folder_id = $2;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, folderId]);
+    return result.rows;
+}

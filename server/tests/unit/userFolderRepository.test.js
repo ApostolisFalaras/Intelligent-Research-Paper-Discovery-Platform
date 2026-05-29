@@ -10,7 +10,8 @@ import pool from "./../../src/config/db.js";
 import { fetchProjectFoldersById,
 	     createProjectFolder,
 		 updateProjectFolder,
-		 deleteProjectFolder } from "./../../src/repositories/userFolderRepository.js";
+		 deleteProjectFolder,
+		 fetchPapersFromFolderById } from "./../../src/repositories/userFolderRepository.js";
 
 
 const mockResolvedProjectFolders = [
@@ -350,5 +351,95 @@ describe("deleteProjectFolder", () => {
 
         expectDeleteFolderQuery(query);
         expect(params).toEqual([1,1]);
+    });
+});
+
+
+const mockResolvedPapers = [
+	{
+		folder_id: 2,
+		paper_id: "864364",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "838182",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "405200",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "50376",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	}
+];
+
+// Helper that validates query structure
+function expectFetchPapersQuery(query) {
+	expect(query).toContain("SELECT *");
+	expect(query).toContain("FROM user_folder_papers");
+	expect(query).toContain("WHERE user_id = $1 AND folder_id = $2;");
+}
+
+describe("fetchPapersFromFolderById", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// --------- SUCCESSFUL RETRIEVAL OF PROJECT FOLDER PAPERS ---------
+
+	it("Fetches an array of papers from a project folder", async () => {
+		pool.query.mockResolvedValue({
+			rows: mockResolvedPapers,
+		});
+
+		const result = await fetchPapersFromFolderById(1, 2);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectFetchPapersQuery(query);
+		expect(params).toEqual([1, 2]);
+		expect(result).toEqual(mockResolvedPapers);
+	});
+
+	// --------- SUCCESSFUL RETRIEVAL OF EMPTY ARRAY WHEN PROJECT FOLDER DOESN'T HAVE ANY PAPERS ---------
+
+	it("Fetches an array of papers from a project folder", async () => {
+		pool.query.mockResolvedValue({
+			rows: [],
+		});
+
+		const result = await fetchPapersFromFolderById(1, 3);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectFetchPapersQuery(query);
+		expect(params).toEqual([1, 3]);
+		expect(result).toEqual([]);
+	});
+
+	// ------------- PROPAGATES DATABASE ERROR ---------------
+
+    it("An unexpected database error occurs", async () => {
+        pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+        await expect(fetchPapersFromFolderById(1, 2))
+        .rejects.
+        toThrow("Unexpected DB error");
+
+        // Although not neccesary, when pool.query fails
+        // Validating the query structure and the query parameter
+        const [query, params] = pool.query.mock.calls[0];
+
+        expectFetchPapersQuery(query);
+        expect(params).toEqual([1,2]);
     });
 });
