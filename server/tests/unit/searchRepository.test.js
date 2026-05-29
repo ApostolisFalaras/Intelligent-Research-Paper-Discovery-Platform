@@ -42,6 +42,135 @@ function expectDefaultSearchQuery(query) {
     expect(query).toContain("OFFSET $5;");
 }
 
+
+const mockRows1 = [
+    {
+        id: "830837",
+        openalex_id: "W3108235655",
+        title: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
+        display_name: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
+        abstract: null,
+        publication_year: 2019,
+        cited_by_count: 262,
+        fwci: "13.0741",
+        primary_source_display_name: null,
+        primary_topic_display_name: "Computational Physics and Python Applications",
+        is_open_access: false,
+        open_access_status: "closed",
+        rank: "1",
+        author_count: "1",
+        authors_preview: [
+            {"id": "A5110726461", "name": "Samuel Burns"}
+        ]
+    },
+    {
+        id: "830874",
+        openalex_id: "W2909369566",
+        title: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
+        display_name: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
+        abstract: "Python Machine Learning, Third Edition is a ...",
+        publication_year: 2017,
+        cited_by_count: 245,
+        fwci: "8.3621",
+        primary_source_display_name: null,
+        primary_topic_display_name: "Computational Physics and Python Applications",
+        is_open_access: false,
+        open_access_status: "closed",
+        rank: "1",
+        author_count: "2",
+        authors_preview: [
+            { "id": "A5053156269", "name": "Sebastian Raschka" },
+            { "id": "A5056930369", "name": "Vahid Mirjalili" }
+        ]
+    }
+];
+
+const mockRows2 = [
+    {
+        id: "864364",
+        openalex_id: "W3215633082",
+        title: "Transformational machine learning: Learning how to learn from many related scientific problems",
+        display_name: "Transformational machine learning: Learning how to learn from many related scientific problems",
+        abstract: "Almost all machine learning (ML) is based on representing examples...",
+        publication_year: 2021,
+        cited_by_count: 35,
+        fwci: "4.0595",
+        primary_source_display_name: "Proceedings of the National Academy of Sciences",
+        primary_topic_display_name: "Machine Learning and Data Classification",
+        is_open_access: true,
+        open_access_status: "hybrid",
+        rank: "0.9999973",
+        author_count: "7",
+        authors_preview: [
+            {"id": "A5028083196", "name": "Iván Olier"},
+            {"id": "A5084132314", "name": "Oghenejokpeme I. Orhobor"}
+        ]
+    },
+    {
+        id: "838182",
+        openalex_id: "W4400556081",
+        title: "Hybrid Quantum-Classical Machine Learning Models: Powering the Future of AI",
+        display_name: "Hybrid Quantum-Classical Machine Learning Models: Powering the Future of AI",
+        abstract: "The burgeoning field of machine learning has transformed numerous sectors, ...",
+        publication_year: 2023,
+        cited_by_count: 30,
+        fwci: "5.2198",
+        primary_source_display_name: "Journal of Science & Technology",
+        primary_topic_display_name: "Quantum Computing Algorithms and Architecture",
+        is_open_access: true,
+        open_access_status: "diamond",
+        rank: "0.99999547",
+        author_count: "1",
+        authors_preview: [
+            { "id": "A5093749371", "name": "Mohan Raja Pulicharla" },
+        ]
+    }
+];
+
+const mockRows3 = [
+    {
+        id: "405200",
+        openalex_id: "W2163851162",
+        title: "Preliminary guidelines for empirical research in software engineering",
+        display_name: "Preliminary guidelines for empirical research in software engineering",
+        abstract: "Empirical software engineering research needs research guidelines to improve...",
+        publication_year: 2002,
+        cited_by_count: 1493,
+        fwci: "86.9251",
+        primary_source_display_name: "IEEE Transactions on Software Engineering",
+        primary_topic_display_name: "Software Engineering Research",
+        is_open_access: true,
+        open_access_status: "green",
+        rank: "0.999706",
+        author_count: "6",
+        authors_preview: [
+            { "id": "A5012102325", "name": "Barbara Kitchenham" },
+            { "id": "A5109245255", "name": "Shari Lawrence Pfleeger"}
+        ]
+    },
+    {
+        id: "50376",
+        openalex_id: "W2010608861",
+        title: "Suggesting accurate method and class names",
+        display_name: "Suggesting accurate method and class names",
+        abstract: "Descriptive names are a vital part of readable, and hence maintainable, code. Recent progress...",
+        publication_year: 2015,
+        cited_by_count: 386,
+        fwci: "79.0533",
+        primary_source_display_name: null,
+        primary_topic_display_name: "Software Engineering Researc",
+        is_open_access: true,
+        open_access_status: "green",
+        rank: "0.39641288",
+        author_count: "4",
+        authors_preview: [
+            { "id": "A5080221214", "name": "Miltiadis Allamanis" },
+            { "id": "A5076587279", "name": "Earl T. Barr" }
+        ]
+    }
+];
+
+
 describe("searchPapersByTextQuery", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
@@ -49,52 +178,9 @@ describe("searchPapersByTextQuery", () => {
     });
 
     it("Queries the DB with the default filters", async () => {
-        const mockRows = [
-            {
-                id: "830837",
-                openalex_id: "W3108235655",
-                title: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
-                display_name: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
-                abstract: null,
-                publication_year: 2019,
-                cited_by_count: 262,
-                fwci: "13.0741",
-                primary_source_display_name: null,
-                primary_topic_display_name: "Computational Physics and Python Applications",
-                is_open_access: false,
-                open_access_status: "closed",
-                rank: "1",
-                author_count: "1",
-                authors_preview: [
-                    {"id": "A5110726461", "name": "Samuel Burns"}
-                ]
-            },
-            {
-                id: "830874",
-                openalex_id: "W2909369566",
-                title: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
-                display_name: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
-                abstract: "Python Machine Learning, Third Edition is a ...",
-                publication_year: 2017,
-                cited_by_count: 245,
-                fwci: "8.3621",
-                primary_source_display_name: null,
-                primary_topic_display_name: "Computational Physics and Python Applications",
-                is_open_access: false,
-                open_access_status: "closed",
-                rank: "1",
-                author_count: "2",
-                authors_preview: [
-                    { "id": "A5053156269", "name": "Sebastian Raschka" },
-                    { "id": "A5056930369", "name": "Vahid Mirjalili" }
-                ]
-            }
-        ];
-
         pool.query.mockResolvedValue({
-            rows: mockRows,
+            rows: mockRows1,
         });
-
 
         const results = await searchPapersByTextQuery({
             ...defaultFilters,
@@ -108,7 +194,7 @@ describe("searchPapersByTextQuery", () => {
         expect(params).toEqual(["Machine Learning", true, false, 25, 0]);
             
         expect(pool.query).toHaveBeenCalledTimes(1);
-        expect(results).toEqual(mockRows);
+        expect(results).toEqual(mockRows1);
     });
 
 
@@ -138,52 +224,8 @@ describe("searchPapersByTextQuery", () => {
 
     // An arbitrary combination of filters including PAGINATION
     it("Queries the DB with fromYear, toYear, paperType, and Pagination filters", async () => {
-
-        // Results from Postman 
-        const mockRows = [
-            {
-                id: "864364",
-                openalex_id: "W3215633082",
-                title: "Transformational machine learning: Learning how to learn from many related scientific problems",
-                display_name: "Transformational machine learning: Learning how to learn from many related scientific problems",
-                abstract: "Almost all machine learning (ML) is based on representing examples...",
-                publication_year: 2021,
-                cited_by_count: 35,
-                fwci: "4.0595",
-                primary_source_display_name: "Proceedings of the National Academy of Sciences",
-                primary_topic_display_name: "Machine Learning and Data Classification",
-                is_open_access: true,
-                open_access_status: "hybrid",
-                rank: "0.9999973",
-                author_count: "7",
-                authors_preview: [
-                    {"id": "A5028083196", "name": "Iván Olier"},
-                    {"id": "A5084132314", "name": "Oghenejokpeme I. Orhobor"}
-                ]
-            },
-            {
-                id: "838182",
-                openalex_id: "W4400556081",
-                title: "Hybrid Quantum-Classical Machine Learning Models: Powering the Future of AI",
-                display_name: "Hybrid Quantum-Classical Machine Learning Models: Powering the Future of AI",
-                abstract: "The burgeoning field of machine learning has transformed numerous sectors, ...",
-                publication_year: 2023,
-                cited_by_count: 30,
-                fwci: "5.2198",
-                primary_source_display_name: "Journal of Science & Technology",
-                primary_topic_display_name: "Quantum Computing Algorithms and Architecture",
-                is_open_access: true,
-                open_access_status: "diamond",
-                rank: "0.99999547",
-                author_count: "1",
-                authors_preview: [
-                    { "id": "A5093749371", "name": "Mohan Raja Pulicharla" },
-                ]
-            }
-        ];
-
         pool.query.mockResolvedValue({
-            rows: mockRows,
+            rows: mockRows2,
         });
 
         const results = await searchPapersByTextQuery({
@@ -214,57 +256,13 @@ describe("searchPapersByTextQuery", () => {
         expect(pool.query).toHaveBeenCalledTimes(1);
 
         expect(params).toEqual(["Machine Learning", 2015, 2025, "article", true, false, 2, 0]);
-        expect(results).toEqual(mockRows);
+        expect(results).toEqual(mockRows2);
     });
 
     it("Queries the DB with minCitations, topicId, and Sorting filters", async () => {
 
-        // Results from Postman, testing only the first 2, and not the (default) 25 papers returned
-        const mockRows = [
-            {
-                id: "405200",
-                openalex_id: "W2163851162",
-                title: "Preliminary guidelines for empirical research in software engineering",
-                display_name: "Preliminary guidelines for empirical research in software engineering",
-                abstract: "Empirical software engineering research needs research guidelines to improve...",
-                publication_year: 2002,
-                cited_by_count: 1493,
-                fwci: "86.9251",
-                primary_source_display_name: "IEEE Transactions on Software Engineering",
-                primary_topic_display_name: "Software Engineering Research",
-                is_open_access: true,
-                open_access_status: "green",
-                rank: "0.999706",
-                author_count: "6",
-                authors_preview: [
-                    { "id": "A5012102325", "name": "Barbara Kitchenham" },
-                    { "id": "A5109245255", "name": "Shari Lawrence Pfleeger"}
-                ]
-            },
-            {
-                id: "50376",
-                openalex_id: "W2010608861",
-                title: "Suggesting accurate method and class names",
-                display_name: "Suggesting accurate method and class names",
-                abstract: "Descriptive names are a vital part of readable, and hence maintainable, code. Recent progress...",
-                publication_year: 2015,
-                cited_by_count: 386,
-                fwci: "79.0533",
-                primary_source_display_name: null,
-                primary_topic_display_name: "Software Engineering Researc",
-                is_open_access: true,
-                open_access_status: "green",
-                rank: "0.39641288",
-                author_count: "4",
-                authors_preview: [
-                    { "id": "A5080221214", "name": "Miltiadis Allamanis" },
-                    { "id": "A5076587279", "name": "Earl T. Barr" }
-                ]
-            }
-        ];
-
         pool.query.mockResolvedValue({
-            rows: mockRows,
+            rows: mockRows3,
         });
 
         const results = await searchPapersByTextQuery({
@@ -292,7 +290,7 @@ describe("searchPapersByTextQuery", () => {
         expect(pool.query).toHaveBeenCalledTimes(1);
 
         expect(params).toEqual(["Software engineering", 50, "T10260", true, false, 25, 0]);
-        expect(results).toEqual(mockRows);
+        expect(results).toEqual(mockRows3);
     });
 
     // ------------ DATABASE ERROR --------------
