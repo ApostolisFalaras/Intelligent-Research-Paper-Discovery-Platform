@@ -5,7 +5,8 @@ vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
     fetchProjectFoldersById: vi.fn(),
 	createProjectFolder: vi.fn(),
 	updateProjectFolder: vi.fn(),
-	deleteProjectFolder: vi.fn()
+	deleteProjectFolder: vi.fn(),
+	fetchPapersFromFolderById: vi.fn()
 }));
 
 
@@ -27,7 +28,8 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
 import { fetchProjectFoldersById,
 	     createProjectFolder,
 		 updateProjectFolder,
-		 deleteProjectFolder } from "../../src/repositories/userFolderRepository.js"; 
+		 deleteProjectFolder, 
+		 fetchPapersFromFolderById } from "../../src/repositories/userFolderRepository.js"; 
 import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
 import app from "../../src/app.js";
 
@@ -479,6 +481,137 @@ describe("DELETE /api/users/me/folders/:id", () => {
 
 		expect(deleteProjectFolder).toHaveBeenCalledWith(1, 1);
 		expect(deleteProjectFolder).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("error");
+		expect(response.body.message).toEqual("Database error occurred");		
+	});
+});
+
+
+const mockResolvedPapers = [
+	{
+		folder_id: 2,
+		paper_id: "864364",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "838182",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "405200",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "50376",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	}
+];
+
+describe("GET /api/users/me/folders/:id/papers", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		mockAuthenticatedUser = {id: 1};
+	});
+
+	// --------- SUCCESSFUL RETRIEVAL OF PROJECT FOLDER PAPERS ---------
+
+	it("Returns 200 and fetches all the papers of a project folder", async () => {
+		fetchPapersFromFolderById.mockResolvedValue(mockResolvedPapers);
+
+		const expectedOutput = mockResolvedPapers.map((paper) => ({
+			paperId: paper.paper_id,
+			folderId: paper.folder_id,
+			userId: paper.user_id,
+			addedAt: paper.added_at
+		}));
+
+		const response = await request(app).get("/api/users/me/folders/2/papers").expect(200);
+
+		expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 2);
+		expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("success");
+		expect(response.body.data).toEqual(expectedOutput);
+	});
+
+
+	// --------- SUCCESSFUL RETRIEVAL OF EMPTY ARRAY WHEN THE PROJECT FOLDER IS EMPTY ---------
+
+	it("Returns 200 and an empty array when the project folder is empty", async () => {
+		fetchPapersFromFolderById.mockResolvedValue([]);
+
+		const response = await request(app).get("/api/users/me/folders/3/papers").expect(200);
+
+		expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 3);
+		expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
+		
+		expect(response.body.status).toBe("success");
+		expect(response.body.data).toEqual([]);
+	});
+
+	// --------- MISSING/INVALID USER ID ---------
+
+	it("Returns 400 when user id is missing", async () => {
+		// Simulating unauthenticated user
+		mockAuthenticatedUser = {id: null};
+
+		const response = await request(app).get("/api/users/me/folders/2/papers").expect(400);
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Missing/Invalid user_id");
+	});
+
+	it("Returns 400 when user id is missing", async () => {
+		// Simulating invalid id
+		mockAuthenticatedUser = {id: "one"};
+
+		const response = await request(app).get("/api/users/me/folders/2/papers").expect(400);
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Missing/Invalid user_id");
+	});
+
+	// --------- MISSING/INVALID FOLDER ID ---------
+
+	it("Returns 400 when folder id is missing", async () => {
+		const response = await request(app).get("/api/users/me/folders/abc/papers").expect(400);
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("'Folder Id' must be an integer");
+	});
+
+	it("Returns 400 when folder id is invalid", async () => {
+		const response = await request(app).get("/api/users/me/folders/0/papers").expect(400);
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Project folder id is required");
+	});
+
+	// ---------- DATABASE ERROR ----------
+
+	it("Returns 500 when there's an unexpected DB error", async () => {
+		fetchPapersFromFolderById.mockRejectedValue(new Error("Database error occurred"));
+
+		const response = await request(app).get("/api/users/me/folders/2/papers").expect(500);
+
+		expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 2);
+		expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
 
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toEqual("Database error occurred");		
