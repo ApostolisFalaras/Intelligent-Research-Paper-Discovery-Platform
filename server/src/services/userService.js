@@ -204,5 +204,10 @@ export async function getPapersFromFolderById(userId, folderId) {
 
     const papers = await fetchPapersFromFolderById(parsedUserId, parsedFolderId);
 
-    return papers;
+    return papers.map((paper) => ({
+        paperId: paper.paper_id,
+        userId: paper.user_id,
+        folderId: paper.folder_id,
+        addedAt: paper.added_at
+    }));
 }

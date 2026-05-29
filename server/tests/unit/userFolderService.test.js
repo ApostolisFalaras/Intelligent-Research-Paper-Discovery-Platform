@@ -347,6 +347,16 @@ describe("patchProjectFolderById", () => {
         expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
         expect(updateProjectFolder).toHaveBeenCalledTimes(1);
     });
+
+	// ---------- PROPAGATES DB ERROR -----------
+    it("Propagates repository error", async () => {
+        updateProjectFolder.mockRejectedValue(new Error("Database query failed"));
+
+        await expect(patchProjectFolderById(1, 2, updateData)).rejects.toThrow("Database query failed");
+
+        expect(updateProjectFolder).toHaveBeenCalledWith(1, 2, updateData);
+        expect(updateProjectFolder).toHaveBeenCalledTimes(1);
+    });
     
 });
 
@@ -403,5 +413,108 @@ describe("deleteProjectFolderById", () => {
 
         expect(deleteProjectFolder).toHaveBeenCalledWith(1, 1);
         expect(deleteProjectFolder).toHaveBeenCalledTimes(1);
+    });
+});
+
+const mockResolvedPapers = [
+	{
+		folder_id: 2,
+		paper_id: "864364",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "838182",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "405200",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	},
+	{
+		folder_id: 2,
+		paper_id: "50376",
+		added_at: "2026-05-29T14:53:38.816Z",
+		user_id: 1
+	}
+];
+
+
+describe("getPapersFromFolderById", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// ---------- SUCCESSFUL RETRIEVAL OF PROJECT FOLDER PAPERS ----------
+
+	it("Returns the papers belonging in a project folder", async () => {
+		fetchPapersFromFolderById.mockResolvedValue(mockResolvedPapers);
+
+		const results = await getPapersFromFolderById(1, 2);
+
+		const expectedOutput = mockResolvedPapers.map((paper) => ({
+			paperId: paper.paper_id,
+			folderId: paper.folder_id,
+			userId: paper.user_id,
+			addedAt: paper.added_at
+		}));
+
+		expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 2);
+		expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
+		expect(results).toEqual(expectedOutput);
+	}); 
+
+	// ---------- SUCCESSFUL RETRIEVAL OF EMPTY ARRAY WHEN PROJECT FOLDER DOESN'T HAVE ANY PAPERS ----------
+	
+	it("Returns empty array when project folder doesn't have any papers", async () => {
+		fetchPapersFromFolderById.mockResolvedValue([]);
+
+		const results = await getPapersFromFolderById(1, 3);
+
+		expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 3);
+		expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
+		expect(results).toEqual([]);
+	}); 
+
+	// ---------- MISSING/INVALID IDS ----------
+
+	it("Throws 400 when user id is missing", async () => {
+		await expect(getPapersFromFolderById(null, 2)).rejects.toThrow("Missing/Invalid user_id");
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+	});
+
+	it("Throws 400 when user id is invalid", async () => {
+		await expect(getPapersFromFolderById("one", 2)).rejects.toThrow("Missing/Invalid user_id");
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+	});
+
+	// ---------- FOLDER ID ERRORS ----------
+
+	it("Throws 400 when folder id is invalid", async () => {
+		await expect(getPapersFromFolderById(1, "one")).rejects.toThrow("'Folder Id' must be an integer");
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+	});
+
+	it("Throws 400 when folder id is null", async () => {
+		await expect(getPapersFromFolderById(1, null)).rejects.toThrow("Project folder id is required");
+
+		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
+	});
+
+	// ---------- PROPAGATES DB ERROR -----------
+    it("Propagates repository error", async () => {
+        fetchPapersFromFolderById.mockRejectedValue(new Error("Database query failed"));
+
+        await expect(getPapersFromFolderById(1, 2)).rejects.toThrow("Database query failed");
+
+        expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 2);
+        expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
     });
 });
