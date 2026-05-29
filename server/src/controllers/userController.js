@@ -4,7 +4,8 @@ import { getUserMe,
          getProjectFoldersById, 
          createProjectFolderById, 
          patchProjectFolderById,
-         deleteProjectFolderById } from "./../services/userService.js";
+         deleteProjectFolderById,
+         getPapersFromFolderById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -110,6 +111,20 @@ export async function deleteFolderController(req, res, next) {
         res.status(200).json({
             status: "success",
             message: "Project folder deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User accesses the papers of a project folder
+export async function getPapersFromFolderController(req, res, next) {
+    try {
+        const papers = await getPapersFromFolderById(req.user.id, req.params.id);
+
+        res.status(200).json({
+            status: "success",
+            data: papers
         });
     } catch (error) {
         next(error);

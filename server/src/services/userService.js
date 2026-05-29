@@ -3,7 +3,8 @@ import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositori
 import { fetchProjectFoldersById, 
          createProjectFolder, 
          updateProjectFolder,
-         deleteProjectFolder } from "../repositories/userFolderRepository.js";
+         deleteProjectFolder,
+         fetchPapersFromFolderById } from "../repositories/userFolderRepository.js";
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -188,4 +189,20 @@ export async function deleteProjectFolderById(userId, folderId) {
 
     if (deletedFolders === 0)
         throw new AppError("Project folder not found", 404);
+}
+
+
+// User accesses the papers of a project folder
+export async function getPapersFromFolderById(userId, folderId) {
+    // Validate user & project folder id
+    const parsedUserId = parseUserId(userId);
+    const parsedFolderId = parseInteger(folderId, "Folder Id");
+
+    if (!parsedFolderId || parsedFolderId < 1) {
+        throw new AppError("Project folder id is required", 400);
+    }
+
+    const papers = await fetchPapersFromFolderById(parsedUserId, parsedFolderId);
+
+    return papers;
 }
