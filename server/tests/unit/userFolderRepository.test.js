@@ -357,36 +357,60 @@ describe("deleteProjectFolder", () => {
 
 const mockResolvedPapers = [
 	{
-		folder_id: 2,
-		paper_id: "864364",
-		added_at: "2026-05-29T14:53:38.816Z",
-		user_id: 1
+        id: "50376",
+		openalex_id: "W2010608861",
+        title: "Suggesting accurate method and class names",
+        display_name: "Suggesting accurate method and class names",
+        abstract: "Descriptive names are a vital part of readable, and hence maintainable, code. Recent progress on ....",
+        publication_year: 2015,
+        cited_by_count: 386,
+        fwci: 79.0533,
+        primary_source_display_name: null,
+        primary_topic_display_name: "Software Engineering Research",
+        is_open_access: true,
+        open_access_status: "green",
+        author_count: 4,
+        authors_preview: [
+            { id: "A5080221214", name: "Miltiadis Allamanis" },
+            { id: "A5076587279", name: "Earl T. Barr" }
+        ],
+        folder_id: 2,
+        added_at: new Date("2026-05-29T14:53:38.816Z")
 	},
 	{
-		folder_id: 2,
-		paper_id: "838182",
-		added_at: "2026-05-29T14:53:38.816Z",
-		user_id: 1
+        id: "405200",
+		openalex_id: "W2163851162",
+        title: "Preliminary guidelines for empirical research in software engineering",
+        display_name: "Preliminary guidelines for empirical research in software engineering",
+        abstract: "Empirical software engineering research needs research guidelines to improve the research and reporting processes. We propose a preliminary set of research guidelines aimed at stimulating discussion among software researchers. They are based on a review of research guidelines developed for medical researchers and on our own experience in doing and reviewing software engineering research. The guidelines are intended to assist researchers, reviewers, and meta-analysts in designing, conducting, and evaluating empirical studies. Editorial boards of software engineering journals may wish to use our recommendations as a basis for developing guidelines for reviewers and for framing policies for dealing with the design, data collection, and analysis and reporting of empirical studies.",
+        publication_year: 2002,
+        cited_by_count: 1493,
+        fwci: 86.9251,
+        primary_source_display_name: "IEEE Transactions on Software Engineering",
+        primary_topic_display_name: "Software Engineering Research",
+        is_open_access: true,
+        open_access_status: "green",
+        author_count: 6,
+        authors_preview: [
+            { id: "A5012102325", name: "Barbara Kitchenham" },
+            { id: "A5109245255", name: "Shari Lawrence Pfleeger" }
+        ],
+        folder_id: 2,
+        added_at: new Date("2026-05-29T14:53:38.816Z")
 	},
-	{
-		folder_id: 2,
-		paper_id: "405200",
-		added_at: "2026-05-29T14:53:38.816Z",
-		user_id: 1
-	},
-	{
-		folder_id: 2,
-		paper_id: "50376",
-		added_at: "2026-05-29T14:53:38.816Z",
-		user_id: 1
-	}
 ];
+
 
 // Helper that validates query structure
 function expectFetchPapersQuery(query) {
-	expect(query).toContain("SELECT *");
-	expect(query).toContain("FROM user_folder_papers");
-	expect(query).toContain("WHERE user_id = $1 AND folder_id = $2;");
+	expect(query).toContain("SELECT");
+	expect(query).toContain("FROM user_folder_papers ufp");
+	expect(query).toContain("JOIN user_folders uf ON uf.id = ufp.folder_id");
+	expect(query).toContain("JOIN papers p ON p.id = ufp.paper_id");
+	expect(query).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
+	expect(query).toContain("WHERE uf.user_id = $1 AND uf.id = $2");
+	expect(query).toContain("GROUP BY p.id, ufp.folder_id, ufp.added_at");
+	expect(query).toContain("ORDER BY ufp.added_at DESC;");
 }
 
 describe("fetchPapersFromFolderById", () => {
