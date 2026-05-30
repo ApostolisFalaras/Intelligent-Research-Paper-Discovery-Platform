@@ -107,11 +107,54 @@ export async function deleteProjectFolder(userId, folderId) {
 // Fetches the papers of a particular project folder
 export async function fetchPapersFromFolderById(userId, folderId) {
     const sqlQuery = `
-        SELECT *
-        FROM user_folder_papers
-        WHERE user_id = $1 AND folder_id = $2;
-    `;
+        SELECT 
+            p.id, 
+            p.openalex_id, 
+            COALESCE(p.title, p.display_name) AS title,
+            p.display_name,
+            p.abstract, 
+            p.publication_year, 
+            p.cited_by_count,
+            p.fwci,
+            p.primary_source_display_name,
+            p.primary_topic_display_name,
+            p.is_open_access,
+            p.open_access_status,
+            ufp.folder_id,
+            ufp.added_at,
+
+            COUNT(pa.author_openalex_id) AS author_count,
+
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id', pa.author_openalex_id,
+                        'name', pa.author_display_name
+                    )
+                    ORDER BY pa.author_order
+                ) FILTER (
+                    WHERE pa.author_order <= 2 
+                    AND pa.author_openalex_id IS NOT NULL
+                ),
+                '[]'::json
+            ) AS authors_preview
+
+        FROM user_folder_papers ufp
+        
+        JOIN user_folders uf ON uf.id = ufp.folder_id
+        
+        JOIN papers p ON p.id = ufp.paper_id
+        
+        LEFT JOIN paper_authors pa ON pa.paper_id = p.id
+
+        WHERE uf.user_id = $1 AND uf.id = $2
+
+        GROUP BY p.id, ufp.folder_id, ufp.added_at
+
+        ORDER BY ufp.added_at DESC;
+`;
 
     const result = await pool.query(sqlQuery, [userId, folderId]);
     return result.rows;
 }
+

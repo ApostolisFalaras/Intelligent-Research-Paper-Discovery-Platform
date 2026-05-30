@@ -4,7 +4,8 @@ import { fetchProjectFoldersById,
          createProjectFolder, 
          updateProjectFolder,
          deleteProjectFolder,
-         fetchPapersFromFolderById } from "../repositories/userFolderRepository.js";
+         fetchPapersFromFolderById,
+         insertPapertoFolder } from "../repositories/userFolderRepository.js";
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -204,10 +205,25 @@ export async function getPapersFromFolderById(userId, folderId) {
 
     const papers = await fetchPapersFromFolderById(parsedUserId, parsedFolderId);
 
+    // folder papers appear as "paper cards"
+    // and hence, use the same DTO as the "paper cards" in the search result
     return papers.map((paper) => ({
-        paperId: paper.paper_id,
-        userId: paper.user_id,
+        id: paper.openalex_id,
+        internalId: paper.id,
+        title: paper.title,
+        displayName: paper.display_name,
+        abstract: paper.abstract,
+        publicationYear: paper.publication_year,
+        citedByCount: paper.cited_by_count,
+        fwci: Number(paper.fwci),
+        primarySource: paper.primary_source_display_name,
+        primaryTopic: paper.primary_topic_display_name,
+        isOpenAccess: paper.is_open_access,
+        openAccessStatus: paper.open_access_status,
+        authorCount: Number(paper.author_count),
+        authorsPreview: paper.authors_preview,
         folderId: paper.folder_id,
-        addedAt: paper.added_at
+        addedAt: paper.added_at,
     }));
 }
+
