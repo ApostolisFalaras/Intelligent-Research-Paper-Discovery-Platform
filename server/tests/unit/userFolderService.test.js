@@ -5,20 +5,29 @@ vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
     createProjectFolder: vi.fn(),
     updateProjectFolder: vi.fn(),
     deleteProjectFolder: vi.fn(),
-	fetchPapersFromFolderById: vi.fn()
+	fetchPapersFromFolderById: vi.fn(),
+    fetchPaperInFolder: vi.fn(),
+    insertPapertoFolder: vi.fn(),
 }));
 
+vi.mock("../../src/repositories/paperRepository.js", () => ({
+    fetchPaperById: vi.fn()
+}));
 
 import { getProjectFoldersById,
 	     createProjectFolderById, 
 		 patchProjectFolderById,
 		 deleteProjectFolderById, 
-		 getPapersFromFolderById } from "../../src/services/userService.js";
+		 getPapersFromFolderById,
+         addPapertoFolderById } from "../../src/services/userService.js";
 import { fetchProjectFoldersById, 
 	     createProjectFolder,
 		 updateProjectFolder, 
 		 deleteProjectFolder, 
-		 fetchPapersFromFolderById } from "../../src/repositories/userFolderRepository.js";
+		 fetchPapersFromFolderById, 
+         insertPapertoFolder,
+         fetchPaperInFolder} from "../../src/repositories/userFolderRepository.js";
+import { fetchPaperById } from "../../src/repositories/paperRepository.js";
 
 const mockProjectFolders = [
     {
@@ -547,5 +556,125 @@ describe("getPapersFromFolderById", () => {
 
         expect(fetchPapersFromFolderById).toHaveBeenCalledWith(1, 2);
         expect(fetchPapersFromFolderById).toHaveBeenCalledTimes(1);
+    });
+});
+
+
+
+describe("addPapertoFolderById", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    // ---------- SUCCESSFUL ADDITION OF PAPER TO A PROJECT FOLDER ----------
+
+    it("Adds paper to project folder", async () => {
+        // Not mocking all paper fields for simplicity 
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+        fetchPaperInFolder.mockResolvedValue(null);
+        insertPapertoFolder.mockResolvedValue(1);
+
+        await addPapertoFolderById(1, 2, "W7129423223");
+
+        // id: 204129 from fetchPaperById()
+        expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
+        expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
+
+        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+    });
+
+    // ----------- ERROR CASES -----------
+
+    it("Throws 400 when user id is missing", async () => {
+        await expect(addPapertoFolderById(null, 2, "W7129423223"))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when user id is invalid", async () => {
+        await expect(addPapertoFolderById("one", 2, "W7129423223"))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when folder id is invalid", async () => {
+        await expect(addPapertoFolderById(1, "two", "W7129423223"))
+        .rejects
+        .toThrow("'Folder Id' must be an integer");
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when folder id is missing", async () => {
+        await expect(addPapertoFolderById(1, null, "W7129423223"))
+        .rejects
+        .toThrow("Project folder id is required");
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 404 when paper doesn't exist", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        await expect(addPapertoFolderById(1, 2, "W7129"))
+        .rejects
+        .toThrow("Paper not found");
+
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 409 when paper already exists in the project folder", async () => {
+        // Not mocking all paper fields for simplicity 
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+
+        // Paper already exists in the project folder
+        fetchPaperInFolder.mockResolvedValue({
+            folder_id: 2,
+            paper_id: 204129,
+            created_at: new Date("2026-05-31 09:40:12.804588+03")
+        });
+
+        await expect(addPapertoFolderById(1, 2, "W7129"))
+        .rejects
+        .toThrow("Paper already exists in project folder");
+
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    // --------- DB ERROR ---------
+    it("Throws 500 when paper couldn't be added to the project folder", async () => {
+        // Not mocking all paper fields for simplicity 
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+        fetchPaperInFolder.mockResolvedValue(null);
+        insertPapertoFolder.mockResolvedValue(0);
+
+        await expect(addPapertoFolderById(1, 2, "W7129423223"))
+        .rejects
+        .toThrow("Paper was not inserted to project folder");
+
+        // id: 204129 from fetchPaperById()
+        expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
+        expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
+
+        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
     });
 });

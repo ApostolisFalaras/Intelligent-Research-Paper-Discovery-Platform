@@ -254,7 +254,7 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
     if (existingPaper)
         throw new AppError("Paper already exists in project folder", 409);
 
-    const addedPapers = await insertPapertoFolder(parsedUserId, parsedFolderId, paperId);
+    const addedPapers = await insertPapertoFolder(parsedUserId, parsedFolderId, paper.id);
 
     if (addedPapers === 0)
         throw new AppError("Paper was not inserted to project folder", 500);
