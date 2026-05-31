@@ -167,20 +167,16 @@ export async function fetchPaperInFolder(folderId, paperId) {
     `;
 
     const result = await pool.query(sqlQuery, [folderId, paperId]);
-    return result;
+    return result.rows[0] || null;
 }
 
 // User inserts a paper to a project folder
 export async function insertPapertoFolder(userId, folderId, paperId) {
     const sqlQuery = `
         INSERT INTO user_folder_papers (folder_id, paper_id)
-            SELECT uf.id, p.id
-
+            SELECT uf.id, $3
             FROM user_folders uf
-            JOIN papers p ON p.openalex_id = $3
-
-            WHERE uf.user_id = $1 AND uf.id = $2
-            ON CONFLICT (folder_id, paper_id) DO NOTHING;
+            WHERE uf.user_id = $1 AND uf.id = $2;
     `;
 
     const result = await pool.query(sqlQuery, [userId, folderId, paperId]);
