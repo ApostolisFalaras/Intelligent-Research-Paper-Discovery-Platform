@@ -158,3 +158,31 @@ export async function fetchPapersFromFolderById(userId, folderId) {
     return result.rows;
 }
 
+// Helper function that checks for duplicate paper entries in a project folder
+export async function fetchPaperInFolder(folderId, paperId) {
+    const sqlQuery = `
+        SELECT *
+        FROM user_folder_papers
+        WHERE folder_id = $1 AND paper_id = $2;
+    `;
+
+    const result = await pool.query(sqlQuery, [folderId, paperId]);
+    return result;
+}
+
+// User inserts a paper to a project folder
+export async function insertPapertoFolder(userId, folderId, paperId) {
+    const sqlQuery = `
+        INSERT INTO user_folder_papers (folder_id, paper_id)
+            SELECT uf.id, p.id
+
+            FROM user_folders uf
+            JOIN papers p ON p.openalex_id = $3
+
+            WHERE uf.user_id = $1 AND uf.id = $2
+            ON CONFLICT (folder_id, paper_id) DO NOTHING;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, folderId, paperId]);
+    return result.rowCount;
+}

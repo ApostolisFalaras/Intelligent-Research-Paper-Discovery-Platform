@@ -6,7 +6,8 @@ import { getMe,
          createFolderController,
          patchFolderController,
          deleteFolderController,
-         getPapersFromFolderController } from "./../controllers/userController.js";
+         getPapersFromFolderController,
+         addPapertoFolderController } from "./../controllers/userController.js";
 
 const router = express.Router();
 
@@ -31,7 +32,10 @@ router.patch("/me/folders/:id", patchFolderController);
 // User removes a project folder
 router.delete("/me/folders/:id", deleteFolderController);
 
-// User accesses the papers of a project folder
+// User fetches the papers of a project folder
 router.get("/me/folders/:id/papers", getPapersFromFolderController);
+
+// User adds a paper to a project folder
+router.post("/me/folders/:id/papers", addPapertoFolderController);
 
 export default router;

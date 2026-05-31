@@ -5,7 +5,9 @@ import { fetchProjectFoldersById,
          updateProjectFolder,
          deleteProjectFolder,
          fetchPapersFromFolderById,
-         insertPapertoFolder } from "../repositories/userFolderRepository.js";
+         insertPapertoFolder,
+         fetchPaperInFolder } from "../repositories/userFolderRepository.js";
+import { fetchPaperById } from "./../repositories/paperRepository.js"; 
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -227,3 +229,33 @@ export async function getPapersFromFolderById(userId, folderId) {
     }));
 }
 
+
+// User adds paper to a project folder
+export async function addPapertoFolderById(userId, folderId, paperId) {
+    // Validate user & project folder id
+    const parsedUserId = parseUserId(userId);
+    const parsedFolderId = parseInteger(folderId, "Folder Id");
+
+    if (!parsedFolderId || parsedFolderId < 1) {
+        throw new AppError("Project folder id is required", 400);
+    }
+
+    // Validate paper id
+    if (!paperId || typeof paperId !== "string")
+        throw new AppError("Invalid paper id", 400);
+
+    // Validate paper existence
+    const paper = await fetchPaperById(paperId);
+    if (!paper) 
+        throw new AppError("Paper not found", 404);
+
+    // Validate duplicate
+    const existingPaper = await fetchPaperInFolder(folderId, paper.id);
+    if (existingPaper)
+        throw new AppError("Paper already exists in project folder", 409);
+
+    const addedPapers = await insertPapertoFolder(parsedUserId, parsedFolderId, paperId);
+
+    if (addedPapers === 0)
+        throw new AppError("Paper was not inserted to project folder", 500);
+}

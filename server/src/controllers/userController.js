@@ -5,7 +5,8 @@ import { getUserMe,
          createProjectFolderById, 
          patchProjectFolderById,
          deleteProjectFolderById,
-         getPapersFromFolderById } from "./../services/userService.js";
+         getPapersFromFolderById,
+         addPapertoFolderById } from "./../services/userService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -125,6 +126,20 @@ export async function getPapersFromFolderController(req, res, next) {
         res.status(200).json({
             status: "success",
             data: papers
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User adds paper to a project folder
+export async function addPapertoFolderController(req, res, next) {
+    try {
+        await addPapertoFolderById(req.user.id, req.params.id, req.query.paperId);
+
+        res.status(201).json({
+            status: "success",
+            message: "Paper added to project folder successfully"
         });
     } catch (error) {
         next(error);
