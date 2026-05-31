@@ -250,7 +250,7 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
         throw new AppError("Paper not found", 404);
 
     // Validate duplicate
-    const existingPaper = await fetchPaperInFolder(folderId, paper.id);
+    const existingPaper = await fetchPaperInFolder(parsedFolderId, paper.id);
     if (existingPaper)
         throw new AppError("Paper already exists in project folder", 409);
 
