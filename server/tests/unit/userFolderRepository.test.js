@@ -11,7 +11,9 @@ import { fetchProjectFoldersById,
 	     createProjectFolder,
 		 updateProjectFolder,
 		 deleteProjectFolder,
-		 fetchPapersFromFolderById } from "./../../src/repositories/userFolderRepository.js";
+		 fetchPapersFromFolderById,
+		 fetchPaperInFolder,
+		 insertPapertoFolder } from "./../../src/repositories/userFolderRepository.js";
 
 
 const mockResolvedProjectFolders = [
@@ -466,4 +468,130 @@ describe("fetchPapersFromFolderById", () => {
         expectFetchPapersQuery(query);
         expect(params).toEqual([1,2]);
     });
+});
+
+
+const mockResolvedPaperInFolder = {
+	folder_id: 2,
+	paper_id: 204129,
+	created_at: new Date("2026-05-31 09:40:12.804588+03")
+};
+
+// Helper function that validates query structure
+function expectFetchPaperInFolderQuery(query) {
+	expect(query).toContain("SELECT *");
+	expect(query).toContain("FROM user_folder_papers");
+	expect(query).toContain("WHERE folder_id = $1 AND paper_id = $2;");
+}
+
+describe("fetchPaperInFolder", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// --------- FETCHES PAPER ENTRY FROM PROJECT FOLDER DURING DUPLICATE VALIDATION ---------
+
+	it("Fetches a paper entry from a project folder", async () => {
+		pool.query.mockResolvedValue({
+			rows: [
+				mockResolvedPaperInFolder
+			]
+		});
+
+		const result = await fetchPaperInFolder(2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectFetchPaperInFolderQuery(query);
+		expect(params).toEqual([2, 204129]);
+		expect(result).toEqual(mockResolvedPaperInFolder);
+	});
+
+	// --------- FETCHES NULL WHEN NO DUPLICATE ENTRY EXISTS IN THE PROJECT FOLDER ---------
+
+	it("Fetches null when the paper entry doesn't exist in the project folder", async () => {
+		pool.query.mockResolvedValue({
+			rows: []
+		});
+
+		const result = await fetchPaperInFolder(2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectFetchPaperInFolderQuery(query);
+		expect(params).toEqual([2, 204129]);
+
+		expect(result).toBeNull();
+	});
+
+	// --------- DB ERROR ---------
+	it("An unexpected database error occurred", async () => {
+		pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+		await expect(fetchPaperInFolder(2, 204129)).rejects.toThrow("Unexpected DB error");
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectFetchPaperInFolderQuery(query);
+		expect(params).toEqual([2, 204129]);
+	});
+});
+
+
+// Helper function that validates query structure
+function expectInsertPapertoFolderQuery(query) {
+	expect(query).toContain("INSERT INTO user_folder_papers (folder_id, paper_id)");
+	expect(query).toContain("SELECT uf.id, $3");
+	expect(query).toContain("FROM user_folders uf");
+	expect(query).toContain("WHERE uf.user_id = $1 AND uf.id = $2;");
+}
+
+describe("insertPaperToFolder", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// --------- INSERTS PAPER TO PROJECT FOLDER ---------
+
+	it("Inserts paper to project folder", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 1
+		});
+
+		const result = await insertPapertoFolder(1, 2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+		expectInsertPapertoFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+
+		expect(result).toBe(1);
+	});
+
+	// --------- FAILS TO INSERT PAPER TO PROJECT FOLDER ---------
+	
+	it("Fails to insert paper to project folder", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 0
+		});
+
+		const result = await insertPapertoFolder(1, 2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+		expectInsertPapertoFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+
+		expect(result).toBe(0);
+	});
+
+	// --------- DB ERROR ---------
+	it("An unexpected database error occurred", async () => {
+		pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+		await expect(insertPapertoFolder(1, 2, 204129)).rejects.toThrow("Unexpected DB error");
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectInsertPapertoFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+	});
 });
