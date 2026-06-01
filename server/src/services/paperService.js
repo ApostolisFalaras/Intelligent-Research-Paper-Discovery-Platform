@@ -10,7 +10,7 @@ export async function getPaperById(id) {
     const parsedId = parseString(id, "paper id");
 
     // Validate paper id format: "W" followed by digits
-    if (!/^W\d+$/.test(parsedId)) {
+    if (!parsedId || !/^W\d+$/.test(parsedId)) {
         throw new AppError("Invalid paper Id", 400);
     }
 
