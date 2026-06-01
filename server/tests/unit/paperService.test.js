@@ -135,8 +135,15 @@ describe("getPaperById", () => {
 
     // ------------ USER ERRORS --------------
     
-    it("Throws a 400 AppError when input id is invalid", async () => {
-        await expect(getPaperById(123)).rejects.toThrow("Invalid paper Id");
+    it("Throws a 400 AppError when input id is not a string", async () => {
+        await expect(getPaperById(123)).rejects.toThrow("'paper id' must be a string");
+
+        // The invalid id is rejected before the repository function is called
+        expect(fetchPaperById).not.toHaveBeenCalled();    
+    });
+
+    it("Throws a 400 AppError when input id has invalid format", async () => {
+        await expect(getPaperById("123")).rejects.toThrow("Invalid paper Id");
 
         // The invalid id is rejected before the repository function is called
         expect(fetchPaperById).not.toHaveBeenCalled();    

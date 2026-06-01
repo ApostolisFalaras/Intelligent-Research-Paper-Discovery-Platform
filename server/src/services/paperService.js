@@ -1,12 +1,16 @@
 import { fetchPaperById } from "./../repositories/paperRepository.js";
 import { formatPage } from "./../utils/formatPages.js";
 import { AppError } from "./../utils/AppError.js";
+import { parseString } from "./../utils/parseData.js";
 
 // Fetch a paper with a particular "id" 
 export async function getPaperById(id) {
 
     // Validate paper id
-    if (!id || typeof id !== "string") {
+    const parsedId = parseString(id, "paper id");
+
+    // Validate paper id format: "W" followed by digits
+    if (!/^W\d+$/.test(parsedId)) {
         throw new AppError("Invalid paper Id", 400);
     }
 

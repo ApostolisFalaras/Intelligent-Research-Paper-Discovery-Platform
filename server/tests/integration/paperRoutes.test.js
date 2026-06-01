@@ -141,6 +141,18 @@ describe("GET /api/papers/:id", () => {
 
     // ------------- USER ERRORS ---------------
 
+    it("Returns 400 when paper Id doesn't follow the correct format", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        const response = await request(app).get("/api/papers/123").expect(400);
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("Invalid paper Id");
+    });
+
+
     it("Returns 404 when the paper doesn't exist", async () => {
         fetchPaperById.mockResolvedValue(null);
 
