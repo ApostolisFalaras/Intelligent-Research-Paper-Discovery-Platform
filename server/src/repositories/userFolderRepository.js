@@ -182,3 +182,19 @@ export async function insertPapertoFolder(userId, folderId, paperId) {
     const result = await pool.query(sqlQuery, [userId, folderId, paperId]);
     return result.rowCount;
 }
+
+
+// User deletes paper from project folder
+export async function deletePaperFromFolder(userId, folderId, paperId) {
+    const sqlQuery = `
+        DELETE FROM user_folder_papers ufp
+        USING user_folders uf
+        WHERE ufp.folder_id = uf.id
+        AND uf.user_id = $1 
+        AND ufp.folder_id = $2 
+        AND ufp.paper_id = $3;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, folderId, paperId]);
+    return result.rowCount;
+}
