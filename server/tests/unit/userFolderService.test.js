@@ -8,6 +8,7 @@ vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
 	fetchPapersFromFolderById: vi.fn(),
     fetchPaperInFolder: vi.fn(),
     insertPapertoFolder: vi.fn(),
+    deletePaperFromFolder: vi.fn()
 }));
 
 vi.mock("../../src/repositories/paperRepository.js", () => ({
@@ -19,14 +20,16 @@ import { getProjectFoldersById,
 		 patchProjectFolderById,
 		 deleteProjectFolderById, 
 		 getPapersFromFolderById,
-         addPapertoFolderById } from "../../src/services/userService.js";
+         addPapertoFolderById, 
+         deletePaperFromFolderById} from "../../src/services/userService.js";
 import { fetchProjectFoldersById, 
 	     createProjectFolder,
 		 updateProjectFolder, 
 		 deleteProjectFolder, 
 		 fetchPapersFromFolderById, 
          insertPapertoFolder,
-         fetchPaperInFolder} from "../../src/repositories/userFolderRepository.js";
+         fetchPaperInFolder,
+         deletePaperFromFolder } from "../../src/repositories/userFolderRepository.js";
 import { fetchPaperById } from "../../src/repositories/paperRepository.js";
 
 const mockProjectFolders = [
@@ -686,7 +689,8 @@ describe("addPapertoFolderById", () => {
         expect(insertPapertoFolder).not.toHaveBeenCalled();
     });
 
-    // --------- DB ERROR ---------
+    // --------- DB ERRORS ---------
+
     it("Throws 500 when paper couldn't be added to the project folder", async () => {
         // Not mocking all paper fields for simplicity 
         fetchPaperById.mockResolvedValue({
@@ -706,5 +710,145 @@ describe("addPapertoFolderById", () => {
 
         expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
         expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+    });
+
+    it("Propagates repository error", async () => {
+        // Not mocking all paper fields for simplicity 
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+        fetchPaperInFolder.mockResolvedValue(null);
+        insertPapertoFolder.mockRejectedValue(new Error("Database query failed"));
+
+        await expect(addPapertoFolderById(1, 2, "W7129423223"))
+        .rejects
+        .toThrow("Database query failed");
+
+        // id: 204129 from fetchPaperById()
+        expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
+        expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
+
+        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+    });
+});
+
+
+describe("deletePaperFromFolderById", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    // ----------- SUCCESSFUL DELETION OF PAPER FROM PROJECT FOLDER -----------
+    
+    it("Deletes a paper from a project folder", async () => {
+        // Not mocking all paper fields for simplicity
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+
+        deletePaperFromFolder.mockResolvedValue(1);
+
+        await deletePaperFromFolderById(1, 2, "W7129423223");
+
+        expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
+    });
+
+    // ----------- UNSUCCESSFUL DELETION OF PAPER FROM PROJECT FOLDER -----------
+    
+    it("Throws 404 when it fails to delete a paper from a project folder", async () => {
+        // Not mocking all paper fields for simplicity
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+
+        deletePaperFromFolder.mockResolvedValue(0);
+
+        await expect(deletePaperFromFolderById(1, 2, "W7129423223"))
+        .rejects
+        .toThrow("Paper wasn't stored in project folder");
+
+        expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
+    });
+
+    // ----------- ERROR CASES -----------
+
+    it("Throws 400 when user id is missing", async () => {
+        await expect(deletePaperFromFolderById(null, 2, "W7129423223"))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when user id is invalid", async () => {
+        await expect(deletePaperFromFolderById("one", 2, "W7129423223"))
+        .rejects
+        .toThrow("Missing/Invalid user_id");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when folder id is invalid", async () => {
+        await expect(deletePaperFromFolderById(1, "two", "W7129423223"))
+        .rejects
+        .toThrow("'Folder Id' must be an integer");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when folder id is missing", async () => {
+        await expect(deletePaperFromFolderById(1, null, "W7129423223"))
+        .rejects
+        .toThrow("Project folder id is required");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when paper id is missing", async () => {
+        await expect(deletePaperFromFolderById(1, 2, null))
+        .rejects
+        .toThrow("Invalid paper id");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when paper id is not a string", async () => {
+        await expect(deletePaperFromFolderById(1, 2, 7129))
+        .rejects
+        .toThrow("'paper id' must be a string");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when paper id doesn't follow the correct format", async () => {
+        await expect(deletePaperFromFolderById(1, 2, "7129"))
+        .rejects
+        .toThrow("Invalid paper id");
+
+        expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    // --------- DB ERROR ---------
+    it("Propagates repository error", async () => {
+        // Not mocking all paper fields for simplicity 
+        fetchPaperById.mockResolvedValue({
+            id: 204129,
+            openalex_id: "W7129423223"
+        });
+        
+        deletePaperFromFolder.mockRejectedValue(new Error("Database query failed"))
+
+        await expect(deletePaperFromFolderById(1, 2, "W7129423223"))
+        .rejects
+        .toThrow("Database query failed");
+
+        expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
     });
 });

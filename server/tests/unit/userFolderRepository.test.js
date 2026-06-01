@@ -13,7 +13,8 @@ import { fetchProjectFoldersById,
 		 deleteProjectFolder,
 		 fetchPapersFromFolderById,
 		 fetchPaperInFolder,
-		 insertPapertoFolder } from "./../../src/repositories/userFolderRepository.js";
+		 insertPapertoFolder,
+		 deletePaperFromFolder } from "./../../src/repositories/userFolderRepository.js";
 
 
 const mockResolvedProjectFolders = [
@@ -592,6 +593,65 @@ describe("insertPaperToFolder", () => {
 		const [query, params] = pool.query.mock.calls[0];
 
 		expectInsertPapertoFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+	});
+});
+
+
+// Helper function that validates query structure
+function expectDeletePaperFromFolderQuery(query) {
+	expect(query).toContain("DELETE FROM user_folder_papers");
+	expect(query).toContain("USING user_folders uf");
+	expect(query).toContain("WHERE ufp.folder_id = uf.id");
+	expect(query).toContain("AND uf.user_id = $1");
+	expect(query).toContain("AND ufp.folder_id = $2");
+	expect(query).toContain("AND ufp.paper_id = $3;");
+}
+
+describe("deletePaperFromFolder", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	// --------- DELETES PAPER FROM PROJECT FOLDER ---------
+
+	it("Deletes paper from project folder", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 1
+		});
+
+		const result = await deletePaperFromFolder(1, 2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectDeletePaperFromFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+	});
+
+	// --------- FAILS TO DELETE PAPER FROM PROJECT FOLDER ---------
+
+	it("Fails to delete paper from project folder", async () => {
+		pool.query.mockResolvedValue({
+			rowCount: 0
+		});
+
+		const result = await deletePaperFromFolder(1, 2, 204129);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectDeletePaperFromFolderQuery(query);
+		expect(params).toEqual([1, 2, 204129]);
+	});
+
+	// --------- DB ERROR ---------
+	it("An unexpected database error occurred", async () => {
+		pool.query.mockRejectedValue(new Error("Unexpected DB error"));
+
+		await expect(deletePaperFromFolder(1, 2, 204129)).rejects.toThrow("Unexpected DB error");
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expectDeletePaperFromFolderQuery(query);
 		expect(params).toEqual([1, 2, 204129]);
 	});
 });
