@@ -241,11 +241,14 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
     }
 
     // Validate paper id
-    if (!paperId || typeof paperId !== "string")
+    const parsedPaperId = parseString(paperId, "paper id");
+
+    // Validate paper id format: "W" followed by digits
+    if (!/^W\d+$/.test(parsedPaperId))
         throw new AppError("Invalid paper id", 400);
 
     // Validate paper existence
-    const paper = await fetchPaperById(paperId);
+    const paper = await fetchPaperById(parsedPaperId);
     if (!paper) 
         throw new AppError("Paper not found", 404);
 

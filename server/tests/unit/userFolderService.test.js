@@ -625,6 +625,36 @@ describe("addPapertoFolderById", () => {
         expect(insertPapertoFolder).not.toHaveBeenCalled();
     });
 
+    it("Throws 400 when paper id is missing", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        await expect(addPapertoFolderById(1, 2, null))
+        .rejects
+        .toThrow("Invalid paper id");
+
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when paper id is not a string", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        await expect(addPapertoFolderById(1, 2, 7129))
+        .rejects
+        .toThrow("'paper id' must be a string");
+
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when paper id doesn't follow the correct format", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        await expect(addPapertoFolderById(1, 2, "7129"))
+        .rejects
+        .toThrow("Invalid paper id");
+
+        expect(insertPapertoFolder).not.toHaveBeenCalled();
+    });
+
     it("Throws 404 when paper doesn't exist", async () => {
         fetchPaperById.mockResolvedValue(null);
 

@@ -799,6 +799,19 @@ describe("POST /api/users/me/folders/:id/papers", () => {
 		expect(response.body.message).toBe("Invalid paper id");
 	});
 
+	it("Returns 400 when paper id doesn't follow the correct format", async () => {
+		const response = await request(app).post("/api/users/me/folders/2/papers")
+		.query({ paperId: "7129" })
+		.expect(400);
+
+		expect(fetchPaperById).not.toHaveBeenCalled();
+		expect(fetchPaperInFolder).not.toHaveBeenCalled();
+		expect(insertPapertoFolder).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("Invalid paper id");
+	});
+
 	it("Returns 404 when paper doesn't exist", async () => {
 		fetchPaperById.mockResolvedValue(null);
 		
