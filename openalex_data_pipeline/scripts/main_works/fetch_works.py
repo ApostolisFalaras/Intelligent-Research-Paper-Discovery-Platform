@@ -13,7 +13,7 @@ load_dotenv()
 API_KEY = os.getenv("OPENALEX_API_KEY")
 
 # OpenAlex's directory and subdirectory paths
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 TOPICS_DIR = RAW_DIR / "topics" # for the raw retrieved JSON topics
@@ -283,7 +283,7 @@ def main():
     # Setting up logger for this module, so that it can be used by all functions
     global logger
     logger = get_logger(name="fetch_openalex", log_file=LOG_FILE)
-    logger.info("Starting OpenAlex fetch data pipeline.")
+    logger.info("Starting OpenAlex fetch data pipeline for the main dataset of works.")
     checkpoint = load_checkpoint()
     
     # Fetching the top 100 most popular topics

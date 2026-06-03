@@ -4,7 +4,7 @@ from pathlib import Path
 from utils.logging_utils import get_logger
 
 # OpenAlex's directory and subdirectory paths
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 RAW_WORKS_DIR = BASE_DIR / "data/raw/works"
 LOG_DIR = BASE_DIR / "logs"
 
