@@ -1,7 +1,7 @@
 import json
 import copy
 from pathlib import Path
-from utils.logging_utils import get_logger
+from scripts.utils.logging_utils import get_logger
 
 # OpenAlex's directory and subdirectory paths
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -23,10 +23,6 @@ logger = None
 # Strip any trailing "/" and split URL based on "/" separators. The last list element is the id.
 def get_openalex_work_id(openalex_url: str) -> str:
     return openalex_url.rstrip("/").split("/")[-1] 
-
-# Extract a topic's id from the URL Path value
-def get_openalex_topic_id(topic_path: Path) -> str:
-    return str(topic_path).rstrip("\\").split("\\")[-1]
 
 
 # --------- RECONSTRUCT ABSTRACT ----------

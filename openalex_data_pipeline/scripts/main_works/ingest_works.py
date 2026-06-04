@@ -7,13 +7,17 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor
 from utils.logging_utils import get_logger
-from openalex_data_pipeline.scripts.ingestion.ingestion_utils import (
-    read_jsonl_batch,
-    has_valid_publication_year,
+
+from scripts.ingestion.works_ingestion_utils import (
     insert_papers,
     insert_paper_authors,
     build_remaining_tables_tuples,
     insert_remaining_tables_tuples
+)
+
+from scripts.ingestion.ingestion_utils import (
+    read_jsonl_batch,
+    has_valid_publication_year
 )
 
 # Load DB Environmental variables
@@ -33,8 +37,6 @@ BATCH_SIZE = 5000
 
 LOG_FILE = LOG_DIR / "ingest_openalex_works.log"
 logger = get_logger("ingest_openalex", log_file=LOG_FILE)
-
-
 
 
 

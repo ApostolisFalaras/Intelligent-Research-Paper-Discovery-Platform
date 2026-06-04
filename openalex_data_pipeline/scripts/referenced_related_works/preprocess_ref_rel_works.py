@@ -4,7 +4,6 @@ from pathlib import Path
 from scripts.utils.logging_utils import get_logger
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-REF_REL_DIR = BASE_DIR / "data/raw/referenced_related_works"
 LOG_DIR = BASE_DIR / "logs"
 
 REF_REL_DIR = BASE_DIR / "data/raw/referenced_related_works/batches"
@@ -20,10 +19,6 @@ logger = None
 # Strip any trailing "/" and split URL based on "/" separators. The last list element is the id.
 def get_openalex_work_id(openalex_url: str) -> str:
     return openalex_url.rstrip("/").split("/")[-1] 
-
-# Extract a topic's id from the URL Path value
-def get_openalex_topic_id(topic_path: Path) -> str:
-    return str(topic_path).rstrip("\\").split("\\")[-1]
 
 
 # --------- RECONSTRUCT ABSTRACT ----------
@@ -59,7 +54,7 @@ def normalize_work(work: dict, batch_file: Path, batch: int) -> dict:
     # Add the reconstructed abstract text
     normalized_work["abstract_text"] = reconstruct_abstract(work.get("abstract_inverted_index"))
     
-    # Add preprocessing/request/response metadata, 
+    # Add preprocessing metadata, 
     # making each JSONL line self-contained, independent and easier to debug
     normalized_work["_preprocessing"] = {
         "batch_file": batch_file.name,

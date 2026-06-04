@@ -6,7 +6,7 @@ import os
 import time
 from pathlib import Path
 from dotenv import load_dotenv
-from utils.logging_utils import get_logger
+from scripts.utils.logging_utils import get_logger
 
 # Load environmental variables and OpenAlex api key
 load_dotenv()
