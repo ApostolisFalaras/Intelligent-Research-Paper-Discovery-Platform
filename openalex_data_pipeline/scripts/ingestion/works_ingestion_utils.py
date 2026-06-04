@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor
 from logging import Logger
-from ingestion_utils import (
+from scripts.ingestion.ingestion_utils import (
     normalize_openalex_id,
     normalize_openalex_id_list,
     normalize_language
