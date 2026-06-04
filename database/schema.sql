@@ -1,5 +1,6 @@
 -- TABLES
 
+-- Each Paper record
 CREATE TABLE papers (
     -- Paper Identity Fields
     id BIGSERIAL PRIMARY KEY, -- local database unique ID
@@ -77,6 +78,7 @@ CREATE TABLE papers (
 CREATE TABLE paper_authors (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
 
     -- Used in cases where author id's are null, but we still need to display the author
     author_order INT NOT NULL, 
@@ -90,6 +92,7 @@ CREATE TABLE paper_authors (
     raw_author_name TEXT,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
     UNIQUE(paper_id, author_order)
 );
 
@@ -233,6 +236,120 @@ CREATE TABLE paper_counts_by_year (
     UNIQUE(paper_id, year)
 );
 
+
+-- AUTHORS
+
+-- Each Author in the database
+CREATE TABLE authors (
+    id BIGSERIAL PRIMARY KEY,
+    openalex_id TEXT NOT NULL UNIQUE,
+    orcid TEXT,
+    display_name TEXT NOT NULL,
+    raw_author_names TEXT[],
+    full_name TEXT,
+
+    works_count INTEGER DEFAULT 0,
+    cited_by_count INTEGER DEFAULT 0,
+    two_year_mean_citedness NUMERIC(20, 6),
+    h_index INTEGER,
+    i10_index INTEGER,
+
+    works_api_url TEXT,
+    openalex_created_at TIMESTAMPTZ,
+    openalex_updated_at TIMESTAMPTZ
+);
+
+-- Each Author is associated with a series of Affiliations
+CREATE TABLE author_affiliations (
+    id BIGSERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
+
+    institution_openalex_id TEXT,
+    institution_ror TEXT,
+    institution_display_name TEXT NOT NULL,
+    institution_country_code TEXT,
+    institution_type TEXT,
+    lineage TEXT[],
+    years INTEGER[],
+
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
+    UNIQUE (author_id, institution_openalex_id)
+);
+
+-- Each Author's most recent institution affiliations
+CREATE TABLE author_last_known_institutions (
+    id BIGSERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
+
+    institution_openalex_id TEXT,
+    institution_ror TEXT,
+    institution_display_name TEXT NOT NULL,
+    institution_country_code TEXT,
+    institution_type TEXT,
+    institution_lineage TEXT[],
+
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
+    UNIQUE(author_id, institution_openalex_id)
+)
+
+
+-- Each Author is associated with a series of Topics
+CREATE TABLE author_topics (
+    id BIGSERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
+
+    topic_openalex_id TEXT,
+    topic_display_name TEXT NOT NULL,
+    works_count INTEGER DEFAULT 0,
+
+    domain_openalex_id TEXT,
+    domain_display_name TEXT NOT NULL,
+    field_openalex_id TEXT,
+    field_display_name TEXT NOT NULL,
+    subfield_openalex_id TEXT,
+    subfield_display_name TEXT NOT NULL,
+
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
+    UNIQUE(author_id, topic_openalex_id)
+);
+
+-- Each Author's share of work in each topic mentioned
+CREATE TABLE author_topic_share (
+    id BIGSERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
+
+    topic_openalex_id TEXT,
+    topic_display_name TEXT NOT NULL,
+    value NUMERIC(10, 6),
+
+    domain_openalex_id TEXT,
+    domain_display_name TEXT NOT NULL,
+    field_openalex_id TEXT,
+    field_display_name TEXT NOT NULL,
+    subfield_openalex_id TEXT,
+    subfield_display_name TEXT NOT NULL,
+
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
+    UNIQUE (author_id, topic_openalex_id)
+);
+
+-- Each Author is accompanied by citation data across the years
+CREATE TABLE author_counts_by_year (
+    id BIGSERIAL PRIMARY KEY,
+    author_id BIGINT NOT NULL,
+
+    year INTEGER NOT NULL,
+    works_count INTEGER DEFAULT 0,
+    oa_works_count INTEGER DEFAULT 0,
+    cited_by_count INTEGER DEFAULT 0,
+
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
+    UNIQUE (author_id, year)
+);
+
+
+-- USERS / PROJECT FOLDERS
+
 -- Each individual User in the application
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -313,6 +430,7 @@ CREATE INDEX idx_paper_authors_paper_id ON paper_authors(paper_id);
 CREATE INDEX idx_paper_authors_display_name ON paper_authors(author_display_name);
 CREATE INDEX idx_paper_authors_openalex_id ON paper_authors(author_openalex_id)
 WHERE author_openalex_id IS NOT NULL;
+CREATE INDEX idx_paper_authors_author_id ON paper_authors(author_id) WHERE author_id IS NOT NULL;
 
 -- Indexes for paper_author_institutions table
 CREATE INDEX idx_paper_author_institutions_author_id ON paper_author_institutions(paper_author_id);
@@ -364,3 +482,54 @@ CREATE INDEX idx_user_folder_papers_paper_id ON user_folder_papers(paper_id);
 
 -- Indexes for user_search_history
 CREATE INDEX idx_user_search_history_user_id_created_at ON user_search_history(user_id, created_at DESC);
+
+-- Indexes for authors
+CREATE INDEX idx_authors_display_name ON authors(display_name);
+CREATE INDEX idx_authors_orcid ON authors(orcid) WHERE orcid IS NOT NULL;
+CREATE INDEX idx_authors_works_count ON authors(works_count DESC);
+CREATE INDEX idx_authors_cited_by_count ON authors(cited_by_count DESC);
+CREATE INDEX idx_authors_h_index ON authors(h_index DESC);
+CREATE INDEX idx_authors_i10_index ON authors(i10_index DESC);
+
+-- Indexes for author_affiliations
+CREATE INDEX idx_author_affiliations_author_id ON author_affiliations(author_id);
+CREATE INDEX idx_author_affiliations_institution_openalex_id ON author_affiliations(institution_openalex_id)
+WHERE institution_openalex_id IS NOT NULL;
+CREATE INDEX idx_author_affiliations_institution_display_name ON author_affiliations(institution_display_name);
+CREATE INDEX idx_author_affiliations_country_code ON author_affiliations(institution_country_code);
+CREATE INDEX idx_author_affiliations_institution_type ON author_affiliations(institution_type);
+
+-- Indexes for author_last_known_institutions
+CREATE INDEX idx_author_last_known_institutions_author_id ON author_last_known_institutions(author_id);
+CREATE INDEX idx_author_last_known_institutions_institution_openalex_id ON author_last_known_institutions(institution_openalex_id)
+WHERE institution_openalex_id IS NOT NULL;
+CREATE INDEX idx_author_last_known_institutions_institution_display_name ON author_last_known_institutions(institution_display_name);
+CREATE INDEX idx_author_last_known_institutions_country_code ON author_last_known_institutions(institution_country_code);
+CREATE INDEX idx_author_last_known_institutions_institution_type ON author_last_known_institutions(institution_type);
+
+-- Indexes for author_topics
+CREATE INDEX idx_author_topics_author_id ON author_topics(author_id);
+CREATE INDEX idx_author_topics_topic_openalex_id ON author_topics(topic_openalex_id)
+WHERE topic_openalex_id IS NOT NULL;
+CREATE INDEX idx_author_topics_display_name ON author_topics(topic_display_name);
+CREATE INDEX idx_author_topics_works_count ON author_topics(works_count DESC);
+CREATE INDEX idx_author_topics_domain ON author_topics(domain_display_name);
+CREATE INDEX idx_author_topics_field ON author_topics(field_display_name);
+CREATE INDEX idx_author_topics_subfield ON author_topics(subfield_display_name);
+
+-- Indexes for author_topic_shares
+CREATE INDEX idx_author_topic_share_author_id ON author_topic_share(author_id);
+CREATE INDEX idx_author_topic_share_topic_openalex_id ON author_topic_share(topic_openalex_id)
+WHERE topic_openalex_id IS NOT NULL;
+CREATE INDEX idx_author_topic_share_display_name ON author_topic_share(topic_display_name);
+CREATE INDEX idx_author_topic_share_works_count ON author_topic_share(value DESC);
+CREATE INDEX idx_author_topic_share_domain ON author_topic_share(domain_display_name);
+CREATE INDEX idx_author_topic_share_field ON author_topic_share(field_display_name);
+CREATE INDEX idx_author_topic_share_subfield ON author_topic_share(subfield_display_name);
+
+-- Indexes for author_counts_by_year
+CREATE INDEX idx_author_counts_by_year_author_id ON author_counts_by_year(author_id);
+CREATE INDEX idx_author_counts_by_year_year ON author_counts_by_year(year);
+CREATE INDEX idx_author_counts_by_year_author_year ON author_counts_by_year(author_id, year);
+CREATE INDEX idx_author_counts_by_year_cited_by_count ON author_counts_by_year(cited_by_count DESC);
+CREATE INDEX idx_author_counts_by_year_works_count ON author_counts_by_year(works_count DESC);
