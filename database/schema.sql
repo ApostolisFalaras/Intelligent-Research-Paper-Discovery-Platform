@@ -129,6 +129,7 @@ CREATE TABLE paper_author_affiliations (
 CREATE TABLE paper_topics (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
+    topic_id BIGINT NOT NULL,
 
     -- Topic Information
     topic_openalex_id TEXT, 
@@ -145,6 +146,7 @@ CREATE TABLE paper_topics (
     is_primary_topic BOOLEAN DEFAULT FALSE,
 
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE SET NULL,
     UNIQUE (paper_id, topic_display_name)
 );
 
@@ -348,6 +350,35 @@ CREATE TABLE author_counts_by_year (
 );
 
 
+-- TOPICS
+CREATE TABLE topics (
+    id BIGSERIAL PRIMARY KEY,
+
+    openalex_id TEXT NOT NULL UNIQUE,
+    topic_display_name TEXT NOT NULL,
+    
+    topic_description TEXT,
+    topic_keywords TEXT[],
+
+    topic_wikipedia_url TEXT,
+
+    domain_openalex_id TEXT,
+    domain_display_name TEXT NOT NULL,
+    field_openalex_id TEXT,
+    field_display_name TEXT NOT NULL,
+    subfield_openalex_id TEXT,
+    subfield_display_name TEXT NOT NULL,
+
+    works_count INTEGER DEFAULT 0,
+    cited_by_count INTEGER DEFAULT 0,
+
+    works_api_url TEXT,
+
+    openalex_created_at TIMESTAMPTZ,
+    openalex_updated_at TIMESTAMPTZ 
+);
+
+
 -- USERS / PROJECT FOLDERS
 
 -- Each individual User in the application
@@ -445,6 +476,7 @@ CREATE INDEX idx_paper_author_affiliations_paper_author_id ON paper_author_affil
 
 -- Indexes for paper_topics table
 CREATE INDEX idx_paper_topics_paper_id ON paper_topics(paper_id);
+CREATE INDEX idx_paper_topics_topic_openalex_id ON paper_topics(topic_openalex_id);
 CREATE INDEX idx_paper_topics_name ON paper_topics(topic_display_name);
 CREATE INDEX idx_paper_topics_domain ON paper_topics(domain_display_name);
 CREATE INDEX idx_paper_topics_field ON paper_topics(field_display_name);
@@ -533,3 +565,12 @@ CREATE INDEX idx_author_counts_by_year_year ON author_counts_by_year(year);
 CREATE INDEX idx_author_counts_by_year_author_year ON author_counts_by_year(author_id, year);
 CREATE INDEX idx_author_counts_by_year_cited_by_count ON author_counts_by_year(cited_by_count DESC);
 CREATE INDEX idx_author_counts_by_year_works_count ON author_counts_by_year(works_count DESC);
+
+-- Indexes for topics
+CREATE INDEX idx_topics_openalex_id ON topics(openalex_id);
+CREATE INDEX idx_topics_display_name ON topics(topic_display_name);
+CREATE INDEX idx_topics_domain ON topics(domain_openalex_id);
+CREATE INDEX idx_topics_field ON topics(field_openalex_id);
+CREATE INDEX idx_topics_subfield ON topics(subfield_openalex_id);
+CREATE INDEX idx_topics_works_count ON topics(works_count DESC);
+CREATE INDEX idx_topics_cited_by_count ON topics(cited_by_count DESC);
