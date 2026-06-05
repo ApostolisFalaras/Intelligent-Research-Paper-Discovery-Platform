@@ -129,7 +129,7 @@ CREATE TABLE paper_author_affiliations (
 CREATE TABLE paper_topics (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
-    topic_id BIGINT NOT NULL,
+    topic_id BIGINT,
 
     -- Topic Information
     topic_openalex_id TEXT, 
