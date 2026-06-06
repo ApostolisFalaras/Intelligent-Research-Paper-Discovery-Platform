@@ -1,4 +1,4 @@
-import { getPaperById, getPaperRecommendations } from "./../services/paperService.js";
+import { getPaperById } from "./../services/paperService.js";
 
 // Retrieves a single paper from its url when accessed
 export async function getPaperByIdController(req, res, next) {
