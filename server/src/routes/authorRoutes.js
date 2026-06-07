@@ -1,6 +1,7 @@
 import express from "express";
 import { getAuthorByIdController } from "./../controllers/authorController.js";
 
+
 const router = express.Router();
 
 // User view an author's profile 

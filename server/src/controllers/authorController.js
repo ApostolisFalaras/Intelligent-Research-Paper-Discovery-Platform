@@ -1,12 +1,15 @@
-import { fetchAuthorById } from "./../services/authorService.js";
+import { getAuthorById } from "./../services/authorService.js";
 
 // Retrieve an author's profile info
-export async function getAuthorByIdController(req, res) {
+export async function getAuthorByIdController(req, res, next) {
     try {
-        const authorId = req.params.id;
-        const author = await fetchAuthorById(authorId);
-        res.json(author);
+        const author = await getAuthorById(req.params.id);
+
+        res.status(200).json({
+            status: "success",
+            data: author
+        });
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch author profile"});
+        next(error);
     }
 }
