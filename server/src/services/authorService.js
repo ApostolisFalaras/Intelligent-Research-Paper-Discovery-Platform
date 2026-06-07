@@ -1,7 +1,7 @@
 import { 
 	fetchAuthorById,
 	fetchAuthorAffiliationsById,
-	fetchAuthorLastKnownAffiliationsById,
+	fetchAuthorLastKnownInstitutionsById,
 	fetchAuthorTopicsById,
 	fetchAuthorTopicSharesById,
 	fetchAuthorCountsByYearById } from "./../repositories/authorRepository.js";
@@ -28,8 +28,7 @@ export async function getAuthorById(id) {
 	const [affiliations, lastKnownAffiliations, topics, topicShares, counts] =
 		await Promise.all([
 			fetchAuthorAffiliationsById(author.id),
-			fetchAuthorLastKnownAffiliationsById(author.id),
-			fetchAuthorTopicsById(author.id),
+			fetchAuthorLastKnownAffiliationsInstitutions(author.id),
 			fetchAuthorTopicSharesById(author.id),
 			fetchAuthorCountsByYearById(author.id)
 		]);

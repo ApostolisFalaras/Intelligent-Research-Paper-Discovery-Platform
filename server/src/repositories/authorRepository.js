@@ -26,7 +26,7 @@ export async function fetchAuthorAffiliationsById(id) {
 }
 
 // Fetches an author's last known affiliations
-export async function fetchAuthorLastKnownAffiliationsById(id) {
+export async function fetchAuthorLastKnownInstitutionsById(id) {
 	const sqlQuery = `
 		SELECT *
 		FROM author_last_known_institutions
