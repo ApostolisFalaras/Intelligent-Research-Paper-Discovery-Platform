@@ -25,10 +25,11 @@ export async function getAuthorById(id) {
 	if (!author)
 		throw new AppError("Author not found", 404);
 
-	const [affiliations, lastKnownAffiliations, topics, topicShares, counts] =
+	const [affiliations, lastKnownInstitutions, topics, topicShares, counts] =
 		await Promise.all([
 			fetchAuthorAffiliationsById(author.id),
-			fetchAuthorLastKnownAffiliationsInstitutions(author.id),
+			fetchAuthorLastKnownInstitutionsById(author.id),
+			fetchAuthorTopicsById(author.id),
 			fetchAuthorTopicSharesById(author.id),
 			fetchAuthorCountsByYearById(author.id)
 		]);
@@ -66,7 +67,7 @@ export async function getAuthorById(id) {
 			years: aff.years
 		})),
 
-		lastKnownAffiliations: lastKnownAffiliations.map(inst => ({
+		lastKnownInstitutions: lastKnownInstitutions.map(inst => ({
 			id: inst.institution_openalex_id,
 			institutionRor: inst.institution_ror,
 			displayName: inst.institution_display_name,
