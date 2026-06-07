@@ -5,11 +5,12 @@ export async function fetchAuthorById(id) {
 	const sqlQuery = `
 		SELECT *
 		FROM authors
-		WHERE openalex_id = $1;
+		WHERE openalex_id = $1
+		LIMIT 1;
 	`;
 
 	const result = await pool.query(sqlQuery, [id]);
-	return result.rows[0];
+	return result.rows[0] || null;
 }
 
 // Fetches the affiliations associated with an author
@@ -18,7 +19,7 @@ export async function fetchAuthorAffiliationsById(id) {
 		SELECT *
 		FROM author_affiliations
 		WHERE author_id = $1
-		ORDER BY institution_display_name ASC;;
+		ORDER BY institution_display_name ASC;
 	`;
 
 	const results = await pool.query(sqlQuery, [id]);
@@ -31,7 +32,7 @@ export async function fetchAuthorLastKnownInstitutionsById(id) {
 		SELECT *
 		FROM author_last_known_institutions
 		WHERE author_id = $1
-		ORDER BY institution_display_name ASC;;
+		ORDER BY institution_display_name ASC;
 	`;
 
 	const results = await pool.query(sqlQuery, [id]);
@@ -44,7 +45,7 @@ export async function fetchAuthorTopicsById(id) {
 		SELECT *
 		FROM author_topics
 		WHERE author_id = $1
-		ORDER BY works_count DESC NULLS LAST;;
+		ORDER BY works_count DESC NULLS LAST;
 	`;
 
 	const results = await pool.query(sqlQuery, [id]);
@@ -57,7 +58,7 @@ export async function fetchAuthorTopicSharesById(id) {
 		SELECT *
 		FROM author_topic_share
 		WHERE author_id = $1
-		ORDER BY value DESC NULLS LAST;;
+		ORDER BY value DESC NULLS LAST;
 	`;
 
 	const results = await pool.query(sqlQuery, [id]);
@@ -70,7 +71,7 @@ export async function fetchAuthorCountsByYearById(id) {
 		SELECT *
 		FROM author_counts_by_year
 		WHERE author_id = $1
-		ORDER BY year DESC;;
+		ORDER BY year DESC;
 	`;
 
 	const results = await pool.query(sqlQuery, [id]);
