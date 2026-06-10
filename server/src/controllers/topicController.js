@@ -8,7 +8,7 @@ export async function getTopicByIdController(req, res, next) {
 		const topic = await getTopicById(req.params.id);
 
 		res.status(200).json({
-			stats: "success",
+			status: "success",
 			data: topic
 		});
 	} catch(error) {
