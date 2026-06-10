@@ -4,17 +4,18 @@ import {
 	fetchAuthorLastKnownInstitutionsById,
 	fetchAuthorTopicsById,
 	fetchAuthorTopicSharesById,
-	fetchAuthorCountsByYearById } from "./../repositories/authorRepository.js";
+	fetchAuthorCountsByYearById,
+	fetchAuthorTop5Papers } from "./../repositories/authorRepository.js";
 import { AppError } from "./../utils/AppError.js";
 import { parseString } from "./../utils/parseData.js";
 
 
 // Fetch author with a particular id from the DB
 export async function getAuthorById(id) {
-	// Validate paper id
+	// Validate author id
 	const parsedId = parseString(id, "author id");
 
-	// Validate paper id format: "W" followed by digits
+	// Validate author id format: "A" followed by digits
 	if (!parsedId || !/^A\d+$/.test(parsedId)) {
 		throw new AppError("Invalid author Id", 400);
 	}
@@ -25,13 +26,14 @@ export async function getAuthorById(id) {
 	if (!author)
 		throw new AppError("Author not found", 404);
 
-	const [affiliations, lastKnownInstitutions, topics, topicShares, counts] =
+	const [affiliations, lastKnownInstitutions, topics, topicShares, counts, topPapers] =
 		await Promise.all([
 			fetchAuthorAffiliationsById(author.id),
 			fetchAuthorLastKnownInstitutionsById(author.id),
 			fetchAuthorTopicsById(author.id),
 			fetchAuthorTopicSharesById(author.id),
-			fetchAuthorCountsByYearById(author.id)
+			fetchAuthorCountsByYearById(author.id),
+			fetchAuthorTop5Papers(author.id)
 		]);
 
 	// Author Data Transfer Object (DTO)
@@ -105,6 +107,23 @@ export async function getAuthorById(id) {
     		worksCount: count.works_count,
     		oaWorksCount: count.oa_works_count,
     		citedByCount: count.cited_by_count
+		})),
+
+		topPapers: topPapers.map(paper => ({
+			id: paper.openalex_id,
+			internalId: paper.id,
+			title: paper.title,
+			displayName: paper.display_name,
+			abstract: paper.abstract,
+			publicationYear: paper.publication_year,
+			citedByCount: paper.cited_by_count,
+			fwci: Number(paper.fwci),
+			primarySource: paper.primary_source_display_name,
+			primaryTopic: paper.primary_topic_display_name,
+			isOpenAccess: paper.is_open_access,
+			openAccessStatus: paper.open_access_status,
+			authorCount: Number(paper.author_count),
+			authorsPreview: paper.authors_preview,
 		}))
 	};
 }

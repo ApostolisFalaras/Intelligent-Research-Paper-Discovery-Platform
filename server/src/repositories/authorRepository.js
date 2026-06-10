@@ -77,3 +77,56 @@ export async function fetchAuthorCountsByYearById(id) {
 	const results = await pool.query(sqlQuery, [id]);
 	return results.rows;
 }
+
+// Fetches the top 5 most cited paper (as paper cards) associated with an author
+export async function fetchAuthorTop5Papers(id) {
+	const sqlQuery = `
+		SELECT
+			p.id,
+			p.openalex_id,
+			COALESCE(p.title, p.display_name) AS title,
+            p.display_name,
+            p.abstract, 
+            p.publication_year, 
+            p.cited_by_count,
+            p.fwci,
+            p.primary_source_display_name,
+            p.primary_topic_display_name,
+            p.is_open_access,
+            p.open_access_status,
+
+			COUNT(pa_all.author_openalex_id) as author_count,
+
+			COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id', pa_all.author_openalex_id,
+                        'name', pa_all.author_display_name
+                    )
+                    ORDER BY pa_all.author_order 
+                ) FILTER (
+                    WHERE pa_all.author_order <= 2 AND pa_all.author_openalex_id IS NOT NULL 
+                ), 
+                '[]'::json
+            ) AS authors_preview
+
+			FROM papers p
+			
+			JOIN paper_authors pa_target
+			ON pa_target.paper_id = p.id
+
+			LEFT JOIN paper_authors pa_all
+			ON pa_all.paper_id = p.id
+
+			WHERE pa_target.author_id = $1
+
+			GROUP BY p.id
+
+			ORDER BY p.cited_by_count DESC NULLS LAST
+
+			LIMIT 5;
+	`;
+
+	const results = await pool.query(sqlQuery, [id]);
+	return results.rows;
+} 
