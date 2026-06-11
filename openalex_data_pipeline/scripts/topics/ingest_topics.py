@@ -90,6 +90,21 @@ def insert_topics(topics_batch: list[dict], cur: cursor) -> None:
     execute_values(cur, query, topic_rows)
     return len(topic_rows)
 
+
+# --------- UPDATE INTERNAL TOPIC IDS IN paper_topics TABLE ---------
+
+def update_paper_topic_ids(cur: cursor) -> None:
+    query = """
+        UPDATE paper_topics pt
+        SET topic_id = t.id 
+        FROM topics t
+        WHERE pt.topic_openalex_id = t.openalex_id 
+          AND pt.topic_id IS NULL;
+    """
+    
+    cur.execute(query)
+    return cur.rowcount
+        
         
  
 # --------- INGEST TOPICS ---------
@@ -139,6 +154,11 @@ def ingest() -> None:
             logger.info(f"Batch {batch_number}: committed successfully")
             
         logger.info(f"Ingestion completed: batches={total_batches}, topics={total_topics}")
+        
+        updated_count = update_paper_topic_ids(cur)
+        conn.commit()
+        logger.info(f"Updated topic_id in paper_topics for {updated_count} rows")
+        
     except Exception:
         # Rolling back a failing transaction
         if conn:

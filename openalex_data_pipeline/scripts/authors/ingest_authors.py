@@ -85,7 +85,7 @@ def insert_authors(authors_batch: list[dict], cur: cursor) -> dict:
     return dict(results)
 
 
-# ---------- INSERT REMAINING AUTHOR-RELATED TABLES ----------
+# ---------- BUILD REMAINING AUTHOR-RELATED TABLE TUPLES ----------
 
 def build_remaining_tables_tuples(authors_batch: list[dict], author_ids: dict) -> dict:
     tuple_batches = {
@@ -208,6 +208,7 @@ def build_remaining_tables_tuples(authors_batch: list[dict], author_ids: dict) -
                 
     return tuple_batches
             
+# ---------- INSERT REMAINING AUTHOR-RELATED TABLES ----------
 
 def insert_remaining_tables_tuples(tuple_batches: dict, cur: cursor) -> None:
     # Initially, checking if there are any tuples to be inserted for the particular table
@@ -308,7 +309,22 @@ def insert_remaining_tables_tuples(tuple_batches: dict, cur: cursor) -> None:
             """,
             tuple_batches["author_counts_by_year"].values()
         )    
-        
+
+
+# ---------- UPDATE INTERNAL AUTHOR IDS IN paper_authors TABLE  ----------
+
+def update_paper_author_ids(cur: cursor) -> None:
+    query = """
+        UPDATE paper_authors pa
+        SET author_id = a.id
+        FROM authors a
+        WHERE pa.author_openalex_id = a.openalex_id 
+          AND pa.author_id IS NULL;
+    """
+    
+    cur.execute(query)
+    return cur.rowcount
+    
  
 # --------- INGEST AUTHORS ---------
 
@@ -364,8 +380,13 @@ def ingest() -> None:
              # Making sure to commit each batch before moving to the next batch
             conn.commit()
             logger.info(f"Batch {batch_number}: committed successfully")
-
+            
         logger.info(f"Ingestion completed: batches={total_batches}, works={total_authors}")
+        
+        updated_count = update_paper_author_ids(cur)
+        conn.commit()
+        logger.info(f"Updated author_id in paper_authors for {updated_count} rows")
+        
                   
     except Exception as e:
         if conn:
