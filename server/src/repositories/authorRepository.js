@@ -79,7 +79,7 @@ export async function fetchAuthorCountsByYearById(id) {
 }
 
 // Fetches the top 5 most cited paper (as paper cards) associated with an author
-export async function fetchAuthorTop5Papers(id) {
+export async function fetchAuthorPapers(id, limit, offset) {
 	const sqlQuery = `
 		SELECT
 			p.id,
@@ -124,9 +124,10 @@ export async function fetchAuthorTop5Papers(id) {
 
 			ORDER BY p.cited_by_count DESC NULLS LAST
 
-			LIMIT 5;
+			LIMIT $2
+			OFFSET $3;
 	`;
 
-	const results = await pool.query(sqlQuery, [id]);
+	const results = await pool.query(sqlQuery, [id, limit, offset]);
 	return results.rows;
 } 
