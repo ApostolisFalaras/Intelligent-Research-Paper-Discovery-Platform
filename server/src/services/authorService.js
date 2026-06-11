@@ -142,7 +142,7 @@ export async function getAuthorPapers(id, pagination) {
 
 	// Pagination filters validation
 	const page = parseInteger(pagination.page, "page") ?? 1;
-	const limit = parseInteger(pagination.limit, "limit") ?? 25;
+	const limit = parseInteger(pagination.limit, "limit") ?? 10;
 
 	if (page < 1)
 		throw new AppError("'page' must be greater than or equal to 1", 400);
