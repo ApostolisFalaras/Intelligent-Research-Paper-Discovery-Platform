@@ -1,4 +1,4 @@
-import { getTopicById } from "./../services/topicService.js";
+import { getTopicById, getTopicPapers } from "./../services/topicService.js";
 import { AppError } from "./../utils/AppError.js";
 
 
@@ -10,6 +10,20 @@ export async function getTopicByIdController(req, res, next) {
 		res.status(200).json({
 			status: "success",
 			data: topic
+		});
+	} catch(error) {
+		next(error);
+	}
+}
+
+// Retrieves papars associated with a particular topic
+export async function getTopicPapersController(req, res, next) {
+	try {
+		const papers = await getTopicPapers(req.params.id, req.query);
+
+		res.status(200).json({
+			status: "success",
+			data: papers
 		});
 	} catch(error) {
 		next(error);
