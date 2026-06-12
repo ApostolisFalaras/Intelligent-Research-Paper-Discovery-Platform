@@ -783,6 +783,22 @@ describe("fetchAuthorPapers", () => {
         expect(results).toEqual(mockResolvedPapers2);
     });
 
+    it("Fetches an authors associated papers using custom pagination", async () => {
+        pool.query.mockResolvedValue({
+            rows: []
+        });
+
+        // Custom pagination: 10 papers from 5th page of papers, 
+        // LIMIT -> 10, OFFSET -> 40
+        const results = await fetchAuthorPapers("50703", 10, 40);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expectFetchAuthorPapersQuery(query);
+        expect(params).toEqual(["50703", 10, 40]);
+
+        expect(results).toEqual([]);
+    });
 
     it("Fetches an empty array for an invalid internal author id", async () => {
         pool.query.mockResolvedValue({

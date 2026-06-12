@@ -592,6 +592,34 @@ describe("getAuthorPapers", () => {
         expect(results).toEqual(expectedOutput);
     });
 
+    it("Returns an empty array when pagination exceeds paper limits", async () => {
+        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
+        fetchAuthorPapers.mockResolvedValue([]);
+
+        const expectedOutput = mockResolvedPapers2.map(paper => ({
+            id: paper.openalex_id,
+            internalId: paper.id,
+            title: paper.title,
+            displayName: paper.display_name,
+            abstract: paper.abstract,
+            publicationYear: paper.publication_year,
+            citedByCount: paper.cited_by_count,
+            fwci: Number(paper.fwci),
+            primarySource: paper.primary_source_display_name,
+            primaryTopic: paper.primary_topic_display_name,
+            isOpenAccess: paper.is_open_access,
+            openAccessStatus: paper.open_access_status,
+            authorCount: Number(paper.author_count),
+            authorsPreview: paper.authors_preview,
+        }));
+
+        const results = await getAuthorPapers("A5107860229", {page: 5, limit: 10});
+
+        expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 10, 40);
+        expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
+        expect(results).toEqual([]);
+    });
+
     // ------------ USER ERRORS --------------
 
     it("Throws a 400 AppError when input id is not a string", async () => {
