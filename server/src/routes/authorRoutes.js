@@ -9,4 +9,5 @@ router.get("/:id", getAuthorByIdController);
 
 // User views an author's papers
 router.get("/:id/papers", getAuthorPapersController);
+
 export default router;
