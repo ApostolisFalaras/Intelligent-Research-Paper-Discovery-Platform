@@ -666,6 +666,20 @@ describe("GET /api/authors/:id/papers", () => {
         expect(response.body.message).toBe("'page' must be an integer");
     });
 
+    it("Returns 400 when the page is an invalid number", async () => {
+        const response = await request(app).get("/api/authors/A5107860229/papers")
+        .query({
+            page: 0,
+            limit: null
+        })
+        .expect(400);
+
+        expect(fetchAuthorById).not.toHaveBeenCalled();
+        expect(fetchAuthorPapers).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("'page' must be greater than or equal to 1");
+    });
 
     it("Returns 400 when the limit is not an integer", async () => {
         const response = await request(app).get("/api/authors/A5107860229/papers")
@@ -680,6 +694,21 @@ describe("GET /api/authors/:id/papers", () => {
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("'limit' must be an integer");
+    });
+
+    it("Returns 400 when the limit is an invalid number", async () => {
+        const response = await request(app).get("/api/authors/A5107860229/papers")
+        .query({
+            page: null,
+            limit: 105
+        })
+        .expect(400);
+
+        expect(fetchAuthorById).not.toHaveBeenCalled();
+        expect(fetchAuthorPapers).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("'limit' must be between 1 and 100");
     });
 
     it("Returns 404 when the author doesn't exist", async () => {

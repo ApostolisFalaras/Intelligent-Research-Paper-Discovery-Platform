@@ -649,11 +649,29 @@ describe("getAuthorPapers", () => {
         expect(fetchAuthorPapers).not.toHaveBeenCalled();
     });
 
+    it("Throws a 400 AppError when page number is an invalid number", async () => {
+        // Assuming default pagination limit for simplicity
+        await expect(getAuthorPapers("A5107860229", {page: 0, limit: null}))
+        .rejects
+        .toThrow("'page' must be greater than or equal to 1");
+
+        expect(fetchAuthorPapers).not.toHaveBeenCalled();
+    });
+
     it("Throws a 400 AppError when limit is not a number", async () => {
         // Assuming default pagination page for simplicity
         await expect(getAuthorPapers("A5107860229", {page: null, limit: "five"}))
         .rejects
         .toThrow("'limit' must be an integer");
+
+        expect(fetchAuthorPapers).not.toHaveBeenCalled();
+    });
+
+    it("Throws a 400 AppError when limit is a invalid number", async () => {
+        // Assuming default pagination page for simplicity
+        await expect(getAuthorPapers("A5107860229", {page: null, limit: 105}))
+        .rejects
+        .toThrow("'limit' must be between 1 and 100");
 
         expect(fetchAuthorPapers).not.toHaveBeenCalled();
     });
