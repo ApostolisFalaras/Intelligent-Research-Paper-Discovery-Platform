@@ -78,7 +78,8 @@ export async function fetchAuthorCountsByYearById(id) {
 	return results.rows;
 }
 
-// Fetches the top 5 most cited paper (as paper cards) associated with an author
+// Fetches the most cited papers (as paper cards) associated with an author
+// based on pagination filters
 export async function fetchAuthorPapers(id, limit, offset) {
 	const sqlQuery = `
 		SELECT
