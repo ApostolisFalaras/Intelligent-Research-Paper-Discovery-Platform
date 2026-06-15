@@ -12,8 +12,8 @@ CREATE TABLE papers (
     
     -- used in Full-Text Search, generated automatically for each tuple
     search_vector tsvector GENERATED ALWAYS AS (
-        setweight(to_tsvector('english', COALESCE('title', 'display_name', '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE('abstract', '')), 'B')
+        setweight(to_tsvector('english', COALESCE(title, display_name, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(abstract, '')), 'B')
     ) STORED, 
 
     -- Publication Metadata
@@ -238,7 +238,6 @@ CREATE TABLE paper_counts_by_year (
     UNIQUE(paper_id, year)
 );
 
-
 -- AUTHORS
 
 -- Each Author in the database
@@ -349,8 +348,8 @@ CREATE TABLE author_counts_by_year (
     UNIQUE (author_id, year)
 );
 
-
 -- TOPICS
+
 CREATE TABLE topics (
     id BIGSERIAL PRIMARY KEY,
 
@@ -377,7 +376,6 @@ CREATE TABLE topics (
     openalex_created_at TIMESTAMPTZ,
     openalex_updated_at TIMESTAMPTZ 
 );
-
 
 -- USERS / PROJECT FOLDERS
 
@@ -434,6 +432,143 @@ CREATE TABLE user_search_history (
     result_count INTEGER,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- RECOMMENDATION-RELATED TABLES
+
+-- Interaction metrics of user with a paper
+CREATE TABLE user_paper_interactions (
+    user_id INTEGER NOT NULL,
+    paper_id BIGINT NOT NULL,
+
+    view_count INTEGER NOT NULL DEFAULT 0,
+    is_saved BOOLEAN NOT NULL DEFAULT FALSE,
+    interest_score NUMERIC(10, 4) NOT NULL DEFAULT 0,
+
+    first_viewed_at TIMESTAMPTZ,
+    last_interaction_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, paper_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
+-- Global interaction metrics for each paper
+CREATE TABLE paper_metrics (
+    paper_id BIGINT PRIMARY KEY,
+
+    view_count INTEGER NOT NULL DEFAULT 0,
+    save_count INTEGER NOT NULL DEFAULT 0,
+    recommendation_click_count INTEGER NOT NULL DEFAULT 0,
+
+    popularity_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+); 
+
+-- Precomputed paper features for recommendation algorithms
+CREATE TABLE paper_recommendation_features (
+    paper_id BIGINT PRIMARY KEY,
+
+    citation_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    recency_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+
+    topic_vector JSONB NOT NULL DEFAULT '{}',
+    domain_vector JSONB NOT NULL DEFAULT '{}',
+    field_vector JSONB NOT NULL DEFAULT '{}',
+    subfield_vector JSONB NOT NULL DEFAULT '{}',
+    author_vector JSONB NOT NULL DEFAULT '{}',
+    keyword_vector JSONB NOT NULL DEFAULT '{}',
+
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
+-- Computed user preference profile
+CREATE TABLE user_profile_preferences (
+    user_id INTEGER PRIMARY KEY,
+
+    topic_preferences JSONB NOT NULL DEFAULT '{}',
+    domain_preferences JSONB NOT NULL DEFAULT '{}',
+    field_preferences JSONB NOT NULL DEFAULT '{}',
+    subfield_preferences JSONB NOT NULL DEFAULT '{}',
+    author_preferences JSONB NOT NULL DEFAULT '{}',
+    keyword_preferences JSONB NOT NULL DEFAULT '{}',
+
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Similar users for collaborative filtering
+CREATE TABLE user_similarity_cache (
+    user_id INTEGER NOT NULL,
+    similar_user_id INTEGER NOT NULL,
+
+    similarity_score NUMERIC(10, 6) NOT NULL,
+
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, similar_user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (similar_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CHECK (user_id <> similar_user_id)
+);
+
+-- Final cached paper recommendations per user
+CREATE TABLE user_recommendation_cache (
+    user_id INTEGER NOT NULL,
+    paper_id BIGINT NOT NULL,
+
+    final_score NUMERIC(10, 6) NOT NULL,
+
+    content_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    collaborative_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    topic_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    popularity_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+    recency_score NUMERIC(10, 6) NOT NULL DEFAULT 0,
+
+    reason TEXT,
+    
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, paper_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
+);
+
+-- Dirty/stale marker for recommendation refresh
+CREATE TABLE recommendation_refresh_queue (
+    user_id INTEGER PRIMARY KEY,
+
+    reason TEXT,
+    priority INTEGER NOT NULL DEFAULT 1,
+    
+    requested_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMPTZ,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Similar papers cache
+CREATE TABLE paper_similarity_cache (
+    paper_id BIGINT NOT NULL,
+    similar_paper_id BIGINT NOT NULL,
+
+    similarity_score NUMERIC(10, 6) NOT NULL,
+    
+    reason TEXT,
+    
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (paper_id, similar_paper_id),
+    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    FOREIGN KEY (similar_paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+    CHECK (paper_id <> similar_paper_id)
 );
 
 -- INDEXES (for potential filtering fields)
@@ -574,3 +709,54 @@ CREATE INDEX idx_topics_field ON topics(field_openalex_id);
 CREATE INDEX idx_topics_subfield ON topics(subfield_openalex_id);
 CREATE INDEX idx_topics_works_count ON topics(works_count DESC);
 CREATE INDEX idx_topics_cited_by_count ON topics(cited_by_count DESC);
+
+-- Indexes for user_paper_interactions
+CREATE INDEX idx_user_paper_interactions_interest_score
+ON user_paper_interactions(user_id, interest_score DESC);
+
+CREATE INDEX idx_user_paper_interactions ON user_paper_interactions(paper_id);
+
+-- Indexes for paper_metrics
+CREATE INDEX idx_paper_metrics_popularity ON paper_metrics(popularity_score DESC);
+
+-- Indexes for paper_recommendation_features
+CREATE INDEX idx_paper_recommendation_features_domain_vector
+ON paper_recommendation_features USING GIN (domain_vector);
+
+CREATE INDEX idx_paper_recommendation_features_field_vector
+ON paper_recommendation_features USING GIN (field_vector);
+
+CREATE INDEX idx_paper_recommendation_features_subfield_vector
+ON paper_recommendation_features USING GIN (subfield_vector);
+
+CREATE INDEX idx_paper_recommendation_features_topic_vector
+ON paper_recommendation_features USING GIN (topic_vector);
+
+-- Indexes for user_profile_preferences
+CREATE INDEX idx_user_profile_preferences_domain_preferences
+ON user_profile_preferences USING GIN (domain_preferences);
+
+CREATE INDEX idx_user_profile_preferences_field_preferences
+ON user_profile_preferences USING GIN (field_preferences);
+
+CREATE INDEX idx_user_profile_preferences_subfield_preferences
+ON user_profile_preferences USING GIN (subfield_preferences);
+
+CREATE INDEX idx_user_profile_preferences_topic_preferences
+ON user_profile_preferences USING GIN (topic_preferences);
+
+-- Indexes for user_similarity_cache
+CREATE INDEX idx_user_similarity_cache_similarity_score
+ON user_similarity_cache(user_id, similarity_score DESC); 
+
+-- Indexes for user_recommendation_cache
+CREATE INDEX idx_user_recommendation_cache_final_score
+ON user_recommendation_cache(user_id, final_score DESC);
+
+-- Indexes for refresh_recommendation_queue
+CREATE INDEX idx_recommendation_refresh_queue_unprocessed
+ON recommendation_refresh_queue(requested_at) WHERE processed_at IS NULL;
+
+-- Indexes for paper_similarity_cache
+CREATE INDEX idx_paper_similarity_cache_paper_score
+ON paper_similarity_cache(paper_id, similarity_score DESC);
