@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import math
 
 # --------- UTILITIES FOR NORMALIZING IDS ------------
 
@@ -59,6 +60,7 @@ def normalize_openalex_id_list(list_openalex_id: list[str]) -> list[str]:
             normalized_id_list.append(openalex_id)
                 
     return normalized_id_list
+
 
 # --------- DATASET BATCHES UTILITIES ------------
 
@@ -252,3 +254,36 @@ def normalize_language(lang_code: str | None) -> str | None:
     lang_code = lang_code.strip().lower()
     
     return LANGUAGE_NAMES.get(lang_code, lang_code)
+
+
+# ---------- UTILITIES FOR RECOMMENDATION-RELATED ISSUES ----------
+
+CURRENT_YEAR = 2026
+
+# Make sure an input value is a float
+def safe_float(value, default=0.0):
+    try:
+        if value is None:
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+    
+    
+# Normalization function for citation counts: score = ln(1 + citations)
+def calculate_citation_score(cited_by_count: int | None) -> float:
+    citations = max(0, int(cited_by_count or 0))
+    return math.log1p(citations)
+
+# recency score = 1 / (1 + (CURRENT_YEAR - publication_year))
+def calculate_recency_score(publication_year: int | None) -> float:
+    if not publication_year:
+        return 0.0
+    
+    try:
+        publication_year = int(publication_year)
+    except (TypeError, ValueError):
+        return 0.0
+    
+    age = max(0, CURRENT_YEAR - publication_year)
+    return 1 / (1 + age)

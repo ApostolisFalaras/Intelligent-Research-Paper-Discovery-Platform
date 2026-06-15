@@ -1,13 +1,14 @@
-import json
-from pathlib import Path
-import psycopg2
+from psycopg2.extras import Json
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor
 from logging import Logger
 from scripts.ingestion.ingestion_utils import (
     normalize_openalex_id,
     normalize_openalex_id_list,
-    normalize_language
+    normalize_language,
+    safe_float,
+    calculate_citation_score,
+    calculate_recency_score
 )
 
 
@@ -158,6 +159,73 @@ def insert_paper_authors(works_batch: list[dict], paper_ids: dict, cur: cursor, 
         (paper_id, author_order): paper_author_id for paper_id, author_order, paper_author_id in results
     }
     
+    
+# ---------- BUILD RECOMMENDATION-RELATED VECTORS ----------
+
+def build_paper_feature_vectors(work: dict) -> dict:
+    topic_vector = {}
+    domain_vector = {}
+    field_vector = {}
+    subfield_vector = {}
+    keyword_vector = {}
+    author_vector = {}
+    
+    # For each topic associated with a work
+    for topic in work.get("topics") or []:
+        topic_id = normalize_openalex_id(topic.get("id"))
+        score = safe_float(topic.get("score"), 1.0)
+        
+        # Add a topic score to a topics record vector,
+        if topic_id:
+            topic_vector[topic_id] = max(topic_vector.get(topic_id, 0), score)
+        
+        # a domain score to a domains record vector
+        domain = topic.get("domain") or {}
+        domain_id = normalize_openalex_id(domain.get("id"))
+        if domain_id:
+            domain_vector[domain_id] = max(domain_vector.get(domain_id, 0), score)
+            
+        # a field score to a fields record vector
+        field = topic.get("field") or {}
+        field_id = normalize_openalex_id(field.get("id"))
+        if field_id:
+            field_vector[field_id] = max(field_vector.get(field_id, 0), score)
+            
+        # a subfield score to a fields record vector
+        subfield = topic.get("subfield") or {}
+        subfield_id = normalize_openalex_id(subfield.get("id"))
+        if subfield_id:
+            subfield_vector[subfield_id] = max(subfield_vector.get(subfield_id, 0), score)
+            
+    # For each keyword associated with a work
+    for keyword in work.get("keywords") or []:
+        keyword_id = normalize_openalex_id(keyword.get("id"))
+        keyword_name = keyword.get("display_name")
+        score = safe_float(keyword.get("score"), 1.0)
+        
+        # Add a keyword score to a keywords record vector
+        key = keyword_id or keyword_name
+        if key:
+            keyword_vector[key] = max(keyword_vector.get(key, 0), score)
+            
+    # For each authorship associated with a work
+    for authorship in work.get("authorships") or []:
+        author = authorship.get("author") or {}
+        author_id = normalize_openalex_id(author.get("id"))
+        
+        if author_id:
+            author_vector[author_id] = max(author_vector.get(author_id, 0), 1.0)      
+    
+    return {
+        "topic_vector": topic_vector,
+        "domain_vector": domain_vector,
+        "field_vector": field_vector,
+        "subfield_vector": subfield_vector,
+        "keyword_vector": keyword_vector,
+        "author_vector": author_vector   
+    }
+    
+    
 # ---------- BUILD REMAINING TABLES' TUPLES -----------
     
 def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper_author_ids: dict, logger: Logger) -> dict:
@@ -171,7 +239,9 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
         "paper_locations_rows": {}, 
         "paper_references_rows": {},
         "paper_related_rows": {},
-        "paper_counts_by_year_rows": {}
+        "paper_counts_by_year_rows": {},
+        "paper_recommendation_features_rows": {},
+        "paper_metrics_rows": {}
     }
     
     for work in work_batch or []:
@@ -362,6 +432,30 @@ def build_remaining_tables_tuples(work_batch: list[dict], paper_ids: dict, paper
                     counts_in_a_year.get("year"),
                     counts_in_a_year.get("cited_by_count") or 0
                 )
+                
+        # Recommendation-related tables
+                
+        vectors = build_paper_feature_vectors(work)
+        
+        tuple_batches["paper_recommendation_features_rows"][paper_id] = (
+            paper_id,
+            calculate_citation_score(work.get("cited_by_count")),
+            calculate_recency_score(work.get("publication_year")),
+            Json(vectors["topic_vector"]),
+            Json(vectors["domain_vector"]),
+            Json(vectors["field_vector"]),
+            Json(vectors["subfield_vector"]),
+            Json(vectors["keyword_vector"]),
+            Json(vectors["author_vector"]),
+        )
+        
+        tuple_batches["paper_metrics_rows"][paper_id] = (
+            paper_id,
+            0,
+            0,
+            0,
+            0,
+        )
             
     return tuple_batches
         
@@ -494,6 +588,43 @@ def insert_remaining_tables_tuples(tuple_batches: dict, cur: cursor) -> None:
             tuple_batches["paper_counts_by_year_rows"].values()
         )
         
-        
-
+    # Recommendation-related tables
     
+    if tuple_batches["paper_recommendation_features_rows"]:
+        execute_values(
+            cur,
+            """ 
+            INSERT INTO paper_recommendation_features (
+                paper_id, citation_score, recency_score, topic_vector, domain_vector,
+                field_vector, subfield_vector, keyword_vector, author_vector  
+            )
+            VALUES %s
+            ON CONFLICT (paper_id) DO UPDATE SET
+                citation_score = EXCLUDED.citation_score,
+                recency_score = EXCLUDED.recency_score,
+                topic_vector = EXCLUDED.topic_vector,
+                domain_vector = EXCLUDED.domain_vector,
+                field_vector = EXCLUDED.field_vector,
+                subfield_vector = EXCLUDED.subfield_vector,
+                keyword_vector = EXCLUDED.keyword_vector,
+                author_vector = EXCLUDED.author_vector,
+                updated_at = CURRENT_TIMESTAMP;
+            """,
+            tuple_batches["paper_recommendation_features_rows"].values()
+        )  
+        
+    if tuple_batches["paper_metrics_rows"]:
+        execute_values(
+            cur,
+            """ 
+            INSERT INTO paper_metrics (
+                paper_id, view_count, save_count, recommendation_click_count, popularity_score 
+            )
+            VALUES %s
+            ON CONFLICT (paper_id) DO NOTHING;
+            """,
+            tuple_batches["paper_metrics_rows"].values()
+        )
+        
+        
+        
