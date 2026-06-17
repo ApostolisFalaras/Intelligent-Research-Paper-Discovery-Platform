@@ -10,6 +10,7 @@ import { parseUserId, parseInteger } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
 
+// Helper method to reduce repetitive code
 function validateUserAndPaperIds(userId, paperId) {
 	// Validate user & paper ids
 	const parsedUserId = parseUserId(userId);
@@ -26,7 +27,7 @@ export async function recordPaperView(userId, paperId, isRecommendation) {
 	await incrementPaperViewCount(parsedPaperId);
 
 	if (isRecommendation)
-		incrementRecommendationClickCount(parsedPaperId);
+		await incrementRecommendationClickCount(parsedPaperId);
 } 
 
 // Records a user's paper save
