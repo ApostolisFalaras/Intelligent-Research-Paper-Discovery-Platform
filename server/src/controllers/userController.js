@@ -8,6 +8,7 @@ import { getUserMe,
          getPapersFromFolderById,
          addPapertoFolderById,
          deletePaperFromFolderById } from "./../services/userService.js";
+import { recordPaperSave, recordPaperUnsave } from "./../services/recommendationEventService.js";
 import { AppError } from "./../utils/AppError.js";
 
 // User accesses their profile
@@ -136,7 +137,15 @@ export async function getPapersFromFolderController(req, res, next) {
 // User adds paper to a project folder
 export async function addPapertoFolderController(req, res, next) {
     try {
-        await addPapertoFolderById(req.user.id, req.params.folderId, req.params.paperId);
+        const internalPaperId = await addPapertoFolderById(req.user.id, req.params.folderId, req.params.paperId);
+
+        if (req.user?.id) {
+            try {
+                await recordPaperSave(req.user.id, internalPaperId);
+            } catch (error) {
+                console.error("Failed to record paper save event:", error);
+            }
+        }
 
         res.status(201).json({
             status: "success",
@@ -150,7 +159,15 @@ export async function addPapertoFolderController(req, res, next) {
 // User deletes paper from project folder
 export async function deletePaperFromFolderController(req, res, next) {
     try {
-        await deletePaperFromFolderById(req.user.id, req.params.folderId, req.params.paperId);
+        const internalPaperId = await deletePaperFromFolderById(req.user.id, req.params.folderId, req.params.paperId);
+
+        if (req.user?.id) {
+            try {
+                await recordPaperUnsave(req.user.id, internalPaperId);
+            } catch (error) {
+                console.error("Failed to record paper unsave event:", error);
+            }
+        }
 
         res.status(200).json({
             status: "success",

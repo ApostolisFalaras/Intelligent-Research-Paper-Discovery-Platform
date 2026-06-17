@@ -262,6 +262,8 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
 
     if (addedPapers === 0)
         throw new AppError("Paper was not inserted to project folder", 500);
+
+    return paper.id;
 }
 
 
@@ -291,4 +293,6 @@ export async function deletePaperFromFolderById(userId, folderId, paperId) {
 
     if (deletedPapers === 0)
         throw new AppError("Paper wasn't stored in project folder", 404);
+
+    return paper.id;
 }
