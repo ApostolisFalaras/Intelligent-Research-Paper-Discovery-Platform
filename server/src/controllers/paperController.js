@@ -1,10 +1,19 @@
 import { getPaperById } from "./../services/paperService.js";
+import { recordPaperView } from "./../services/recommendationEventService.js";
 
 // Retrieves a single paper from its url when accessed
 export async function getPaperByIdController(req, res, next) {
     try {
         const paper = await getPaperById(req.params.id);
         
+        if (req.user?.id) {
+            try {
+                await recordPaperView(req.user.id, paper.internalId, req.query.isRecommendation);
+            } catch (error) {
+                console.error("Failed to record paper view event:", error);
+            }
+        }
+
         // Successful retrieval of paper
         return res.status(200).json({
             status: "success",
