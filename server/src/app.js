@@ -1,7 +1,6 @@
 import express from "express";
 import paperRouter from "./routes/paperRoutes.js";
 import searchRouter from "./routes/searchRoutes.js";
-import recommendationsRouter from "./routes/recommendationRoutes.js";
 import authorRouter from "./routes/authorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import authRouter from "./routes/authRoutes.js";
@@ -22,13 +21,12 @@ app.use(sessionMiddleware);
 app.use("/api/auth", authRouter);
 
 app.use("/api/search", optionalAuthMiddleware, searchRouter);
-app.use("/api/papers", paperRouter);
+app.use("/api/papers", optionalAuthMiddleware, paperRouter);
 app.use("/api/authors", authorRouter);
 app.use("/api/topics", topicRouter);
 
 // To perform user- and recommendation-related operations, the user needs to be authenticated
 app.use("/api/users", authMiddleware, userRouter);
-app.use("/api/recommendations", authMiddleware, recommendationsRouter);
 
 
 app.get("/", (req, res) => {
