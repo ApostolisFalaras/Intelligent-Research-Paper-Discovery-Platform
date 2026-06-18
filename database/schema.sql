@@ -757,6 +757,9 @@ ON user_recommendation_cache(user_id, final_score DESC);
 CREATE INDEX idx_recommendation_refresh_queue_unprocessed
 ON recommendation_refresh_queue(requested_at) WHERE processed_at IS NULL;
 
+CREATE INDEX idx_recommendation_refresh_queue_pending
+ON recommendation_refresh_queue(user_id, reason) WHERE processed_at IS NULL;
+
 -- Indexes for paper_similarity_cache
 CREATE INDEX idx_paper_similarity_cache_paper_score
 ON paper_similarity_cache(paper_id, similarity_score DESC);
