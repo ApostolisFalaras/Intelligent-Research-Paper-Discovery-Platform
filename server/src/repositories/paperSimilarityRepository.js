@@ -86,3 +86,15 @@ export async function deletePaperSimilarityCache(paperId) {
 	const result = await pool.query(sqlQuery, [paperId]);
 	return result.rowCount;
 }
+
+// Fetches a paper's recommendation features
+export async function fetchPaperRecommendationFeatures(paperId) {
+	const sqlQuery = `
+		SELECT *
+		FROM paper_recommendation_features
+		WHERE paper_id = $1;
+	`;
+
+	const results = await pool.query(sqlQuery, [paperId]);
+	return results.rows[0] ?? null;
+}
