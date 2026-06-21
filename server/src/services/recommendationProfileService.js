@@ -3,43 +3,10 @@ import {
 	upsertUserProfilePreferences } from "./../repositories/recommendationProfileRepository.js";
 import { 
 	fetchStaleRecommendations, 
-	markUserRecommendationsProcessed } from "../repositories/recommendationRefreshRepository.js";
-import { addWeightVector, normalizeVector } from "./../utils/vectorUtils.js";
+	markUserRecommendationsProcessed } from "./../repositories/recommendationRefreshRepository.js";
+import { buildProfilePreferences } from "./../algorithms/userProfileAggregation.js";
 import { parseUserId, parseInteger } from "./../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
-
-
-
-// Helper function constructing each type of user preferences
-function buildProfilePreferences(interactionFeatures) {
-	const topicPreferences = {};
-	const domainPreferences = {};
-	const fieldPreferences = {};
-	const subfieldPreferences = {};
-	const authorPreferences = {};
-	const keywordPreferences = {};
-
-	for (const interaction of interactionFeatures) {
-		// Interest score captures the interaction's weight
-		const weight = Math.max(Number(interaction.interest_score ?? 0), 0);
-
-		addWeightVector(topicPreferences, interaction.topic_vector, weight);
-		addWeightVector(domainPreferences, interaction.domain_vector, weight);
-		addWeightVector(fieldPreferences, interaction.field_vector, weight);
-		addWeightVector(subfieldPreferences, interaction.subfield_vector, weight);
-		addWeightVector(authorPreferences, interaction.author_vector, weight);
-		addWeightVector(keywordPreferences, interaction.keyword_vector, weight);
-	}
-
-	return {
-		topicPreferences: normalizeVector(topicPreferences),
-		domainPreferences: normalizeVector(domainPreferences),
-		fieldPreferences: normalizeVector(fieldPreferences),
-		subfieldPreferences: normalizeVector(subfieldPreferences),
-		authorPreferences: normalizeVector(authorPreferences),
-		keywordPreferences: normalizeVector(keywordPreferences)
-	}
-}
 
 
 // Rebuild a user's profile preferences based on their recorded interactions with papers
