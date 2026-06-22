@@ -132,7 +132,7 @@ export function minMaxNormalization(value, min, max) {
 
 // Min-Max Normalization, applied to all recommendation scores,
 // before computing the final recommendation score of a paper to a user
-export function normalizeArray(values = []) {
+export function minmaxNormalizeArray(values = []) {
 	const numericValues = values.map(Number).filter(Number.isFinite);
 
 	if (numericValues.length === 0)
