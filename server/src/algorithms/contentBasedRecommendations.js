@@ -25,7 +25,6 @@ export function generateContentBasedRecommendations(userProfile, candidatePapers
 		.map(paper => ({
 			paperId: paper.paper_id,
 			contentScore: calculateContentScore(userProfile, paper),
-			recencyScore: Number(paper.recency_score ?? 0)
 		}));
 	
 	// Filtering out negative content scores and sorting the array is descending order of those scores.
