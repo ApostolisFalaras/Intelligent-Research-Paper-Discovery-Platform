@@ -3,10 +3,7 @@ import { fetchPaperRecommendationFeatures } from "../repositories/paperSimilarit
 
 // Paper-paper similarity, we compute all vector similarities (topics, fields, subfields, etc.)
 // and add them through a linear combination that assigns different weight to each similarity
-export async function paperToPaperSimilarity(paperAId, paperBId) {
-	const paperAFeatures = await fetchPaperRecommendationFeatures(paperAId);
-	const paperBFeatures = await fetchPaperRecommendationFeatures(paperBId);
-
+export async function paperToPaperSimilarity(paperAFeatures, paperBFeatures) {
 	if (!paperAFeatures || !paperBFeatures) {
 		return 0;
 	}
