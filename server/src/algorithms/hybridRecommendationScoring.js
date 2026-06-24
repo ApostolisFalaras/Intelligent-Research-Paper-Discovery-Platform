@@ -62,7 +62,6 @@ export function calculateFinalRecommendationScores(
 	for (const rec of contentRecommendations) {
 		const target = ensurePaper(rec.paper_id);
 		target.contentScore = rec.contentScore;
-		target.recencyScore = rec.recencyScore;
 	}
 
 	for (const rec of collaborativeRecommendations) {
