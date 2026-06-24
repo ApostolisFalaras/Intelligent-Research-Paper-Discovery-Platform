@@ -1,23 +1,18 @@
 import { minmaxNormalizeArray } from "./../utils/vectorUtils.js";
 
 
-export function generateCollaborativeRecommendations(similarUsers, similarUserInteractions, excludedPaperIds = new Set()) {
+export function generateCollaborativeRecommendations(similarUserInteractions, excludedPaperIds = new Set()) {
 	const scoreMap = new Map();
-
-	const similarityMap = new Map(
-		similarUsers.map(user => [Number(user.similar_user_id), Number(user.similarity_score)])
-	);
 
 	// For each paper interaction of a similar user
 	for (const interaction of similarUserInteractions) {
-		const similarUserId = Number(interaction.user_id);
 		const paperId = Number(interaction.paper_id);
 
 		if (excludedPaperIds.has(paperId))
 			continue;
 
 		// we calculate its individual contribution to the collaborative score
-		const similarityScore = similarityMap.get(similarUserId) ?? 0;
+		const similarityScore = Number(interaction.similarity_score ?? 0);
 		const interestScore = Number(interaction.interest_score ?? 0);
 		
 		// Using log to prevent users with extreme interest scores from dominating the rest of the users
