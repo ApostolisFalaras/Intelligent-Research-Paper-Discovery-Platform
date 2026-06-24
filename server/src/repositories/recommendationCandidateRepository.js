@@ -4,7 +4,7 @@ import pool from "./../config/db.js";
 // It's used for content-based & hybrid recommendation scores
 export async function fetchCandidatePapersByTopics(topicIds, limit = 5000) {
 	const sqlQuery = `
-		SELECT prf.*
+		SELECT prf.paper_id
 		FROM paper_recommendation_features prf
 		JOIN paper_topics pt
 		  ON pt.paper_id = prf.paper_id
@@ -20,7 +20,7 @@ export async function fetchCandidatePapersByTopics(topicIds, limit = 5000) {
 // It's used for content-based & hybrid recommendation scores
 export async function fetchCandidatePapersBySubfields(subfieldIds, limit = 5000) {
 	const sqlQuery = `
-		SELECT prf.*
+		SELECT prf.paper_id
 		FROM paper_recommendation_features prf
 		JOIN paper_topics pt
 		  ON pt.paper_id = prf.paper_id
@@ -45,7 +45,7 @@ export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000)
 			usc.similarity_score
 		FROM user_similarity_cache usc
 		JOIN user_paper_interactions upi
-		  ON upi.user_id = usc.other_user_id
+		  ON upi.user_id = usc.similar_user_id
 		WHERE usc.user_id = $1
 		  AND upi.paper_id NOT IN (
 		  	SELECT paper_id
@@ -64,21 +64,20 @@ export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000)
 // It's used for similar-to-saved-paper, home, hybrid recommendation scores
 export async function fetchCandidatePapersFromSavedPaper(userId, limit = 5000) {
 	const sqlQuery = `
-		SELECT DISTINCT
-			psc.similar_paper_id,
-			psc.similarity_score,
-			psc.reason
+		SELECT psc.similar_paper_id AS paper_id
 		FROM user_paper_interactions upi
 		JOIN paper_similarity_cache psc
 		  ON psc.paper_id = upi.paper_id
+		JOIN paper_recommendation_features prf
+		  ON prf.paper_id = psc.similar_paper_id
 		WHERE upi.user_id = $1
 		  AND upi.is_saved = true
 		  AND psc.similar_paper_id NOT IN (
-		  	SELECT paper_id
-			FROM user_paper_interactions
-			WHERE user_id = $1
+		  	  SELECT paper_id
+			  FROM user_paper_interactions
+			  WHERE user_id = $1
 		  )
-		ORDER BY similarity_score DESC,
+		ORDER BY psc.similarity_score DESC
 		LIMIT $2;
 	`;
 
@@ -90,16 +89,16 @@ export async function fetchCandidatePapersFromSavedPaper(userId, limit = 5000) {
 // It's used for popular paper, cold-start, & fallback recommendations
 export async function fetchCandidatePopularPapers(limit = 1000) {
 	const sqlQuery = `
-		SELECT prf.*
+		SELECT prf.paper_id
 		FROM paper_recommendation_features prf
 		LEFT JOIN paper_metrics pm
-		  ON prf.paper_id = p.paper_id
+		   ON prf.paper_id = pm.paper_id
 		ORDER BY
-			COALESCE(pm.popularity_score, 0) DESC,
-			prf.citation_score DESC
-		LIMIT $1; 
+		   COALESCE(pm.popularity_score, 0) DESC,
+		   prf.citation_score DESC
+		LIMIT $1;
 	`;
-
+	
 	const results = await pool.query(sqlQuery, [limit]);
 	return results.rows;
 }
@@ -108,11 +107,12 @@ export async function fetchCandidatePopularPapers(limit = 1000) {
 // It's used for recent paper, cold-start, & fallback recommendations
 export async function fetchCandidateRecentPapers(limit = 1000) {
 	const sqlQuery = `
-		SELECT prf.*
+		SELECT prf.paper_id
 		FROM paper_recommendation_features prf
 		ORDER BY prf.recency_score DESC
-		LIMIT $1; 
+		LIMIT $1;
 	`;
+
 
 	const results = await pool.query(sqlQuery, [limit]);
 	return results.rows;
@@ -122,7 +122,7 @@ export async function fetchCandidateRecentPapers(limit = 1000) {
 // It's used for similar-paper recommendations
 export async function fetchCandidatePapersForPaperSimilarity(paperId, limit = 10000) {
 	const sqlQuery = `
-		SELECT DISTINCT prf.*
+		SELECT DISTINCT prf.paper_id
 		FROM paper_recommendation_features prf
 		JOIN paper_topics pt_candidate
 		  ON pt_candidate.paper_id = prf.paper_id
@@ -134,6 +134,40 @@ export async function fetchCandidatePapersForPaperSimilarity(paperId, limit = 10
 	`;
 
 	const results = await pool.query(sqlQuery, [paperId, limit]);
+	return results.rows;
+}
+
+
+// If fetches all paper-related fields 
+// required by content-based, topic & popularity scoring algorithms
+export async function fetchCandidatePaperScoringRows(candidatePaperIds) {
+	if (!candidatePaperIds || candidatePaperIds.length === 0)
+		return [];
+
+	const sqlQuery = `
+		SELECT 
+			prf.paper_id,
+			prf.topic_vector,
+			prf.field_vector,
+			prf.subfield_vector,
+			prf.domain_vector,
+			prf.author_vector,
+			prf.keyword_vector,
+			prf.citation_score,
+			prf.recency_score,
+
+			COALESCE(pm.view_count, 0) AS view_count,
+			COALESCE(pm.save_count, 0) AS save_count,
+			COALESCE(pm.recommendation_click_count, 0) AS recommendation_click_count,
+			COALESCE(pm.popularity_score, 0) AS popularity_score
+			
+		FROM paper_recommendation_features prf
+		LEFT JOIN paper_metrics pm
+		  ON prf.paper_id = pm.paper_id
+		WHERE prf.paper_id = ANY($1::bigint[]);
+	`;
+
+	const results = await pool.query(sqlQuery, [candidatePaperIds]);
 	return results.rows;
 }
 
