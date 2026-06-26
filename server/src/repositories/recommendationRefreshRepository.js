@@ -7,11 +7,12 @@ export async function markUserRecommendationsStale(userId, reason = "unknown", p
 			user_id, reason, priority, requested_at, processed_at
 		)
 		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, NULL)
-		ON CONFLICT (user_id, reason) 
+		ON CONFLICT (user_id) 
 		WHERE processed_at IS NULL
 		DO UPDATE SET
-			request_at = CURRENT_TIMESTAMP,
+			reason = EXCLUDED.reason,
 			priority = GREATEST(recommendation_refresh_queue.priority, EXCLUDED.priority),
+			requested_at = CURRENT_TIMESTAMP,
 			processed_at = NULL;
 	`;
 
