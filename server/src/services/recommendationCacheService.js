@@ -15,7 +15,7 @@ import { replaceUserRecommendationCache } from "./../repositories/recommendation
 
 import { generateContentBasedRecommendations } from "./../algorithms/contentBasedRecommendations.js";
 import { generateCollaborativeRecommendations } from "./../algorithms/collaborativeFiltering.js";
-import { calculatePaperTopicScores } from "./../algorithms/topicRecommendations.js";
+import { generatePaperTopicScores } from "./../algorithms/topicRecommendations.js";
 import { calculatePopularityScores } from "./../algorithms/popularityScoring.js";
 import { calculateFinalRecommendationScores } from "./../algorithms/hybridRecommendationScoring.js";
 
@@ -77,12 +77,13 @@ export async function rebuildUserRecommendationCache(userId) {
 		...topicCandidates,
 		...subfieldCandidates,
 		...popularCandidates,
+		...savedPaperCandidates,
 		...recentCandidates,
 		...collaborativeCandidates
 	]).filter(paperId => !excludedPaperIds.has(paperId));
 
 	// Fetching all the fields required from content-based, topic, & popularity scoring algorithms
-	const candidatePapers = fetchCandidatePaperScoringRows(candidatePaperIds);
+	const candidatePapers = await fetchCandidatePaperScoringRows(candidatePaperIds);
 
 	// Generating all different types of recommendation scores
 	// 1) Content-Based Recommendation Scores
@@ -99,7 +100,7 @@ export async function rebuildUserRecommendationCache(userId) {
 	);
 
 	// 3) Topic Recommendation Scores
-	const topicScores = calculatePaperTopicScores(userProfile, candidatePapers);
+	const topicScores = generatePaperTopicScores(userProfile, candidatePapers);
 
 	// 4) Popularity Recommendation Scores
 	const popularityScores = calculatePopularityScores(candidatePapers);
@@ -113,7 +114,7 @@ export async function rebuildUserRecommendationCache(userId) {
 		candidatePapers
 	);
 
-	const topRecommendations = finalRecommendations.slice(0,100);
+	const topRecommendations = finalRecommendations.slice(0, 100);
 
 	// which actually update the user's recommendation cache
 	await replaceUserRecommendationCache(parsedUserId, topRecommendations);
