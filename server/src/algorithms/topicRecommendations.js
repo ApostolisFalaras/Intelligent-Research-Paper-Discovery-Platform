@@ -1,5 +1,5 @@
 import { minmaxNormalizeArray } from "./../utils/vectorUtils.js";
-import { cosineSimilarity } from "./../utils/vectorUtils";
+import { cosineSimilarity } from "./../utils/vectorUtils.js";
 
 // Calculates a single paper's topic score in terms of a user's preferences
 export function calculatePaperTopicScores(userProfile, paperFeatures) {

@@ -4,7 +4,7 @@ export function dotProduct(vectorA = {}, vectorB = {}) {
 
 	// Determning the smaller & larger vector
 	const smallerVector = Object.keys(vectorA).length <= Object.keys(vectorB).length ? vectorA : vectorB;
-	const largerVector = smallerVector === vectorA ? vectorA : vectorB;
+	const largerVector = smallerVector === vectorA ? vectorB : vectorA;
 
 	// In order to traverse the smaller one's entries
 	for (const [key, value] of Object.entries(smallerVector)) {
@@ -14,7 +14,7 @@ export function dotProduct(vectorA = {}, vectorB = {}) {
 			continue;
 
 		const a = Number(value);
-		const b = Number(largerVector);
+		const b = Number(largerVector[key]);
 
 		if (!Number.isFinite(a) || !Number.isFinite(b))
 			continue;
@@ -32,7 +32,7 @@ export function vectorMagnitude(vector = {}) {
 	for (const [key, value] of Object.entries(vector)) {
 		const numericValue = Number(value);
 
-		if (!Numeric.isFinite(numericValue))
+		if (!Number.isFinite(numericValue))
 			continue;
 
 		magnitude += numericValue ** 2;
@@ -89,12 +89,18 @@ export function addWeightVector(target, vector, weight) {
 
 export function normalizeVector(vector) {
 	const values = Object.values(vector);
-	const total = values.reduce((sum, value) => sum + value, 0);
+	const total = values.reduce((sum, value) => {
+		const numericValue = Number(value);
+		return Number.isFinite(numericValue) ? sum + numericValue : sum;
+	}, 0);
+
+	if (total == 0)
+		return {};
 
 	const normalizedVector = {};
 
 	for (const [key, value] of Object.entries(vector)) {
-		normalizedVector[key] = Number((value/total).toFixed(6));
+		normalizedVector[key] = Number((Number(value)/total).toFixed(6));
 	}
 
 	return normalizedVector;
@@ -140,6 +146,10 @@ export function minmaxNormalizeArray(values = []) {
 
 	const min = Math.min(...numericValues);
 	const max = Math.max(...numericValues);
+
+	if (min === max) {
+        return numericValues.map(value => value > 0 ? 1 : 0);
+    }
 
 	return numericValues.map(value => minMaxNormalization(value, min, max));
 }

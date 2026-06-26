@@ -39,9 +39,11 @@ export function calculateFinalRecommendationScores(
 
 	// Closure function that can access recommendation Map from outside context
 	function ensurePaper(paperId) {
-		if (!recommendationMap.has(paperId)) {
-			recommendationMap.set(paperId, {
-				paperId: paperId,
+		const normalizedPaperId = Number(paperId);
+
+		if (!recommendationMap.has(normalizedPaperId)) {
+			recommendationMap.set(normalizedPaperId, {
+				paperId: normalizedPaperId,
 				contentScore: 0,
 				collaborativeScore: 0,
 				topicScore: 0,
@@ -51,7 +53,7 @@ export function calculateFinalRecommendationScores(
 			});
 		}
 
-		return recommendationMap.get(paperId);
+		return recommendationMap.get(normalizedPaperId);
 	}
 
 	// Building the final paper recommendation for a single user-paper pair
@@ -60,22 +62,22 @@ export function calculateFinalRecommendationScores(
 	// the user_recommendation_cache tuple, and then calculating the final recommendation score
 
 	for (const rec of contentRecommendations) {
-		const target = ensurePaper(rec.paper_id);
+		const target = ensurePaper(rec.paperId);
 		target.contentScore = rec.contentScore;
 	}
 
 	for (const rec of collaborativeRecommendations) {
-		const target = ensurePaper(rec.paper_id);
+		const target = ensurePaper(rec.paperId);
 		target.collaborativeScore = rec.collaborativeScore;
 	}
 
 	for (const rec of topicScores) {
-		const target = ensurePaper(rec.paper_id);
+		const target = ensurePaper(rec.paperId);
 		target.topicScore = rec.topicScore;
 	}
 
 	for (const rec of popularityScores) {
-		const target = ensurePaper(rec.paper_id);
+		const target = ensurePaper(rec.paperId);
 		target.popularityScore = rec.popularityScore;
 	}
 

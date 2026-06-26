@@ -3,7 +3,7 @@ import { fetchUserProfilePreferences } from "../repositories/recommendationProfi
 
 // User-user similarity, we compute all vector similaries (topics, fields, subfields, etc.)
 // and add them through a linear combination that assigns different weight to each similarity
-export async function userToUserSimilarity(userAProfile, userBProfile) {
+export function userToUserSimilarity(userAProfile, userBProfile) {
 	if (!userAProfile || !userBProfile) {
 		return 0;
 	}

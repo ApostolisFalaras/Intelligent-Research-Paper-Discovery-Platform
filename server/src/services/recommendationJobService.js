@@ -1,4 +1,4 @@
-import { fetchStaleRecommendations, markUserRecommendationsProcessed } from "./../repositories/recommendationRefreshRepository";
+import { fetchStaleRecommendations, markUserRecommendationsProcessed } from "./../repositories/recommendationRefreshRepository.js";
 import { rebuildUserRecommendationCache } from "./recommendationCacheService.js";
 import { rebuildUserProfilePreferences } from "./recommendationProfileService.js";
 import { rebuildUserSimilarityCache } from "./recommendationSimilarityService.js";

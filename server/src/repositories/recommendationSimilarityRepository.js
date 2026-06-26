@@ -12,7 +12,7 @@ export async function replaceUserSimilarityCache(userId, similarities) {
 		await client.query("BEGIN");
 
 		await client.query(
-			`DELETE FROM user_similarity_cache WHERE user_id = $1;` 
+			`DELETE FROM user_similarity_cache WHERE user_id = $1;`,
 			[userId]
 		);
 
