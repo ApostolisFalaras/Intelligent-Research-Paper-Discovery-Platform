@@ -16,6 +16,7 @@ export async function fetchPopularRecommendations(limit = 5, offset = 0) {
 			p.primary_topic_display_name,
 			p.is_open_access,
 			p.open_access_status,
+			pm.popularity_score,
 
 			COUNT(pa.author_openalex_id) AS author_count,
 
@@ -68,6 +69,7 @@ export async function fetchContentRecommendations(userId, limit = 25, offset = 0
             p.primary_topic_display_name,
             p.is_open_access,
             p.open_access_status,
+			urc.content_score,
 
             COUNT(pa.author_openalex_id) AS author_count,
 
@@ -93,7 +95,7 @@ export async function fetchContentRecommendations(userId, limit = 25, offset = 0
 
         WHERE urc.user_id = $1
 
-        GROUP BY p.id 
+        GROUP BY p.id, urc.content_score
 
         ORDER BY urc.content_score DESC
 
@@ -122,6 +124,7 @@ export async function fetchUserRecommendations(userId, limit = 25, offset = 0) {
             p.primary_topic_display_name,
             p.is_open_access,
             p.open_access_status,
+			urc.collaborative_score,
 
             COUNT(pa.author_openalex_id) AS author_count,
 
@@ -147,7 +150,7 @@ export async function fetchUserRecommendations(userId, limit = 25, offset = 0) {
 
         WHERE urc.user_id = $1
 
-        GROUP BY p.id 
+        GROUP BY p.id, urc.collaborative_score
 
         ORDER BY urc.collaborative_score DESC
 
@@ -176,6 +179,7 @@ export async function fetchTopicRecommendations(userId, limit = 25, offset = 0) 
             p.primary_topic_display_name,
             p.is_open_access,
             p.open_access_status,
+			urc.topic_score,
 
             COUNT(pa.author_openalex_id) AS author_count,
 
@@ -201,7 +205,7 @@ export async function fetchTopicRecommendations(userId, limit = 25, offset = 0) 
 
         WHERE urc.user_id = $1
 
-        GROUP BY p.id 
+        GROUP BY p.id, urc.topic_score
 
         ORDER BY urc.topic_score DESC
 

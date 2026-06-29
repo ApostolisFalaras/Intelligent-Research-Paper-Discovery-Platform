@@ -7,7 +7,6 @@ import {
 import { fetchUserInteractionsCount } from "./../repositories/recommendationProfileRepository.js";
 import { parseInteger, parseUserId } from "./../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
-import { fetchPopularRecommendations } from "../repositories/recommendationRepository.js";
 
 
 // Helper function for repeated instances of pagination filters validation
