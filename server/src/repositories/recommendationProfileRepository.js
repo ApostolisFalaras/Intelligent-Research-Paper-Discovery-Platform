@@ -29,6 +29,19 @@ export async function fetchUserInteractionRows(userId) {
 	return result.rows;
 }
 
+// Checks if user has any paper interactions
+export async function fetchUserInteractionsCount(userId) {
+	const sqlQuery = `
+		SELECT COUNT(*) AS num_interactions
+		FROM user_paper_interactions
+		WHERE user_id = $1;
+	`;
+
+	const results = await pool.query(sqlQuery, [userId]);
+	return results.rows[0];
+}
+
+
 // Insert a user's profile preferences
 export async function upsertUserProfilePreferences(userId, profile) {
 	const sqlQuery = `
