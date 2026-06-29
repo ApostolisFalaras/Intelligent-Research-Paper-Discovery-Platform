@@ -5,6 +5,7 @@ import authorRouter from "./routes/authorRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import topicRouter from "./routes/topicRoutes.js";
+import recommendationRouter from "./routes/recommendationRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
 import { authMiddleware, optionalAuthMiddleware } from "./middlewares/authMiddleware.js";
@@ -25,8 +26,11 @@ app.use("/api/papers", optionalAuthMiddleware, paperRouter);
 app.use("/api/authors", authorRouter);
 app.use("/api/topics", topicRouter);
 
-// To perform user- and recommendation-related operations, the user needs to be authenticated
+// To perform user-related operations, the user needs to be authenticated
 app.use("/api/users", authMiddleware, userRouter);
+
+
+app.use("/api/recommendations", recommendationRouter);
 
 
 app.get("/", (req, res) => {
