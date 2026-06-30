@@ -26,6 +26,7 @@ server/build/
 # Optional: uploads or temp files
 server/uploads/
 server/tmp/
+server/src/scripts/
 
 # REACT + VITE (client)
 client/node_modules/
