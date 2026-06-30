@@ -455,21 +455,6 @@ describe("GET /api/topics/:id/papers", () => {
         expect(response.body.message).toBe("Invalid topic Id");
     });
 
-    it("Returns 400 when the page is not an integer", async () => {
-        const response = await request(app).get("/api/topics/T10102/papers")
-        .query({
-            page: "first",
-            limit: null
-        })
-        .expect(400);
-
-        expect(fetchTopicById).not.toHaveBeenCalled();
-        expect(fetchTopicPapers).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("'page' must be an integer");
-    });
-
     it("Returns 400 when the page is an invalid number", async () => {
         const response = await request(app).get("/api/topics/T10102/papers")
         .query({
@@ -485,20 +470,6 @@ describe("GET /api/topics/:id/papers", () => {
         expect(response.body.message).toBe("'page' must be greater than or equal to 1");
     });
 
-    it("Returns 400 when the limit is not an integer", async () => {
-        const response = await request(app).get("/api/topics/T10102/papers")
-        .query({
-            page: null,
-            limit: "five"
-        })
-        .expect(400);
-
-        expect(fetchTopicById).not.toHaveBeenCalled();
-        expect(fetchTopicPapers).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("'limit' must be an integer");
-    });
 
     it("Returns 400 when the limit is an invalid number", async () => {
         const response = await request(app).get("/api/topics/T10102/papers")

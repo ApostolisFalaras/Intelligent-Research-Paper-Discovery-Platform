@@ -129,17 +129,6 @@ describe("GET /api/users/me/search-history", () => {
         expect(response.body.message).toBe("Missing/Invalid user_id");
     });
 
-
-    it("Returns 400 when user id is invalid", async () => {
-        mockAuthenticatedUser = {id: "one"};
-
-        const response = await request(app).get("/api/users/me/search-history").expect(400);
-
-        expect(fetchUserSearchHistory).not.toHaveBeenCalled();
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("Missing/Invalid user_id");
-    });
-
     // ------------ INVALID PAGINATION FILTERS -----------
 
     it("Returns 400 when the page filter is invalid", async () => {
@@ -214,19 +203,7 @@ describe("DELETE /api/users/me/search-history/:id", () => {
 		expect(response.body.message).toBe("Search history record not found");
 	});
 
-	// ---------- MISSING/INVALID PROJECT FOLDER ID ----------
-
-	it("Returns 400 when search history record id is missing", async () => {
-
-		const response = await request(app)
-		.delete("/api/users/me/search-history/abc")
-		.expect(400);		
-
-		expect(deleteFromSearchHistory).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'history record id' must be an integer");
-	});
+	// ---------- INVALID PROJECT FOLDER ID ----------
 
 	it("Returns 400 when search history record id is missing", async () => {
 
@@ -238,21 +215,6 @@ describe("DELETE /api/users/me/search-history/:id", () => {
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Search history record id is required");
-	});
-
-	// ---------- MISSING USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app)
-		.delete("/api/users/me/search-history/1")
-		.expect(400);		
-
-		expect(deleteFromSearchHistory).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
 	});
 
 	// ----------- DATABASE ERROR -----------

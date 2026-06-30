@@ -15,6 +15,31 @@ vi.mock("./../../src/repositories/paperRepository.js", () => ({
     fetchPaperCountsByYearById: vi.fn(),
 }));
 
+vi.mock("./../../src/repositories/recommendationEventRepository.js", () => ({
+    upsertPaperView: vi.fn(),
+    incrementPaperViewCount: vi.fn(),
+    incrementRecommendationClickCount: vi.fn()
+}));
+
+vi.mock("../../src/repositories/recommendationRefreshRepository.js", () => ({
+    markUserRecommendationsStale: vi.fn()
+}));
+
+// Middleware has to be mocked to authenticate the only existing user in the current tests
+let mockAuthenticatedUser = {id: 1};
+
+vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
+    const actual = await importOriginal();
+
+    return {
+        ...actual,
+        optionalAuthMiddleware: (req, res, next) => {
+            req.user = mockAuthenticatedUser;
+            next();
+        }
+    }
+});
+
 // Import after to replace the real function with the mock function
 import { 
     fetchPaperById,
@@ -28,6 +53,9 @@ import {
     fetchPaperRelatedById, 
     fetchPaperTopicsById } from "../../src/repositories/paperRepository.js";
 import app from "./../../src/app.js";
+import { incrementPaperViewCount, incrementRecommendationClickCount, upsertPaperView } from "../../src/repositories/recommendationEventRepository.js";
+import { optionalAuthMiddleware } from "../../src/middlewares/authMiddleware.js";
+import { markUserRecommendationsStale } from "../../src/repositories/recommendationRefreshRepository.js";
 
 
 const mockResolvedPaper = {
@@ -267,14 +295,209 @@ const mockResolvedCountByYear = [
     }
 ];
 
+// The route's expected data output
+const expectedOutput = {
+    id: mockResolvedPaper.openalex_id,
+    internalId: mockResolvedPaper.id,
+    doi: mockResolvedPaper.doi,
+    title: mockResolvedPaper.title,
+    displayName: mockResolvedPaper.display_name,
+    abstract: mockResolvedPaper.abstract,
+    publication: {
+        year: mockResolvedPaper.publication_year,
+        date: "2018-02-12",
+        type: mockResolvedPaper.paper_type,
+        language: mockResolvedPaper.language
+    },
+    source: {
+        id: mockResolvedPaper.primary_source_openalex_id,
+        name: mockResolvedPaper.primary_source_display_name,
+        type: mockResolvedPaper.primary_source_type,
+        volume: mockResolvedPaper.biblio_volume,
+        issue: mockResolvedPaper.biblio_issue,
+        pages: mockResolvedPaper.biblio_first_page
+    },
+    topic: {
+        id: mockResolvedPaper.primary_topic_openalex_id,
+        name: mockResolvedPaper.primary_topic_display_name,
+        domain: mockResolvedPaper.primary_domain_display_name,
+        field: mockResolvedPaper.primary_field_display_name,
+        subfield: mockResolvedPaper.primary_subfield_display_name
+    },
+    metrics: {
+        citedByCount: mockResolvedPaper.cited_by_count,
+        fwci: 490.1635,
+        citationPercentile: 1,
+        top1Percent: mockResolvedPaper.citation_top_1_percent,
+        top10Percent: mockResolvedPaper.citation_top_10_percent,
+        referencedWorksCount: mockResolvedPaper.referenced_works_count
+    },
+    access: {
+        isOpenAccess: mockResolvedPaper.is_open_access,
+        status: mockResolvedPaper.open_access_status,
+        bestURL: mockResolvedPaper.open_access_best_url,
+        anyRepoHasFullText: mockResolvedPaper.open_access_any_repo_has_fulltext,
+        hasFullText: mockResolvedPaper.has_fulltext,
+        hasPDF: mockResolvedPaper.has_content_pdf,
+        hasGrobIdXML: mockResolvedPaper.has_content_grobid_xml
+    },
+    indexedIn: mockResolvedPaper.indexed_in,
+    flags: {
+        isRetracted: mockResolvedPaper.is_retracted,
+        isParatext: mockResolvedPaper.is_paratext
+    },
+    metadata: {
+        openalexCreatedAt: new Date(mockResolvedPaper.openalex_created_at).toISOString(),
+        openalexUpdatedAt: new Date(mockResolvedPaper.openalex_updated_at).toISOString(),
+    },
+
+    authors: mockResolvedPaperAuthors.map(author => ({
+        id: author.author_openalex_id,
+        orcid: author.author_orcid,
+        displayName: author.author_display_name,
+        rawAuthorName: author.raw_author_name,
+        order: author.author_order,
+        position: author.author_position,
+        isCorresponding: author.is_corresponding,
+
+        institutions: mockResolvedPaperInstitutions
+            .filter(inst => inst.paper_author_id === author.id)
+            .map(inst => ({
+                id: inst.institution_openalex_id,
+                ror: inst.institution_ror,
+                displayName: inst.institution_display_name,
+                countryCode: inst.country_code,
+                type: inst.institution_type,
+                lineage: inst.lineage ?? []
+            })),
+
+        affiliations: mockResolvedPaperAffiliations
+            .filter(aff => aff.paper_author_id === author.id)
+            .map(aff => ({
+                internalId: aff.id,
+                rawString: aff.raw_affiliation_string,
+                institutionIds: aff.institution_ids ?? []
+            }))
+    })),
+
+    topics: mockResolvedTopics.map(topic => ({
+        id: topic.topic_openalex_id,
+        displayName: topic.topic_display_name,
+        score: topic.score === null ? null : Number(topic.score),
+        domain: {
+            id: topic.domain_openalex_id,
+            name: topic.domain_display_name
+        },
+        field: {
+            id: topic.field_openalex_id,
+            name: topic.field_display_name
+        },
+        subfield: {
+            id: topic.subfield_openalex_id,
+            name: topic.subfield_display_name
+        },
+        isPrimary: topic.is_primary_topic
+    })),
+
+    keywords: mockResolvedKeywords.map(keyword => ({
+        id: keyword.keyword_openalex_id,
+        displayName: keyword.keyword_display_name,
+        score: keyword.score === null ? null : Number(keyword.score)
+    })),
+
+    locations: mockResolvedLocations.map(location => ({
+        id: location.location_openalex_id,
+        isOpenAccess: location.is_oa,
+        landingPageUrl: location.landing_page_url,
+        pdfUrl: location.pdf_url,
+
+        source: {
+            id: location.source_openalex_id,
+            displayName: location.source_display_name,
+            issnL: location.source_issn_l,
+            issn: location.source_issn ?? [],
+            isOpenAccess: location.source_is_oa,
+            isInDOAJ: location.source_is_in_doaj,
+            isCore: location.source_is_core,
+            hostOrganization: location.source_host_organization,
+            hostOrganizationName: location.source_host_organization_name,
+            hostOrganizationLineage: location.source_host_organization_lineage ?? [],
+            type: location.source_type
+        },
+
+        license: {
+            name: location.license,
+            id: location.license_id
+        },
+
+        version: location.version,
+        isAccepted: location.is_accepted,
+        isPublished: location.is_published,
+        rawSourceName: location.raw_source_name,
+        rawType: location.raw_type,
+        isPrimary: location.is_primary,
+        isBestOpenAccess: location.is_best_oa
+    })),
+
+    references: mockResolvedReferences.map(reference => ({
+        id: reference.referenced_work_openalex_id,
+    })),
+
+    relatedPapers: mockResolvedRelated.map(related => ({
+        id: related.related_work_openalex_id,
+    })),
+
+    countsByYear: mockResolvedCountByYear.map(count => ({
+        year: count.year,
+        citedByCount: count.cited_by_count
+    }))
+};
+
+
+
+// Helper function to verify repository method calls and parameters
+function expectFetchPaperRepositoryFunctions(internalPaperId) {
+    expect(fetchPaperAuthorsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperAuthorsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperTopicsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperTopicsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperKeywordsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperKeywordsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperLocationsById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperLocationsById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperReferencesById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperReferencesById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperRelatedById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperRelatedById).toHaveBeenCalledTimes(1);
+
+        expect(fetchPaperCountsByYearById).toHaveBeenCalledWith(internalPaperId);
+        expect(fetchPaperCountsByYearById).toHaveBeenCalledTimes(1);
+}
 
 describe("GET /api/papers/:id", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
         vi.resetAllMocks();
+        mockAuthenticatedUser = { id: 1 };
+
+        upsertPaperView.mockResolvedValue(undefined);
+        incrementPaperViewCount.mockResolvedValue(undefined);
+        incrementRecommendationClickCount.mockResolvedValue(undefined);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
     });
 
-    it("Returns 200 and the paper when found", async () => {
+    it("Returns 200 and the paper when accessed by an authenticated user", async () => {
         fetchPaperById.mockResolvedValue(mockResolvedPaper);
         fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
         fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
@@ -286,195 +509,103 @@ describe("GET /api/papers/:id", () => {
         fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
         fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
 
-        // The route's expected data output
-        const expectedOutput = {
-            id: mockResolvedPaper.openalex_id,
-            internalId: mockResolvedPaper.id,
-            doi: mockResolvedPaper.doi,
-            title: mockResolvedPaper.title,
-            displayName: mockResolvedPaper.display_name,
-            abstract: mockResolvedPaper.abstract,
-            publication: {
-                year: mockResolvedPaper.publication_year,
-                date: "2018-02-12",
-                type: mockResolvedPaper.paper_type,
-                language: mockResolvedPaper.language
-            },
-            source: {
-                id: mockResolvedPaper.primary_source_openalex_id,
-                name: mockResolvedPaper.primary_source_display_name,
-                type: mockResolvedPaper.primary_source_type,
-                volume: mockResolvedPaper.biblio_volume,
-                issue: mockResolvedPaper.biblio_issue,
-                pages: mockResolvedPaper.biblio_first_page
-            },
-            topic: {
-                id: mockResolvedPaper.primary_topic_openalex_id,
-                name: mockResolvedPaper.primary_topic_display_name,
-                domain: mockResolvedPaper.primary_domain_display_name,
-                field: mockResolvedPaper.primary_field_display_name,
-                subfield: mockResolvedPaper.primary_subfield_display_name
-            },
-            metrics: {
-                citedByCount: mockResolvedPaper.cited_by_count,
-                fwci: 490.1635,
-                citationPercentile: 1,
-                top1Percent: mockResolvedPaper.citation_top_1_percent,
-                top10Percent: mockResolvedPaper.citation_top_10_percent,
-                referencedWorksCount: mockResolvedPaper.referenced_works_count
-            },
-            access: {
-                isOpenAccess: mockResolvedPaper.is_open_access,
-                status: mockResolvedPaper.open_access_status,
-                bestURL: mockResolvedPaper.open_access_best_url,
-                anyRepoHasFullText: mockResolvedPaper.open_access_any_repo_has_fulltext,
-                hasFullText: mockResolvedPaper.has_fulltext,
-                hasPDF: mockResolvedPaper.has_content_pdf,
-                hasGrobIdXML: mockResolvedPaper.has_content_grobid_xml
-            },
-            indexedIn: mockResolvedPaper.indexed_in,
-            flags: {
-                isRetracted: mockResolvedPaper.is_retracted,
-                isParatext: mockResolvedPaper.is_paratext
-            },
-            metadata: {
-                openalexCreatedAt: new Date(mockResolvedPaper.openalex_created_at).toISOString(),
-                openalexUpdatedAt: new Date(mockResolvedPaper.openalex_updated_at).toISOString(),
-            },
+        upsertPaperView.mockResolvedValue(null);
+        incrementRecommendationClickCount.mockResolvedValue(null);
 
-            authors: mockResolvedPaperAuthors.map(author => ({
-                id: author.author_openalex_id,
-                orcid: author.author_orcid,
-                displayName: author.author_display_name,
-                rawAuthorName: author.raw_author_name,
-                order: author.author_order,
-                position: author.author_position,
-                isCorresponding: author.is_corresponding,
-
-                institutions: mockResolvedPaperInstitutions
-                    .filter(inst => inst.paper_author_id === author.id)
-                    .map(inst => ({
-                        id: inst.institution_openalex_id,
-                        ror: inst.institution_ror,
-                        displayName: inst.institution_display_name,
-                        countryCode: inst.country_code,
-                        type: inst.institution_type,
-                        lineage: inst.lineage ?? []
-                    })),
-
-                affiliations: mockResolvedPaperAffiliations
-                    .filter(aff => aff.paper_author_id === author.id)
-                    .map(aff => ({
-                        internalId: aff.id,
-                        rawString: aff.raw_affiliation_string,
-                        institutionIds: aff.institution_ids ?? []
-                    }))
-            })),
-
-            topics: mockResolvedTopics.map(topic => ({
-                id: topic.topic_openalex_id,
-                displayName: topic.topic_display_name,
-                score: topic.score === null ? null : Number(topic.score),
-                domain: {
-                    id: topic.domain_openalex_id,
-                    name: topic.domain_display_name
-                },
-                field: {
-                    id: topic.field_openalex_id,
-                    name: topic.field_display_name
-                },
-                subfield: {
-                    id: topic.subfield_openalex_id,
-                    name: topic.subfield_display_name
-                },
-                isPrimary: topic.is_primary_topic
-            })),
-
-            keywords: mockResolvedKeywords.map(keyword => ({
-                id: keyword.keyword_openalex_id,
-                displayName: keyword.keyword_display_name,
-                score: keyword.score === null ? null : Number(keyword.score)
-            })),
-
-            locations: mockResolvedLocations.map(location => ({
-                id: location.location_openalex_id,
-                isOpenAccess: location.is_oa,
-                landingPageUrl: location.landing_page_url,
-                pdfUrl: location.pdf_url,
-
-                source: {
-                    id: location.source_openalex_id,
-                    displayName: location.source_display_name,
-                    issnL: location.source_issn_l,
-                    issn: location.source_issn ?? [],
-                    isOpenAccess: location.source_is_oa,
-                    isInDOAJ: location.source_is_in_doaj,
-                    isCore: location.source_is_core,
-                    hostOrganization: location.source_host_organization,
-                    hostOrganizationName: location.source_host_organization_name,
-                    hostOrganizationLineage: location.source_host_organization_lineage ?? [],
-                    type: location.source_type
-                },
-
-                license: {
-                    name: location.license,
-                    id: location.license_id
-                },
-
-                version: location.version,
-                isAccepted: location.is_accepted,
-                isPublished: location.is_published,
-                rawSourceName: location.raw_source_name,
-                rawType: location.raw_type,
-                isPrimary: location.is_primary,
-                isBestOpenAccess: location.is_best_oa
-            })),
-
-            references: mockResolvedReferences.map(reference => ({
-                id: reference.referenced_work_openalex_id,
-            })),
-
-            relatedPapers: mockResolvedRelated.map(related => ({
-                id: related.related_work_openalex_id,
-            })),
-
-            countsByYear: mockResolvedCountByYear.map(count => ({
-                year: count.year,
-                citedByCount: count.cited_by_count
-            }))
-        };
 
         const response = await request(app).get("/api/papers/W2741809807").expect(200);
 
         expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperAuthorsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperAuthorsById).toHaveBeenCalledTimes(1);
+        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
+        expect(upsertPaperView).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledTimes(1);
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
-        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledTimes(1);
+        expect(response.body.status).toBe("success");
+        expect(response.body.data).toEqual(expectedOutput);
+    });
 
-        expect(fetchPaperTopicsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperTopicsById).toHaveBeenCalledTimes(1);
+    it("Returns 200 and the paper when accessed by an authenticated user as a recommendation", async () => {
+        fetchPaperById.mockResolvedValue(mockResolvedPaper);
+        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
+        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
+        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
+        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
+        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
+        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
+        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
+        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
+        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
 
-        expect(fetchPaperKeywordsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperKeywordsById).toHaveBeenCalledTimes(1);
+        upsertPaperView.mockResolvedValue(null);
+        incrementRecommendationClickCount.mockResolvedValue(null);
 
-        expect(fetchPaperLocationsById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperLocationsById).toHaveBeenCalledTimes(1);
+        const response = await request(app).get("/api/papers/W2741809807")
+        .query({isRecommendation: true}).expect(200);
 
-        expect(fetchPaperReferencesById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperReferencesById).toHaveBeenCalledTimes(1);
+        expectFetchPaperRepositoryFunctions("386866");
 
-        expect(fetchPaperRelatedById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperRelatedById).toHaveBeenCalledTimes(1);
+        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
+        expect(upsertPaperView).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperCountsByYearById).toHaveBeenCalledWith("386866");
-        expect(fetchPaperCountsByYearById).toHaveBeenCalledTimes(1);
+        expect(incrementRecommendationClickCount).toHaveBeenCalledWith(386866);
+        expect(incrementRecommendationClickCount).toHaveBeenCalledTimes(1);
+
+        expect(response.body.status).toBe("success");
+        expect(response.body.data).toEqual(expectedOutput);
+    });
+
+    it("Returns 200 and the paper when accessed by an un-authenticated user", async () => {
+        mockAuthenticatedUser = {id: null};
+
+        fetchPaperById.mockResolvedValue(mockResolvedPaper);
+        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
+        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
+        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
+        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
+        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
+        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
+        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
+        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
+        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
+
+        const response = await request(app).get("/api/papers/W2741809807")
+        .query({isRecommendation: true}).expect(200);
+
+        expectFetchPaperRepositoryFunctions("386866");
+
+        expect(upsertPaperView).not.toHaveBeenCalled();
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("success");
+        expect(response.body.data).toEqual(expectedOutput);
+    });
+
+    it("Returns 200 and the paper when accessed even if recording the paper view event fails", async () => {
+        fetchPaperById.mockResolvedValue(mockResolvedPaper);
+        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
+        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
+        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
+        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
+        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
+        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
+        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
+        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
+        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
+
+        upsertPaperView.mockRejectedValue(new Error("Unexpected DB error"));
+
+        const response = await request(app).get("/api/papers/W2741809807")
+        .query({isRecommendation: true}).expect(200);
+
+        expectFetchPaperRepositoryFunctions("386866");
+        
+        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
+        expect(upsertPaperView).toHaveBeenCalledTimes(1);
+
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedOutput);
@@ -497,6 +628,9 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperReferencesById).not.toHaveBeenCalled();
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
+
+        expect(upsertPaperView).not.toHaveBeenCalled();
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Invalid paper Id");
@@ -521,6 +655,9 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
 
+        expect(upsertPaperView).not.toHaveBeenCalled();
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Paper not found");
     });
@@ -544,6 +681,9 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperReferencesById).not.toHaveBeenCalled();
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
+
+        expect(upsertPaperView).not.toHaveBeenCalled();
+        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("error");
         expect(response.body.message).toBe("Unexpected failure");

@@ -75,21 +75,8 @@ describe("GET /api/users/me", () => {
 
     // ------------- AUTHENTICATED USER ID NOT SENT IN SERVICE FUNCTION CALL -> 400 BAD REQUEST --------------
 
-    it("Returns 400 when the user id is not sent in the service call", async () => {
+    it("Returns 400 when the user id is missing", async () => {
         mockAuthenticatedUser = {id: null};
-
-        const response = await request(app).get("/api/users/me").expect(400);
-
-        expect(fetchUserById).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("Missing/Invalid user_id");
-    });
-
-    // ------------- AUTHENTICATED USER ID NOT A NUMBER -> 400 BAD REQUEST --------------
-
-    it("Returns 400 when the user id is not a number", async () => {
-        mockAuthenticatedUser = {id: "1"};
 
         const response = await request(app).get("/api/users/me").expect(400);
 

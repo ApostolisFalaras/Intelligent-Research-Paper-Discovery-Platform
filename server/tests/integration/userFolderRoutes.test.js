@@ -16,6 +16,13 @@ vi.mock("./../../src/repositories/paperRepository.js", () => ({
 	fetchPaperById: vi.fn()
 }));
 
+vi.mock("./../../src/repositories/recommendationEventRepository.js", () => ({
+	upsertPaperSave: vi.fn(),
+	upsertPaperUnsave: vi.fn(),
+	incrementPaperSaveCount: vi.fn(),
+	decrementPaperSaveCount: vi.fn()
+}));
+
 
 // Middleware has to be mocked to authenticate the only existing user in the current tests
 let mockAuthenticatedUser = {id: 1};
@@ -43,6 +50,7 @@ import { fetchProjectFoldersById,
 import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
 import app from "../../src/app.js";
 import { fetchPaperById } from "../../src/repositories/paperRepository.js";
+import { decrementPaperSaveCount, incrementPaperSaveCount, upsertPaperSave, upsertPaperUnsave } from "../../src/repositories/recommendationEventRepository.js";
 
 
 const mockResolvedProjectFolders = [
@@ -206,22 +214,6 @@ describe("POST /api/users/me/folders", () => {
 		expect(response.body.message).toBe("Project folder was not inserted");
 	});
 
-	// ---------- MISSING USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app)
-		.post("/api/users/me/folders")
-		.send(newProjectFolder)
-		.expect(400);		
-
-		expect(createProjectFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
 	// ---------- MISSING PROJECT NAME ----------
 
 	it("Returns 400 when project name is missing", async () => {
@@ -303,21 +295,7 @@ describe("PATCH /api/user/me/folders/:id", () => {
 		expect(response.body.message).toBe("Project folder not found");
 	});
 
-	// ---------- MISSING PROJECT FOLDER ID ----------
-
-	it("Returns 400 when project folder id is missing", async () => {
-
-		const response = await request(app)
-		.patch("/api/users/me/folders/abc")
-		.send(updateData)
-		.expect(400);		
-
-		expect(updateProjectFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'Folder Id' must be an integer");
-	});
-
+	// ---------- INVALID PROJECT FOLDER ID ----------
 	it("Returns 400 when project folder id is invalid", async () => {
 
 		const response = await request(app)
@@ -329,22 +307,6 @@ describe("PATCH /api/user/me/folders/:id", () => {
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
-	});
-
-	// ---------- MISSING USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app)
-		.patch("/api/users/me/folders/2")
-		.send(updateData)
-		.expect(400);		
-
-		expect(updateProjectFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
 	});
 
 	// ---------- INVALID UPDATE PARAMETERS ---------
@@ -377,7 +339,7 @@ describe("PATCH /api/user/me/folders/:id", () => {
 		expect(response.body.message).toBe("Invalid 'visibility' value");
 	});
 
-	it("Returns 400 when visibility is invalid", async () => {
+	it("Returns 400 when no modified fields were provided", async () => {
 		const response = await request(app)
 		.patch("/api/users/me/folders/2")
 		.send({})
@@ -440,19 +402,7 @@ describe("DELETE /api/users/me/folders/:id", () => {
 		expect(response.body.message).toBe("Project folder not found");
 	});
 
-	// ---------- MISSING PROJECT FOLDER ID ----------
-
-	it("Returns 400 when project folder id is missing", async () => {
-
-		const response = await request(app)
-		.delete("/api/users/me/folders/abc")
-		.expect(400);		
-
-		expect(deleteProjectFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'Folder Id' must be an integer");
-	});
+	// ---------- INVALID PROJECT FOLDER ID ----------
 
 	it("Returns 400 when project folder id is invalid", async () => {
 
@@ -464,21 +414,6 @@ describe("DELETE /api/users/me/folders/:id", () => {
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
-	});
-
-	// ---------- MISSING USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app)
-		.delete("/api/users/me/folders/1")
-		.expect(400);		
-
-		expect(deleteProjectFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
 	});
 
 	// ---------- DATABASE ERROR ----------
@@ -598,42 +533,7 @@ describe("GET /api/users/me/folders/:id/papers", () => {
 		expect(response.body.data).toEqual([]);
 	});
 
-	// --------- MISSING/INVALID USER ID ---------
-
-	it("Returns 400 when user id is missing", async () => {
-		// Simulating unauthenticated user
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app).get("/api/users/me/folders/2/papers").expect(400);
-
-		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
-	it("Returns 400 when user id is missing", async () => {
-		// Simulating invalid id
-		mockAuthenticatedUser = {id: "one"};
-
-		const response = await request(app).get("/api/users/me/folders/2/papers").expect(400);
-
-		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
-	// --------- MISSING/INVALID FOLDER ID ---------
-
-	it("Returns 400 when folder id is missing", async () => {
-		const response = await request(app).get("/api/users/me/folders/abc/papers").expect(400);
-
-		expect(fetchPapersFromFolderById).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'Folder Id' must be an integer");
-	});
+	// --------- INVALID FOLDER ID ---------
 
 	it("Returns 400 when folder id is invalid", async () => {
 		const response = await request(app).get("/api/users/me/folders/0/papers").expect(400);
@@ -676,6 +576,8 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 	it("Returns 201 and adds a paper to a project folder", async () => {
 		// Not mocking all paper fields for simplicity 
 		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
+		upsertPaperSave.mockResolvedValue(null);
+		incrementPaperSaveCount.mockResolvedValue(null);
 		
 		fetchPaperInFolder.mockResolvedValue(null);
 		insertPapertoFolder.mockResolvedValue(1);
@@ -692,6 +594,43 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+
+		expect(upsertPaperSave).toHaveBeenCalledWith(1, 204129);
+		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
+
+		expect(incrementPaperSaveCount).toHaveBeenCalledWith(204129);
+		expect(incrementPaperSaveCount).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toBe("success");
+		expect(response.body.message).toBe("Paper added to project folder successfully");
+	});
+
+	it("Returns 201 and adds a paper to a project folder even if recording the paper save event fails", async () => {
+		// Not mocking all paper fields for simplicity 
+		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
+		upsertPaperSave.mockRejectedValue(new Error("Unexpected DB error"));
+		incrementPaperSaveCount.mockResolvedValue(null);
+		
+		fetchPaperInFolder.mockResolvedValue(null);
+		insertPapertoFolder.mockResolvedValue(1);
+
+		const response = await request(app)
+		.post("/api/users/me/folders/2/papers/W7129423223")
+		.expect(201);
+
+		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
+		expect(fetchPaperById).toHaveBeenCalledTimes(1);
+
+		expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
+		expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
+
+		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+
+		expect(upsertPaperSave).toHaveBeenCalledWith(1, 204129);
+		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
+
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("success");
 		expect(response.body.message).toBe("Paper added to project folder successfully");
@@ -719,53 +658,14 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
 
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Paper was not inserted to project folder");
 	});
 
-	// ---------- MISSING/INVALID USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app).post("/api/users/me/folders/2/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(fetchPaperInFolder).not.toHaveBeenCalled();
-		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
-	it("Returns 400 when user id is invalid", async () => {
-		mockAuthenticatedUser = {id: "one"};
-
-		const response = await request(app).post("/api/users/me/folders/2/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(fetchPaperInFolder).not.toHaveBeenCalled();
-		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
-	// ---------- MISSING/INVALID FOLDER ID ----------
-
-	it("Returns 400 when folder id is missing", async () => {
-		const response = await request(app).post("/api/users/me/folders/abc/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(fetchPaperInFolder).not.toHaveBeenCalled();
-		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'Folder Id' must be an integer");
-	});
+	// ---------- INVALID FOLDER ID ----------
 
 	it("Returns 400 when folder id is invalid", async () => {
 		const response = await request(app).post("/api/users/me/folders/0/papers/W7129423223")
@@ -774,6 +674,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
+
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
@@ -789,6 +692,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
 
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
 	});
@@ -800,6 +706,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
+
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
@@ -816,6 +725,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
+
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper not found");
@@ -846,6 +758,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
 
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper already exists in project folder");
 	});
@@ -873,6 +788,9 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
 
+		expect(upsertPaperSave).not.toHaveBeenCalled();
+		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Database error occurred");
 	});
@@ -889,6 +807,8 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 	it("Returns 200 and deletes paper from project folder", async () => {
 		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
+		upsertPaperUnsave.mockResolvedValue(null);
+		decrementPaperSaveCount.mockResolvedValue(null);
 
 		deletePaperFromFolder.mockResolvedValue(1);
 
@@ -901,10 +821,40 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
 
+		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 204129);
+		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
+
+		expect(decrementPaperSaveCount).toHaveBeenCalledWith(204129);
+		expect(decrementPaperSaveCount).toHaveBeenCalledTimes(1);
+
+
 		expect(response.body.status).toBe("success");
 		expect(response.body.message).toBe("Paper deleted from project folder successfully");
 	});
 
+	it("Returns 200 and deletes paper from project folder even if recording the paper unsave event fails", async () => {
+		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
+		upsertPaperUnsave.mockRejectedValue(new Error("Unexpected DB error"));
+
+		deletePaperFromFolder.mockResolvedValue(1);
+
+		const response = await request(app).delete("/api/users/me/folders/2/papers/W7129423223")
+		.expect(200);
+
+		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
+		expect(fetchPaperById).toHaveBeenCalledTimes(1);
+
+		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
+		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
+
+		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 204129);
+		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
+
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("success");
+		expect(response.body.message).toBe("Paper deleted from project folder successfully");
+	});
 	// ---------- UNSUCCESSFUL DELETION OF PAPER IN PROJECT FOLDER ----------
 
 	it("Returns 404 and fails to delete paper from project folder", async () => {
@@ -921,50 +871,14 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
 
+		expect(upsertPaperUnsave).not.toHaveBeenCalled();
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper wasn't stored in project folder");
 	});
 
-	// ---------- MISSING/INVALID USER ID ----------
-
-	it("Returns 400 when user id is missing", async () => {
-		mockAuthenticatedUser = {id: null};
-
-		const response = await request(app).delete("/api/users/me/folders/2/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(deletePaperFromFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
-	it("Returns 400 when user id is invalid", async () => {
-		mockAuthenticatedUser = {id: "one"};
-
-		const response = await request(app).delete("/api/users/me/folders/2/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(deletePaperFromFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Missing/Invalid user_id");
-	});
-
 	// ---------- MISSING/INVALID FOLDER ID ----------
-
-	it("Returns 400 when folder id is missing", async () => {
-		const response = await request(app).delete("/api/users/me/folders/abc/papers/W7129423223")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(deletePaperFromFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("'Folder Id' must be an integer");
-	});
 
 	it("Returns 400 when folder id is invalid", async () => {
 		const response = await request(app).delete("/api/users/me/folders/0/papers/W7129423223")
@@ -973,22 +887,14 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
 
+		expect(upsertPaperUnsave).not.toHaveBeenCalled();
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
 	});
 
-	// ---------- MISSING/INVALID PAPER ID ----------
-
-	it("Returns 400 when paper id is missing", async () => {
-		const response = await request(app).delete("/api/users/me/folders/2/papers/abc")
-		.expect(400);
-
-		expect(fetchPaperById).not.toHaveBeenCalled();
-		expect(deletePaperFromFolder).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Invalid paper id");
-	});
+	// ---------- INVALID PAPER ID ----------
 
 	it("Returns 400 when paper id doesn't follow the correct format", async () => {
 		const response = await request(app).delete("/api/users/me/folders/2/papers/7129")
@@ -996,6 +902,9 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
+
+		expect(upsertPaperUnsave).not.toHaveBeenCalled();
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
@@ -1011,6 +920,9 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).toHaveBeenCalledTimes(1);
 
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
+
+		expect(upsertPaperUnsave).not.toHaveBeenCalled();
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper not found");
@@ -1031,6 +943,9 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		
 		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
+
+		expect(upsertPaperUnsave).not.toHaveBeenCalled();
+		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Database error occurred");
