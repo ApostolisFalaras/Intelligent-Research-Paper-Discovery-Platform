@@ -22,5 +22,5 @@ export async function rebuildUserProfilePreferences(userId) {
 
 	const profile = buildProfilePreferences(rows);
 
-	return await upsertUserProfilePreferences(userId, profile);
+	return await upsertUserProfilePreferences(parsedUserId, profile);
 }
