@@ -1,17 +1,28 @@
-import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+import "../../styles/papers.css";
 
 function PaperCard({ paper }) {
-    // The whole result card becomes a clickable link
-    // that will redirect the user to the paper page
-    
-    return (
-        <Link to={`papers/${paper.id}`} className="paper-card">
-            <h3>{paper.title}</h3>
-            <p>{paper.authors?.join(", ")}</p>
-            <p>{paper.publicationYear}</p>
-            <p>{paper.topicCategory}</p>
-        </Link>        
-    );
+
+	return (
+		<div className="card">
+			<div className="card-header">
+				<span className="paper-topic">{paper.primaryTopic}</span>
+				<span className="paper-year">{paper.publicationYear}</span>
+				<span className="paper-journal">{paper.primarySource}</span>
+			</div>
+
+			<p className="paper-title">{paper.title}</p>
+			<p className="authors-preview">
+				{paper.authorPreview[0].authorDisplayName}, {paper.authorPreview[1].authorDisplayName}{" "}
+				<span style={{ color: "#9B9B8A" }}>et al.</span>
+			</p>
+
+			<div className="card-footer">
+				<span className="citation-count">{paper.citedByCount} citations</span>
+				<ArrowUpRight size={13} className="arrow-up-right" />
+			</div>
+		</div>
+	);
 }
 
 export default PaperCard;
