@@ -1,0 +1,321 @@
+#main-auth-page {
+    min-height: 100vh;
+    background: #F8F9FA;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', sans-serif;
+}
+
+#panel-columns {
+    display: flex;
+    align-items: stretch;
+    height: 100vh;
+}
+
+#brand-panel {
+    width: 420px;
+    height: 100%;
+    flex-shrink: 0;
+    background-color: #1B4332;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.grid-lines {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+        
+}
+
+#brand-div {
+    position: relative;
+    z-index: 1;
+}
+
+#brand-subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: #74C69D;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+#brand-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.25;
+    margin-bottom: 20px;
+}
+
+#brand-title > em {
+    font-style: italic;
+    color: #B7E4C7;
+}
+
+#brand-message {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.7; 
+    margin-bottom: 40px;
+    font-weight: 300;
+}
+
+.brand-features {
+    display: flex;
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 12px;
+}
+
+.brand-features > div {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: rgba(149,213,178,0.18);
+    border: 1px solid rgba(149,213,178,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.brand-features > span {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; 
+    color: rgba(255,255,255,0.65);
+}
+
+#form-panel {
+    width: 100%; 
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 40px 52px;
+    margin-top: 66.4px;
+    overflow-y: auto;
+}
+
+#form-panel > div {
+    width: 100%;
+    max-width: 420px;
+}
+
+#tab-switcher {
+    display: flex;
+    background-color: #ECEAE4;
+    border-radius: 6px;
+    padding: 3px;
+    margin-bottom: 32px;
+}
+
+.auth-tab {
+    width: 200px;
+    height: 40px;
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B5A;
+    background-color: transparent; 
+    border: none;
+    border-radius: 4px;
+    padding: 9px 0;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: capitalize;
+    box-shadow: none;
+}
+
+.auth-tab.selected {
+    font-weight: 600;
+    color: #212529;
+    background-color: #FFFFFF;
+    box-shadow: 0 1px 4px rgba(26,26,20,0.10);
+}
+
+#form-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 6px;
+}
+
+#form-message {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; 
+    color: #9B9B8A;
+    margin-bottom: 28px;
+    line-height: 1.5;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.server-error-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 5px;
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #C0392B;         
+}
+
+.alert-circle {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.field-container {
+    display: flex;
+    flex-direction: column; 
+    gap: 5px;
+}
+
+.label {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #212529;
+    letter-spacing: 0.02em;
+}
+
+.required-asterisk {
+    color: #2D6A4F; 
+    margin-left: 3px;
+}
+
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 4px; 
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #C0392B;
+}
+
+.field-hint {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #9B9B8A;
+}
+
+.text-input {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #212529;
+    background-color: #FFFFFF;
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.text-input.has-error {
+    border: 1.5px solid #C0392B;
+}
+
+.text-input.focused {
+    border: 1.5px solid #95D5B2;
+}
+
+.password-container {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px;
+    transition: border-color 0.15s;
+    overflow: hidden;
+}
+
+.password-container.has-error {
+    border: 1.5px solid #C0392B;
+}
+
+.password-container.focused {
+    border: 1.5px solid #95D5B2;
+}
+
+.password-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #212529;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 10px 12px;
+}
+
+.password-eye {
+    background: none;
+    border: none;
+    padding: 0 12px;
+    cursor: pointer;
+    color: #9B9B8A;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.forgot-password {
+    display: flex; 
+    justify-content: flex-end;
+}
+
+.forgot-password > button {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #2D6A4F;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+#login-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: #1B4332;
+    border: none;
+    border-radius: 5px;
+    width: 100%;
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    margin-top: 4px;
+}
+
+#login-btn:hover {
+    background-color: #2D6A4F;
+}
+
+#login-btn.loading {
+    background-color: #40916C;
+    cursor: not-allowed;
+}
