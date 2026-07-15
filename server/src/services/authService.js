@@ -32,9 +32,13 @@ export async function login(credentials) {
 
 // Register service 
 export async function register(credentials) {
+    const firstName = credentials.firstName;
+    const lastName = credentials.lastName;
     const username = credentials.username;
     const email = credentials.email;
     const password = credentials.password;
+    const affiliation = credentials.affiliation;
+    const role = credentials.role;
 
     // Checking for missing authentication credentials
     if (!username || !email || !password)
@@ -58,12 +62,10 @@ export async function register(credentials) {
         username: username, 
         email: email, 
         password_hash: passwordHash,
-        first_name: credentials.firstName,
-        last_name: credentials.lastName,
-        affiliation: credentials.affiliation,
-        role: credentials.role,
-        bio: credentials.bio,
-        avatar_url: credentials.avatarURL
+        first_name: firstName,
+        last_name: lastName,
+        affiliation: affiliation,
+        role: role,
     });
 
     return {

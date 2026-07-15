@@ -44,8 +44,8 @@ export async function fetchUserByEmail(email) {
 export async function createUser(credentials) {
     const sqlQuery = `
         INSERT INTO users (username, email, password_hash, 
-                           first_name, last_name, affiliation, role, bio, avatar_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                           first_name, last_name, affiliation, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id, username, email;
     `;
 
@@ -56,9 +56,7 @@ export async function createUser(credentials) {
         credentials.first_name,
         credentials.last_name,
         credentials.affiliation,
-        credentials.role,
-        credentials.bio,
-        credentials.avatar_url
+        credentials.role
     ];
 
     const result = await pool.query(sqlQuery, values);
