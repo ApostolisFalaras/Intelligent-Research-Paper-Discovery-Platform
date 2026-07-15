@@ -1,10 +1,12 @@
-import { Search } from "lucide-react";
+import SearchBar from "../search/SearchBar.jsx";
+import FloatingPapers from "./FloatingPapers.jsx";
 import "./../../styles/home.css";
 
 function Hero() {
 	return (
 		<div id="hero">
-
+			<FloatingPapers />
+			
 			<div id="hero-content">
 				<p id="hero-app-name">
 					RESEARCH INTELLIGENCE PLATFORM
@@ -18,19 +20,7 @@ function Hero() {
 					Personalized to your research interests and reading history. 
 				</p>
 
-				<div id="hero-search">
-					<div className="search-bar">
-						<Search size={18} className="search-icon" />
-
-						<input 
-							type="text"
-							placeholder="Search papers, authors, topics..."
-							className="search-input"	
-						/>
-
-						<button className="search-button">Search</button>
-					</div>
-				</div>
+				<SearchBar variant="hero" />
 			</div>
 
 
