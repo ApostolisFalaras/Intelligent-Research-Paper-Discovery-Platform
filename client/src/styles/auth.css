@@ -1,3 +1,4 @@
+/* ---------- Main Auth page styles ---------- */
 #main-auth-page {
     min-height: 100vh;
     background: #F8F9FA;
@@ -35,6 +36,7 @@
         
 }
 
+/* ---------- Left-side App Brand styles ---------- */
 #brand-div {
     position: relative;
     z-index: 1;
@@ -97,6 +99,7 @@
     color: rgba(255,255,255,0.65);
 }
 
+/* ---------- Right-side Login/Signup form styles ---------- */
 #form-panel {
     width: 100%; 
     display: flex;
@@ -120,6 +123,7 @@
     margin-bottom: 32px;
 }
 
+/* ---------- Generic Form tab styles ---------- */
 .auth-tab {
     width: 200px;
     height: 40px;
@@ -185,10 +189,17 @@
     margin-top: 1px;
 }
 
+/* ---------- Form fields styles ---------- */
 .field-container {
     display: flex;
     flex-direction: column; 
     gap: 5px;
+}
+
+#form-name-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
 }
 
 .label {
@@ -215,7 +226,7 @@
 
 .field-hint {
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     color: #9B9B8A;
 }
 
@@ -226,7 +237,7 @@
     background-color: #FFFFFF;
     border: 1.5px solid rgba(26,26,20,0.16);
     border-radius: 5px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     outline: none;
     transition: border 0.15s;
     width: 100%;
@@ -241,6 +252,7 @@
     border: 1.5px solid #95D5B2;
 }
 
+/* ---------- Password verification elements' styles ---------- */
 .password-container {
     display: flex;
     align-items: center;
@@ -296,6 +308,74 @@
     padding: 0;
 }
 
+#passwords-match {
+    display: flex; 
+    align-items: center; 
+    gap: 4px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px;
+    color: #2D6A4F;
+}
+
+#passwords-mismatch {
+    display: flex; 
+    align-items: center; 
+    gap: 4px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px;
+    color: #C0392B;
+}
+
+
+/* ---------- Password strength bar styles ---------- */
+#strength-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+#strength-bar {
+    flex: 1; 
+    height: 3px; 
+    background: rgba(26,26,20,0.1);
+    border-radius: 2px; 
+    overflow: hidden;
+}
+
+#strength-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.2s, background-color 0.2s;                
+}
+
+#strength-bar-fill.weak { width: 20%; background-color: #C0392B; }
+
+#strength-bar-fill.fair { width: 40%; background-color: #E67E22; }
+
+#strength-bar-fill.good { width: 60%; background-color: #74C69D; }
+
+#strength-bar-fill.strong { width: 80%; background-color: #2D6A4F; }
+
+#strength-bar-fill.very-strong { width: 100%; background-color: #1B4332;}
+
+#strength-estimation {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; 
+    min-width: 40px;
+}
+
+#strength-estimation.weak { color: #C0392B; }
+
+#strength-estimation.fair { color: #E67E22; }
+
+#strength-estimation.good { color: #74C69D; }
+
+#strength-estimation.strong { color: #2D6A4F; }
+
+#strength-estimation.very-strong { color: #1B4332; }
+
+/* ---------- Submit button styles ---------- */
 #login-btn {
     font-family: 'Inter', sans-serif;
     font-size: 14px;
@@ -318,4 +398,54 @@
 #login-btn.loading {
     background-color: #40916C;
     cursor: not-allowed;
+}
+
+/* ---------- Role dropdown field styles ---------- */
+#role-dropdown-container {
+    position: relative;
+}
+
+#role-dropdown {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color:  #9B9B8A;
+    background-color: #FFFFFF;
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px;
+    padding: 10px 12px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+}
+
+#role-dropdown.form-role {
+    color: #212529;
+}
+
+#role-dropdown:focus {
+    border: 1.5px solid #95D5B2;
+}
+
+/* ---------- Form's bottom section styles ---------- */
+#form-bottom {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #9B9B8A;
+    text-align: center; 
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-bottom-btn {
+    color: #2D6A4F;
+    background-color: transparent;
+    border: none;
+    cursor: pointer; 
+    font-size: 14px; 
+    font-weight: 600;
+    padding: 5px;
 }

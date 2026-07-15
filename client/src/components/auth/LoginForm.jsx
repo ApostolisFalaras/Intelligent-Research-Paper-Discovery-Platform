@@ -1,24 +1,31 @@
 import { useState } from "react";
+import { useAuth } from "../../hooks/useAuth.jsx";
+import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 import Field from "./Field.jsx";
 import PasswordInput from "./PasswordInput.jsx";
 import TextInput from "./TextInput.jsx";
 import "../../styles/auth.css";
 
+/* Login form retains as state:
+ i) the form fields
+ ii) the errors associated with each field
+ iii) the server errors that might occur during form submission
+ iv) the loading state after clicking the submit button
+*/
 function LoginForm() {
-	// State representing the current values of form fields
 	const [form, setForm] = useState({ username: "", password: ""});
-
-	// State representing the current errors associated with each field value
-	// If any or both form fields are empty, the error fields are set
 	const [errors, setErrors] = useState({});
-
-	// State associated with a backend server error
 	const [serverError, setServerError] = useState("");
-
-	// Loading state when "Sign in" button is clicked
 	const [loading, setLoading] = useState(false);
+	
+	// Navigation back to home page after successful login
+	const navigate = useNavigate();
 
-	// Verify form inputs, specifically if they're empty 
+	// Update user content value after successful login
+	const { refreshUser } = useAuth();
+
+	// Validate form inputs. If empty set corresponding error fields 
 	function validateInputs() {
 		const e = {};
 
@@ -34,7 +41,7 @@ function LoginForm() {
 	}
 
 	// Submit form credentials in backend "POST /api/auth/login" route
-	function handleSubmit(event) {
+	async function handleSubmit(event) {
 		event.preventDefault();
 
 		if (!validateInputs())
@@ -42,7 +49,39 @@ function LoginForm() {
 
 		setLoading(true);
 		setServerError("");
-		// TODO: API call
+		
+		try {
+			const response = await fetch("/api/auth/login", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					username: form.username,
+					password: form.password
+				})
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.message || "Unable to sign in.");
+			}
+			
+			// After authentication, retrieve all user info from with the 
+			// "GET /api/users/me" request
+			const authenticatedUser = await refreshUser();
+
+			if (!authenticatedUser) {
+				throw new Error("Login succeeded, but the authenticated user could not be loaded.");
+			} 
+			
+			navigate("/");
+		} catch (error) {
+			setServerError(error.message || "Unable to sign in");
+		} finally {
+			setLoading(false);
+		}
 	}
 
 	return (
@@ -53,16 +92,17 @@ function LoginForm() {
 			{/* Server error if the form cannot be submitted successfully */}
 			{serverError && (
 				<div className="server-error-alert">
-					<AlertCircle size={13} className="alert-circle" />
+					<AlertCircle size={13} className="alert-circle" /> {serverError}
 				</div>
 			)}
 
-			{/* Username login field */}
-			<Field label="Username" noValidate required error={errors.username}>
+			{/* Form Fields section */}
+			
+			<Field label="Username" required error={errors.username}>
 				<TextInput 
 					type="text"
 					value={form.username}
-					placeholder="Your username"
+					placeholder="johndoe12345"
 					autoComplete="username"
 					onChange={(username) => 
 						setForm(prev => ({
@@ -75,7 +115,7 @@ function LoginForm() {
 			</Field>
 			
 			{/* Password login field */}
-			<Field label="Password" noValidate required error={errors.password}>
+			<Field label="Password" required error={errors.password}>
 				<PasswordInput 
 					value={form.password}
 					placeholder="Your password"

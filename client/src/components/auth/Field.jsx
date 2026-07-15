@@ -1,7 +1,7 @@
 import { AlertCircle } from "lucide-react";
 import "../../styles/auth.css";
 
-function Field({ label, required, children, error, hint }) {
+function Field({ label, namePart, required, children, error, hint }) {
 
 	return (
 		<div className="field-container">
