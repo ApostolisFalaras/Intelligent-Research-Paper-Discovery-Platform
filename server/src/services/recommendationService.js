@@ -27,6 +27,25 @@ function validatePagination(page, limit) {
 	};
 }
 
+function paperRecomDTO(papers) {
+	return papers.map((paper) => ({
+        id: paper.openalex_id,
+        internalId: paper.id,
+        title: paper.title,
+        displayName: paper.display_name,
+        abstract: paper.abstract,
+        publicationYear: paper.publication_year,
+        citedByCount: paper.cited_by_count,
+        fwci: Number(paper.fwci),
+        primarySource: paper.primary_source_display_name,
+        primaryTopic: paper.primary_topic_display_name,
+        isOpenAccess: paper.is_open_access,
+        openAccessStatus: paper.open_access_status,
+        rank: Number(paper.rank),
+        authorCount: Number(paper.author_count),
+        authorsPreview: paper.authors_preview,
+    }));
+}
 
 // It fetches a preview of each type of recommendation
 export async function getHomeRecommendations(userId) {
@@ -35,10 +54,10 @@ export async function getHomeRecommendations(userId) {
 	if (!userId) {
 		const popularPapers = await fetchPopularRecommendations(10);
 
+		const sections = [{ header: "Popular papers", papers: paperRecomDTO(popularPapers) }];
 		return {
 			authenticated: false,
-			header: "Popular papers",
-			papers: popularPapers
+			sections
 		};
 	}
 	else {
@@ -55,7 +74,7 @@ export async function getHomeRecommendations(userId) {
 		if (numInteractions === 0) {
 			const popularPapers = await fetchPopularRecommendations(10);
 
-			sections.push({ header: "Popular papers", papers: popularPapers });
+			sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			
 		}
 		else {
@@ -74,24 +93,24 @@ export async function getHomeRecommendations(userId) {
 			const hasRecommendations = contentBased.length > 0 || userBased.length > 0 || topicBased.length > 0;
 
 			if (!hasRecommendations) {
-				sections.push({ header: "Popular papers", papers: popularPapers });
+				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			}
 			else if (numInteractions < 3) {
-				sections.push({ header: "Because you viewed", papers: contentBased });
-				sections.push({ header: "Popular papers", papers: popularPapers});
+				sections.push({ header: "Because you viewed", papers: paperRecomDTO(contentBased) });
+				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers)});
 			}
 			else if (numInteractions < 10) {
-				sections.push({ header: "Based on your interests", papers: contentBased });
-				sections.push({ header: "Explore your research topics", papers: topicBased });
-				sections.push({ header: "Popular papers", papers: popularPapers });
+				sections.push({ header: "Based on your interests", papers: paperRecomDTO(contentBased) });
+				sections.push({ header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
+				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			}
 			else {
-				sections.push({ header: "Based on your interests", papers: contentBased });
+				sections.push({ header: "Based on your interests", papers: paperRecomDTO(contentBased) });
 				sections.push({ 
 					header: "Researchers with similar interests also viewed", 
-					papers: userBased 
+					papers: paperRecomDTO(userBased) 
 				});
-				sections.push({ header: "Explore your research topics", papers: topicBased });
+				sections.push({ header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
 			}
 
 		} 
