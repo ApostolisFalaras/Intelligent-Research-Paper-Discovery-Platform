@@ -1,19 +1,29 @@
 import pool from "./../config/db.js";
 
 export async function searchPapersByTextQuery(filters) {
-    
-    const values = [filters.query];
+    const filterValues = [filters.query];
 
     // Create WHERE clause by concatenating the specified filters with the AND operator
-    const whereClause = buildWHEREClause(filters, values).join(" AND ");
+    const whereClause = buildWHEREClause(filters, filterValues).join(" AND ");
     // Construct the ORDER BY clause
     const orderByClause = buildORDERBYClause(filters);
+    
+    // Running a helper query that retrieves the number of papers that match the submitted search query
+    const countValues = [...filterValues];
 
-    values.push(filters.limit);
-    const limitIndex = values.length; // value for the query '$' parameters
+    const helperQuery = `
+        SELECT COUNT(DISTINCT p.id) AS total_results
+        
+        FROM papers p
+        LEFT JOIN paper_authors pa ON pa.paper_id = p.id
 
-    values.push(filters.offset);
-    const offsetIndex = values.length; // value for the query '$' parameters
+        WHERE ${whereClause};`;
+
+    const helperResult = await pool.query(helperQuery, countValues);
+
+    const searchValues = [...filterValues, filters.limit, filters.offset];
+    const limitIndex = filterValues.length + 1; // value for the query '$' parameters
+    const offsetIndex = filterValues.length + 2; // value for the query '$' parameters
 
     // Query to extract the minimum info needed to present the result paper cards.
     // Also performs a left join with "paper_authors" in order to mention a few of the authors in the paper card.
@@ -63,9 +73,14 @@ export async function searchPapersByTextQuery(filters) {
 
     // Any potential DB errors propagate to the controller, 
     // and are handled by the global error-handling middleware
-    const result = await pool.query(sqlQuery, values);
-    return result.rows;
+    const result = await pool.query(sqlQuery, searchValues);
+
+    return {
+        papers: result.rows,
+        totalResults: Number(helperResult.rows[0].total_results)
+    }
 }
+
 
 // Build a dynamic WHERE clause based on the arbitrary user selection of filters
 function buildWHEREClause(filters, values) {

@@ -9,7 +9,7 @@ export async function searchPapers(user_id, queryParams) {
     // Validate search bar's input query & filters
     const filters = validateSearchFilters(queryParams)
     
-    const papers = await searchPapersByTextQuery(filters);
+    const searchResults = await searchPapersByTextQuery(filters);
     
     // Add query to the user search history, only if the user is logged in
     const { query, page, limit, offset, ...searchHistoryFilters } = filters;
@@ -17,7 +17,7 @@ export async function searchPapers(user_id, queryParams) {
     // If the user is logged in, add search query as a record to user search history
     if (user_id) {
         try {
-            await addToSearchHistory(user_id, query, searchHistoryFilters, papers.length);
+            await addToSearchHistory(user_id, query, searchHistoryFilters, searchResults.totalResults);
         } catch (error) {
             // Failing to add the record in the search history 
             // should not interrupt the search operation
@@ -25,8 +25,8 @@ export async function searchPapers(user_id, queryParams) {
         }
     }
     
-    // Papers Data Transfer Object (DTO)
-    return papers.map((paper) => ({
+    // Papers filed Data Transfer Object (DTO)
+    const papers = searchResults.papers.map((paper) => ({
         id: paper.openalex_id,
         internalId: paper.id,
         title: paper.title,
@@ -43,6 +43,11 @@ export async function searchPapers(user_id, queryParams) {
         authorCount: Number(paper.author_count),
         authorsPreview: paper.authors_preview,
     }));
+
+    return {
+        totalResults: searchResults.totalResults,
+        papers
+    }
 }
 
 // Validates each search parameter only if it exists. If it doesn't exist, move to the next one.
@@ -98,7 +103,7 @@ function validateSearchFilters(searchFilters) {
         throw new AppError("'topicId' has invalid ID format", 400);
 
     // Author filter
-    const authorName = parseString(searchFilters.authorName, "authorId");
+    const authorName = parseString(searchFilters.authorName, "authorName");
 
     // Open-Access filter
     const isOpenAccess = parseBoolean(searchFilters.isOpenAccess, "isOpenAccess") ?? true; 
