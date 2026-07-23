@@ -147,25 +147,32 @@ describe("GET /api/search/?q=<search-query>", () => {
     // ------------ TESTS WITH DEFAULT FILTERS --------------
 
     it("Returns 200 and the found search results with default filters", async () => {
-        searchPapersByTextQuery.mockResolvedValue(mockResultsRows_1);
+        searchPapersByTextQuery.mockResolvedValue({ 
+            totalResults: 2,
+            papers: mockResultsRows_1
+        });
 
-        const expectedResponseData = mockResultsRows_1.map((row) => ({
-            id: row.openalex_id,
-            internalId: row.id,
-            title: row.title,
-            displayName: row.display_name,
-            abstract: row.abstract,
-            publicationYear: row.publication_year,
-            citedByCount: row.cited_by_count,
-            fwci: Number(row.fwci),
-            primarySource: row.primary_source_display_name,
-            primaryTopic: row.primary_topic_display_name,
-            isOpenAccess: row.is_open_access,
-            openAccessStatus: row.open_access_status,
-            rank: Number(row.rank),
-            authorCount: Number(row.author_count),
-            authorsPreview: row.authors_preview
-        }));
+        const expectedResponseData = {
+            totalResults: 2,
+
+            papers: mockResultsRows_1.map((row) => ({
+                id: row.openalex_id,
+                internalId: row.id,
+                title: row.title,
+                displayName: row.display_name,
+                abstract: row.abstract,
+                publicationYear: row.publication_year,
+                citedByCount: row.cited_by_count,
+                fwci: Number(row.fwci),
+                primarySource: row.primary_source_display_name,
+                primaryTopic: row.primary_topic_display_name,
+                isOpenAccess: row.is_open_access,
+                openAccessStatus: row.open_access_status,
+                rank: Number(row.rank),
+                authorCount: Number(row.author_count),
+                authorsPreview: row.authors_preview
+            }))
+        };
 
         const response = await request(app).get("/api/search/").query({query: "Machine Learning"}).expect(200);
 
@@ -173,6 +180,7 @@ describe("GET /api/search/?q=<search-query>", () => {
             ...defaultFilters,
             query: "Machine Learning"
         });
+
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
         const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
@@ -185,7 +193,10 @@ describe("GET /api/search/?q=<search-query>", () => {
 
 
     it("Returns 200 but there were no search results with default filters", async () => {
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
 
         const response = await request(app).get("/api/search/").query({query: "Unknown query"}).expect(200);
 
@@ -200,31 +211,41 @@ describe("GET /api/search/?q=<search-query>", () => {
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         
         expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual([]);
+        expect(response.body.data).toEqual({
+            totalResults: 0,
+            papers: []
+        });
     });
 
     // -------------- TEST WITH COMBINATIONS OF FILTERS -------------
     
     it("Returns 200 and the found papers with filters", async () => {
-        searchPapersByTextQuery.mockResolvedValue(mockResultsRows_2);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 2,
+            papers: mockResultsRows_2
+        });
 
-        const expectedResponseData = mockResultsRows_2.map((row) => ({
-            id: row.openalex_id,
-            internalId: row.id,
-            title: row.title,
-            displayName: row.display_name,
-            abstract: row.abstract,
-            publicationYear: row.publication_year,
-            citedByCount: row.cited_by_count,
-            fwci: Number(row.fwci),
-            primarySource: row.primary_source_display_name,
-            primaryTopic: row.primary_topic_display_name,
-            isOpenAccess: row.is_open_access,
-            openAccessStatus: row.open_access_status,
-            rank: Number(row.rank),
-            authorCount: Number(row.author_count),
-            authorsPreview: row.authors_preview
-        }));
+        const expectedResponseData = {
+            totalResults: 2,
+
+            papers: mockResultsRows_2.map((row) => ({
+                id: row.openalex_id,
+                internalId: row.id,
+                title: row.title,
+                displayName: row.display_name,
+                abstract: row.abstract,
+                publicationYear: row.publication_year,
+                citedByCount: row.cited_by_count,
+                fwci: Number(row.fwci),
+                primarySource: row.primary_source_display_name,
+                primaryTopic: row.primary_topic_display_name,
+                isOpenAccess: row.is_open_access,
+                openAccessStatus: row.open_access_status,
+                rank: Number(row.rank),
+                authorCount: Number(row.author_count),
+                authorsPreview: row.authors_preview
+            }))
+        };
 
         // Every other filter combination works similarly
         const response = await request(app).get("/api/search/").query({
@@ -266,26 +287,33 @@ describe("GET /api/search/?q=<search-query>", () => {
 
     
     it("Returns 200 even when saving history fails", async () => {
-        searchPapersByTextQuery.mockResolvedValue(mockResultsRows_1);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 2,
+            papers: mockResultsRows_1
+        });
         addToSearchHistory.mockRejectedValue(new Error("Failed to save history"));
 
-        const expectedResponseData = mockResultsRows_1.map((row) => ({
-            id: row.openalex_id,
-            internalId: row.id,
-            title: row.title,
-            displayName: row.display_name,
-            abstract: row.abstract,
-            publicationYear: row.publication_year,
-            citedByCount: row.cited_by_count,
-            fwci: Number(row.fwci),
-            primarySource: row.primary_source_display_name,
-            primaryTopic: row.primary_topic_display_name,
-            isOpenAccess: row.is_open_access,
-            openAccessStatus: row.open_access_status,
-            rank: Number(row.rank),
-            authorCount: Number(row.author_count),
-            authorsPreview: row.authors_preview
-        }));
+        const expectedResponseData = {
+            totalResults: 2,
+
+            papers: mockResultsRows_1.map((row) => ({
+                id: row.openalex_id,
+                internalId: row.id,
+                title: row.title,
+                displayName: row.display_name,
+                abstract: row.abstract,
+                publicationYear: row.publication_year,
+                citedByCount: row.cited_by_count,
+                fwci: Number(row.fwci),
+                primarySource: row.primary_source_display_name,
+                primaryTopic: row.primary_topic_display_name,
+                isOpenAccess: row.is_open_access,
+                openAccessStatus: row.open_access_status,
+                rank: Number(row.rank),
+                authorCount: Number(row.author_count),
+                authorsPreview: row.authors_preview
+            }))
+        };
 
         const response = await request(app).get("/api/search/").query({
             query: "Machine Learning",
@@ -313,6 +341,4 @@ describe("GET /api/search/?q=<search-query>", () => {
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);
     });
-
-
 });
