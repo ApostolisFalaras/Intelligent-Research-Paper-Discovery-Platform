@@ -84,29 +84,36 @@ describe("searchPapers", () => {
     // ----------- SUCCESSFUL PAPER RETRIEVAL ------------
 
     it("Maps fetched array of papers to array of formatted DTOs, with no filters, unauthenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue(mockResultsRows);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 2,
+            papers: mockResultsRows
+        });
 
         // Assuming no provided filters, since the effect would be the same with any of them
         // The focus of this test is the DTO formatting of the retrieved papers
         const results = await searchPapers(null, {query: "Machine Learning"});
 
-        const expectedOutput = mockResultsRows.map((row) => ({
-            id: row.openalex_id,
-            internalId: row.id,
-            title: row.title,
-            displayName: row.display_name,
-            abstract: row.abstract,
-            publicationYear: row.publication_year,
-            citedByCount: row.cited_by_count,
-            fwci: Number(row.fwci),
-            primarySource: row.primary_source_display_name,
-            primaryTopic: row.primary_topic_display_name,
-            isOpenAccess: row.is_open_access,
-            openAccessStatus: row.open_access_status,
-            rank: Number(row.rank),
-            authorCount: Number(row.author_count),
-            authorsPreview: row.authors_preview
-        }));
+        const expectedOutput = {
+            totalResults: 2,
+            
+            papers: mockResultsRows.map((row) => ({
+                id: row.openalex_id,
+                internalId: row.id,
+                title: row.title,
+                displayName: row.display_name,
+                abstract: row.abstract,
+                publicationYear: row.publication_year,
+                citedByCount: row.cited_by_count,
+                fwci: Number(row.fwci),
+                primarySource: row.primary_source_display_name,
+                primaryTopic: row.primary_topic_display_name,
+                isOpenAccess: row.is_open_access,
+                openAccessStatus: row.open_access_status,
+                rank: Number(row.rank),
+                authorCount: Number(row.author_count),
+                authorsPreview: row.authors_preview
+            }))
+        };
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
             ...defaultFilters,
@@ -119,7 +126,10 @@ describe("searchPapers", () => {
 
 
     it("Maps fetched array of papers to array of formatted DTOs, with no filters, authenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue(mockResultsRows);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 2,
+            papers: mockResultsRows
+        });
 
         addToSearchHistory.mockResolvedValue({id: 1, user_id: 1});
 
@@ -127,23 +137,27 @@ describe("searchPapers", () => {
         // The focus of this test is the DTO formatting of the retrieved papers
         const results = await searchPapers(1, {query: "Machine Learning"});
 
-        const expectedOutput = mockResultsRows.map((row) => ({
-            id: row.openalex_id,
-            internalId: row.id,
-            title: row.title,
-            displayName: row.display_name,
-            abstract: row.abstract,
-            publicationYear: row.publication_year,
-            citedByCount: row.cited_by_count,
-            fwci: Number(row.fwci),
-            primarySource: row.primary_source_display_name,
-            primaryTopic: row.primary_topic_display_name,
-            isOpenAccess: row.is_open_access,
-            openAccessStatus: row.open_access_status,
-            rank: Number(row.rank),
-            authorCount: Number(row.author_count),
-            authorsPreview: row.authors_preview
-        }));
+        const expectedOutput = {
+            totalResults: 2,
+            
+            papers: mockResultsRows.map((row) => ({
+                id: row.openalex_id,
+                internalId: row.id,
+                title: row.title,
+                displayName: row.display_name,
+                abstract: row.abstract,
+                publicationYear: row.publication_year,
+                citedByCount: row.cited_by_count,
+                fwci: Number(row.fwci),
+                primarySource: row.primary_source_display_name,
+                primaryTopic: row.primary_topic_display_name,
+                isOpenAccess: row.is_open_access,
+                openAccessStatus: row.open_access_status,
+                rank: Number(row.rank),
+                authorCount: Number(row.author_count),
+                authorsPreview: row.authors_preview
+            }))
+        };
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
             ...defaultFilters,
@@ -160,7 +174,10 @@ describe("searchPapers", () => {
     // ----------- SUCCESSFUL RETRIEVAL OF EMPTY LIST WHEN NO PAPER MATCHES -----------
 
     it("Returns an empty array when query doesn't retrieve any papers, with no filters, unauthenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
 
         const results = await searchPapers(null, {query: "unknown query"});
 
@@ -172,11 +189,17 @@ describe("searchPapers", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
         expect(addToSearchHistory).not.toHaveBeenCalled();
-        expect(results).toEqual([]);
+        expect(results).toEqual({
+            totalResults: 0,
+            papers: []
+        });
     });
 
     it("Returns an empty array when query doesn't retrieve any papers, with no filters, authenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
         addToSearchHistory.mockResolvedValue({id: 1, user_id: 1});
 
         const results = await searchPapers(1, {query: "unknown query"});
@@ -192,14 +215,20 @@ describe("searchPapers", () => {
         const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
-        expect(results).toEqual([]);
+        expect(results).toEqual({
+            totalResults: 0,
+            papers: []
+        });
     });
 
 
     // ------------ DOESN'T FAIL WHEN INSERTION OF SEARCH HISTORY RECORD FAILS ------------
     it("Search doesn't fail when insertion of search history record fails", async () => {
         // Assuming no matching papers for simplicity
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
 
         addToSearchHistory.mockRejectedValue(new Error("Insertion of search history record failed"));
 
@@ -214,7 +243,10 @@ describe("searchPapers", () => {
         const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
-        expect(result).toEqual([]);
+        expect(result).toEqual({
+            totalResults: 0,
+            papers: []
+        });
     });
 
 
@@ -222,7 +254,10 @@ describe("searchPapers", () => {
 
     it("Validates & Normalizes filters before calling the searchPapers function", async () => {
         // Assuming no paper matches, since filter normalization & validation is tested
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
 
         // Checking all filters for test completeness
         const searchFilters = {
@@ -262,7 +297,10 @@ describe("searchPapers", () => {
             offset: 10
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(results).toEqual([]);
+        expect(results).toEqual({
+            totalResults: 0,
+            papers: []
+        });
 
     });
 
@@ -271,7 +309,10 @@ describe("searchPapers", () => {
     it("Trims the query before calling the repository function", async () => {
         // Since the trimming of input is checked here, 
         // we assume a query with no retrieved results and no filters applied for simplicity
-        searchPapersByTextQuery.mockResolvedValue([]);
+        searchPapersByTextQuery.mockResolvedValue({
+            totalResults: 0,
+            papers: []
+        });
 
         const results = await searchPapers(null, {query: "  unknown query   "});
 
@@ -293,7 +334,10 @@ describe("searchPapers", () => {
             offset: 0
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(results).toEqual([]);
+        expect(results).toEqual({
+            totalResults: 0,
+            papers: []
+        });
     });
 
     // ------------- BAD REQUEST CASES -> 400 --------------
