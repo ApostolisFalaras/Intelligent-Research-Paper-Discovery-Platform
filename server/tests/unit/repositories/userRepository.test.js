@@ -222,16 +222,14 @@ describe("userRepository", () => {
                 first_name: registrationCredentials.firstName,
                 last_name: registrationCredentials.lastName,
                 affiliation: registrationCredentials.affiliation,
-                role: registrationCredentials.role,
-                bio: registrationCredentials.bio,
-                avatar_url: registrationCredentials.avatarURL
+                role: registrationCredentials.role
             });
 
         const [query, params] = pool.query.mock.calls[0];
 
         expect(query).toContain("INSERT INTO users (username, email, password_hash,");
-        expect(query).toContain("first_name, last_name, affiliation, role, bio, avatar_url)");
-        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)");
+        expect(query).toContain("first_name, last_name, affiliation, role)");
+        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7)");
         expect(query).toContain("RETURNING id, username, email;");
 
         
@@ -242,9 +240,7 @@ describe("userRepository", () => {
             registrationCredentials.firstName,
             registrationCredentials.lastName,
             registrationCredentials.affiliation,
-            registrationCredentials.role,
-            registrationCredentials.bio,
-            registrationCredentials.avatarURL
+            registrationCredentials.role
         ]);
         expect(pool.query).toHaveBeenCalledTimes(1);
         expect(user).toEqual(expectedOutput);
@@ -264,17 +260,15 @@ describe("userRepository", () => {
                 first_name: registrationCredentials.firstName,
                 last_name: registrationCredentials.lastName,
                 affiliation: registrationCredentials.affiliation,
-                role: registrationCredentials.role,
-                bio: registrationCredentials.bio,
-                avatar_url: registrationCredentials.avatarURL
+                role: registrationCredentials.role
             }
         )).rejects.toThrow("Database query failed");
         
         const [query, params] = pool.query.mock.calls[0];
 
         expect(query).toContain("INSERT INTO users (username, email, password_hash");
-        expect(query).toContain("first_name, last_name, affiliation, role, bio, avatar_url)");
-        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)");
+        expect(query).toContain("first_name, last_name, affiliation, role)");
+        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7)");
         expect(query).toContain("RETURNING id, username, email;");
 
         expect(params).toEqual([
@@ -284,9 +278,7 @@ describe("userRepository", () => {
             registrationCredentials.firstName,
             registrationCredentials.lastName,
             registrationCredentials.affiliation,
-            registrationCredentials.role,
-            registrationCredentials.bio,
-            registrationCredentials.avatarURL
+            registrationCredentials.role
         ]);
 
         expect(pool.query).toHaveBeenCalledTimes(1);

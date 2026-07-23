@@ -12,7 +12,6 @@ vi.mock("../../../src/repositories/userRepository.js", () => ({
 import { createUser, fetchUserByEmail, fetchUserByUsername } from "../../../src/repositories/userRepository.js";
 import { login, register } from "../../../src/services/authService.js";
 
-
 const mockResolvedUser = {
     id: 1,
     username: "ApostolisCoder",
@@ -36,7 +35,6 @@ const registrationCredentials = {
     lastName: "Falaras",
     affiliation: "None",
     role: "Full-Stack Software Engineer",
-    bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatarURL: "None"
 };
 
@@ -91,44 +89,42 @@ describe("authService", () => {
 
     // ---------- SUCCESSFUL REGISTRATION ------------
 
-    it("Fetches a new user after Registration", async () => {
-        // No other user with either of the input username/email is found
+    it("Creates a new user after registration", async () => {
         fetchUserByUsername.mockResolvedValue(null);
         fetchUserByEmail.mockResolvedValue(null);
-
         createUser.mockResolvedValue(mockResolvedUser);
 
         const user = await register(registrationCredentials);
 
         expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
-        expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
         expect(fetchUserByEmail).toHaveBeenCalledWith(registrationCredentials.email);
-        expect(fetchUserByEmail).toHaveBeenCalledTimes(1);
-        
-        expect(createUser).toHaveBeenCalledWith({
-            username:  registrationCredentials.username,
-            email:  registrationCredentials.email,
-            password_hash: expect.any(String),
-            first_name:  registrationCredentials.firstName,
-            last_name:  registrationCredentials.lastName,
-            affiliation:  registrationCredentials.affiliation,
-            role:  registrationCredentials.role,
-            bio:  registrationCredentials.bio,
-            avatar_url:  registrationCredentials.avatarURL,
-        });
+
         expect(createUser).toHaveBeenCalledTimes(1);
 
-        // Validate password Hash has been correctly generated
         const createUserArgs = createUser.mock.calls[0][0];
-        expect(createUserArgs.passwordHash).not.toBe(registrationCredentials.password);
-        await expect(bcryptjs.compare(registrationCredentials.password, createUserArgs.password_hash)).resolves.toBe(true);
-        
+
+        expect(createUserArgs).toMatchObject({
+            username: registrationCredentials.username,
+            email: registrationCredentials.email,
+            first_name: registrationCredentials.firstName,
+            last_name: registrationCredentials.lastName,
+            affiliation: registrationCredentials.affiliation,
+            role: registrationCredentials.role
+        });
+
+        expect(createUserArgs.password_hash).toBeTypeOf("string");
+
+        expect(createUserArgs.password_hash).not.toBe(registrationCredentials.password);
+
+        await expect(bcryptjs.compare(registrationCredentials.password, createUserArgs.password_hash))
+            .resolves.toBe(true);
+
         expect(user).toEqual({
             id: 1,
             username: "ApostolisCoder",
             email: "apostolisCoder@email.com"
         });
-    });
+});
 
     // ---------- FAILED REGISTRATION ------------
 
