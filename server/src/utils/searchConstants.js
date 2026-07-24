@@ -1,6 +1,6 @@
 // Arrays of possible search parameters values, used for validation
 
-export const ALLOWED_SORT_TYPES = ["relevance", "citations", "impact", "year_desc", "year_asc"];
+export const ALLOWED_SORT_TYPES = ["relevance", "citations", "impact", "year"];
 
 export const ALLOWED_LANGUAGES = ["Afrikaans", "Antigua and Barbuda Creole English","Swiss German",
 "Old English", "Arabic", "Standard Arabic", "Asturian", "Azerbaijani", "South Azerbaijani", "Bavarian", 

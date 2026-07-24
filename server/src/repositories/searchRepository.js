@@ -149,10 +149,8 @@ function buildORDERBYClause(filters) {
             return `ORDER BY p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
         case "impact":
             return `ORDER BY p.fwci DESC NULLS LAST, p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
-        case "year_desc":
+        case "year":
             return `ORDER BY p.publication_year DESC NULLS LAST, rank DESC NULLS LAST`;
-        case "year_asc":
-            return `ORDER BY p.publication_year ASC NULLS LAST, rank DESC NULLS LAST`;
         case "relevance":
         case "default":
             return `ORDER BY rank DESC NULLS LAST, p.cited_by_count DESC NULLS LAST`;
