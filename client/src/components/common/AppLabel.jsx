@@ -1,5 +1,5 @@
 import { BookOpen } from "lucide-react";
-import "./../../styles/layout.css";
+import "./../../styles/common.css";
 
 function AppLabel({ iconSize, iconColor, textColor, textSize }) {
 	
