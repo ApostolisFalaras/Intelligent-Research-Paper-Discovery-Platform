@@ -1,4 +1,5 @@
-/* ---------- Main Auth page styles ---------- */
+/* ---------- Auth Page styles ---------- */
+
 #main-auth-page {
     min-height: 100vh;
     background: #F8F9FA;
@@ -12,6 +13,8 @@
     align-items: stretch;
     height: 100vh;
 }
+
+/* ---------- Auth Page styles > Brand Panel ---------- */
 
 #brand-panel {
     width: 420px;
@@ -36,7 +39,6 @@
         
 }
 
-/* ---------- Left-side App Brand styles ---------- */
 #brand-div {
     position: relative;
     z-index: 1;
@@ -99,7 +101,8 @@
     color: rgba(255,255,255,0.65);
 }
 
-/* ---------- Right-side Login/Signup form styles ---------- */
+/* ---------- Auth Page > Login/Signup Form ---------- */
+
 #form-panel {
     width: 100%; 
     display: flex;
@@ -123,7 +126,8 @@
     margin-bottom: 32px;
 }
 
-/* ---------- Generic Form tab styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Generic Form tab styles ---------- */
+
 .auth-tab {
     width: 200px;
     height: 40px;
@@ -189,7 +193,8 @@
     margin-top: 1px;
 }
 
-/* ---------- Form fields styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Form fields styles ---------- */
+
 .field-container {
     display: flex;
     flex-direction: column; 
@@ -252,7 +257,8 @@
     border: 1.5px solid #95D5B2;
 }
 
-/* ---------- Password verification elements' styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Password verification elements ---------- */
+
 .password-container {
     display: flex;
     align-items: center;
@@ -326,8 +332,8 @@
     color: #C0392B;
 }
 
+/* ---------- Auth Page > Login/Signup Form > Password strength bar styles ---------- */
 
-/* ---------- Password strength bar styles ---------- */
 #strength-bar-container {
     display: flex;
     align-items: center;
@@ -375,7 +381,8 @@
 
 #strength-estimation.very-strong { color: #1B4332; }
 
-/* ---------- Submit button styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Submit button styles ---------- */
+
 #login-btn {
     font-family: 'Inter', sans-serif;
     font-size: 14px;
@@ -400,7 +407,8 @@
     cursor: not-allowed;
 }
 
-/* ---------- Role dropdown field styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Role dropdown field styles ---------- */
+
 #role-dropdown-container {
     position: relative;
 }
@@ -428,7 +436,8 @@
     border: 1.5px solid #95D5B2;
 }
 
-/* ---------- Form's bottom section styles ---------- */
+/* ---------- Auth Page > Login/Signup Form > Form's bottom section styles ---------- */
+
 #form-bottom {
     font-family: 'Inter', sans-serif;
     font-size: 13px;

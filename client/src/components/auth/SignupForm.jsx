@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth.jsx";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Check, X } from "lucide-react";
+import { toast } from "sonner";
 import Field from "./Field.jsx";
 import PasswordInput from "./PasswordInput.jsx";
 import TextInput from "./TextInput.jsx";
@@ -127,6 +128,7 @@ function SignupForm() {
 				headers: {
 					"Content-Type": "application/json",
 				},
+				credentials: "include",
 				body: JSON.stringify({
 					firstName: form.firstName,
 					lastName: form.lastName,
@@ -152,9 +154,14 @@ function SignupForm() {
 				throw new Error("Login succeeded, but the authenticated user could not be loaded.");
 			} 
 			
+			toast.success("Your account was created successfully.");
+
 			navigate("/");
 		} catch (error) {
-			setServerError(error.message || "Unable to sign in");
+			const message = error.message || "Unable to sign in";
+
+			setServerError(message);
+			toast.error(message);
 		} finally {
 			setLoading(false);
 		}
