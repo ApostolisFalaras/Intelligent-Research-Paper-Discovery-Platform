@@ -1,3 +1,4 @@
+/* ---------- Home Page > Hero Styles ---------- */
 #hero {
     position: relative;
     background-color: #1B4332;
@@ -6,7 +7,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 100px 24px 72px;
+    padding: 100px 24px 56px;
 }
 
 #hero-content {
@@ -46,54 +47,68 @@
     margin-bottom: 36px;
 }
 
-#hero-search {
-    position: relative;
-    max-width: 580px;
-    margin: 0 auto;
-}
+/* ---------- Home Page > Floating papers Animation ---------- */
 
-.search-bar {
-    display: flex;
-    align-items: center;
-    background-color: #FFFFFF;
-    border-radius: 6px;
-    border-width: 2px;
-    border-style: solid;
-    border-color: none;
+#floating-papers {
+    position: absolute;
+    inset: 0;
     overflow: hidden;
+    pointer-events: none;
 }
 
-.search-icon {
-    color: #9B9B8A;
-    margin-left: 18px;
-    flex-shrink: 0;
+@keyframes floatUp {
+    0% {
+        transform: translateY(110vh) rotate((var(--rot)));
+    }
+    100% {
+        transform: translateY(-30vh) rotate(calc(var(--rot) + 12deg));
+    }
 }
 
-.search-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 16px 12px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    color: #212529;
-    background: transparent;
+.floating-paper {
+    position: absolute;
+    bottom: -20%;
 }
 
-.search-button {
-    color: #FFFFFF;
-    background: #1B4332;
-    border: none;
-    border-radius: 4px;
-    margin: 6px;
-    padding: 10px 22px;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
+.animated-paper {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.9);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    gap: 5px;
 }
+
+.main-paper-title {
+    height: 6px;
+    background-color: rgba(27,67,50,0.6);
+    border-radius: 2px;
+    width: 90%; 
+} 
+
+.secondary-paper-title {
+    height: 6px; 
+    background-color: rgba(27,67,50,0.4);
+    border-radius: 2px;
+    width: 70%;
+} 
+
+.author-names {
+    height: 4px;
+    background-color: rgba(27,67,50,0.2);
+    border-radius: 2px;
+    width: 55%;
+    margin-top: 2px;
+}
+
+.fake-abstract-line {
+    height: 3px;
+	border-radius: 2px;
+}
+
+/* ---------- Home Page > Stats Strip Styles ---------- */
 
 #stats-strip {
     display: flex;
@@ -123,6 +138,8 @@
     margin-top: 2px;
 }
 
+/* ---------- Home Page > Main Section styles ---------- */
+
 #main-section {
     display: flex;
     flex-direction: column;
@@ -134,7 +151,7 @@
 
 #main-section-header > p {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #9B9B8A;
@@ -143,11 +160,13 @@
 
 #main-section-header > h2 {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 24px; 
+    font-size: 26px; 
     font-weight: 600;
     color: #212529;
     margin: 0;
 }
+
+/* ---------- Home Page > Recommendation section styles ---------- */
 
 .recom-section {
     display: flex;
@@ -163,7 +182,7 @@
 
 .section-type {
     display: flex; 
-    align-items: center; 
+    align-items: baseline; 
     gap: 8px;    
 }
 
@@ -173,7 +192,7 @@
 
 .section-label {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: #212529;
     margin: 0;
@@ -181,14 +200,14 @@
 
 .section-sublabel {
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #9B9B8A 
 }
 
 .see-all-btn {
     margin-left: auto;
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #2D6A4F;
     background: none;
     border: none;
@@ -207,5 +226,44 @@
     padding: 8px 0 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    height: 200px;
+    height: 220px;
+    width: 1300px;
+}
+
+/* ---------- Home Page > Recommendation section > Loading Recommendations ---------- */
+
+#recommendation-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 72px 0 80px;
+    gap: 14px;
+}
+
+#recommendation-loading-svg {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #FFF8E6;
+    border: 1px solid #F4D58D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#recommendation-loading-title {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+#recommendation-loading-msg {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    color: #6B6B5A;
+    text-align: center;
+    max-width: 360px;
+    margin: 0;
 }

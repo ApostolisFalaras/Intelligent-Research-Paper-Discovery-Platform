@@ -1,0 +1,305 @@
+/* ---------- Navbar styles ---------- */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 40px;
+    padding: 18px 48px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid rgba(26,26,20,0.08);
+    box-shadow: 0 1px 8px rgba(26,26,20,0.06);
+}
+
+.navbar.home {
+    background-color: transparent;
+    border-bottom: none;
+    box-shadow: 0;
+    position: absolute;
+}
+
+/* ---------- Navbar styles > App Label ---------- */
+.app-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;   
+}
+
+#app-label-separator {
+    width: 1px; 
+    height: 28px; 
+    background-color: rgba(26,26,20,0.2);
+    flex-shrink: 0;
+    margin-left: 15px;
+}
+
+.app-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- Navbar styles > Embedded Search Bar ---------- */
+#search-bar-container {
+    width: 700px;
+    display: flex;
+    align-items: center;
+    background-color: #F8F9FA;
+    border: 1px solid rgba(26,26,20,0.13);
+    border-radius: 5px;
+    transition: border 0.15s;
+    overflow: hidden;
+    margin-left: 20px;
+}
+
+#search-bar-container:focus-within {
+    border: 1.5px solid #95D5B2;
+}
+
+/* ---------- Navbar styles > Navbar Menu ---------- */
+
+#navbar-menu {
+    width: 500px;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 28px;
+    padding: 24px;
+}
+
+#navbar-menu.home { width: 90%; }
+
+#navbar-menu-placeholder {
+    width: 330px;
+    height: 20px;
+}
+
+.navbar-menu-option {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #6B6B5A;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.navbar-menu-option.active-link {
+    color: #1B4332;
+    font-weight: 600;  
+    border-bottom: 2.5px solid #95D5B2; 
+    padding-bottom: 2px;
+}
+
+.navbar-menu-option:hover {
+    color: #212529;
+}
+
+.navbar-menu-option.home {
+    color: rgba(255,255,255,0.7);
+}
+
+.navbar-menu-option.home:hover {
+    color: #FFFFFF;
+}
+
+/* ---------- NavBar styles > Profile avatar styles ---------- */
+
+#profile-avatar {
+    position: relative;
+    flex-shrink: 0;
+}
+
+#avatar-button {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    box-shadow: none;
+    transition: box-shadow 0.18s ease;
+}
+
+#avatar-button.open {
+    box-shadow: 0 0 0 3px rgba(26,26,20,0.1);
+}
+
+#avatar-button.light {
+    background-color: rgba(255,255,255,0.92);
+    border: 1.5px solid rgba(255,255,255,0.4);
+}
+
+#avatar-button.dark {
+    background-color: #F0EDF6;
+    border: 1.5px solid rgba(26,26,20,0.15);
+}
+
+#avatar-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #212529;
+    line-height: 1;
+    user-select: none;
+}
+
+/* ---------- Profile avatar styles > Dropdown styles ---------- */
+
+#dropdown {
+    position: absolute;
+    top: 80%;
+    right: 3.2%;
+    background: #FFFFFF;
+    border: 1px solid rgba(26,26,20,0.10);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(26,26,20,0.12);
+    min-width: 168px;
+    overflow: hidden;
+    z-index: 300;
+}
+
+.dropdown-option {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    text-decoration: none;
+    display: block;
+    background-color: transparent;
+    padding: 10px 14px;
+    transition: background-color 0.12s;
+}
+
+.dropdown-option.first { color: #212529; border-top: none; }
+
+.dropdown-option.second { color: #C0392B; border-top: 1px solid rgba(26,26,20,0.07); }
+
+.dropdown-option:hover { background-color: #F8F9FA; }
+
+.dropdown-option.second:hover { background-color: #FEF2F2; }
+
+
+/* ---------- Navbar styles > Sign-in Button styles ---------- */
+
+#sign-in-button {
+    width: 100px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1B4332;
+    background-color: rgba(255,255,255,0.92);
+    border: none;
+    border-radius: 4px;
+    padding: 10px 4px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transform: translateY(0);
+    transition: transform 0.15s ease;
+}
+
+#sign-in-button.not-home {
+    color: rgba(255,255,255,0.92);
+    background-color: #1B4332;
+}
+
+#sign-in-button:hover {
+    transform: translateY(-2px);
+}
+
+/* ---------- Auth Page > "Back to home" Button styles ---------- */
+
+#back-to-home {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #6B6B5A;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+#back-to-home:hover { color: #212529; }
+
+/* ---------- Footer styles ---------- */
+#footer {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 32px;
+    background-color: #1B4332;
+}
+
+#footer-copyright {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: rgba(255,255,255,0.35);
+}
+
+/* ---------- Fetch Error Container ---------- */
+
+#fetch-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 72px 0 80px;
+    gap: 14px;
+}
+
+#fetch-error-svg {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#fetch-error-title {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 18px; 
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+#fetch-error-msg {
+    font-family: 'Inter', sans-serif; 
+    font-size: 14px;
+    color: #6B6B5A; 
+    margin: 0;
+    text-align: center;
+    max-width: 500px;
+}
+
+#try-again-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 4px;
+    padding: 9px 22px;
+    background-color: #1B4332;
+    color: #FFFFFF;
+    border: none; 
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+#try-again:hover {
+    background-color: #2D6A4F;
+}
