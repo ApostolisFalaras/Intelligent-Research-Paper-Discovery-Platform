@@ -7,7 +7,7 @@ export async function fetchUserById(id) {
     // Fetching everything except the password hash,
     // since this method is about displaying the user and NOT login/registration 
     const sqlQuery = `
-        SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at
+        SELECT *
         FROM users
         WHERE id = $1;
     `;
