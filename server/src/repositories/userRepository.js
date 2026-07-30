@@ -44,8 +44,8 @@ export async function fetchUserByEmail(email) {
 export async function createUser(credentials) {
     const sqlQuery = `
         INSERT INTO users (username, email, password_hash, 
-                           first_name, last_name, affiliation, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                           first_name, last_name, affiliation, location, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id, username, email;
     `;
 
@@ -56,6 +56,7 @@ export async function createUser(credentials) {
         credentials.first_name,
         credentials.last_name,
         credentials.affiliation,
+        credentials.location,
         credentials.role
     ];
 

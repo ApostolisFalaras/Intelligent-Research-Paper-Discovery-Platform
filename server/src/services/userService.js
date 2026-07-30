@@ -33,6 +33,7 @@ export async function getUserMe(id) {
         firstName: userProfile.first_name,
         lastName: userProfile.last_name,
         affiliation: userProfile.affiliation,
+        location: userProfile.location,
         role: userProfile.role,
         bio: userProfile.bio,
         createdAt: userProfile.created_at,

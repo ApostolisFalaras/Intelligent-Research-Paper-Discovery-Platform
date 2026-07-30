@@ -388,6 +388,7 @@ CREATE TABLE users (
     first_name TEXT,
     last_name TEXT,
     affiliation TEXT,
+    location TEXT,
     role TEXT,
     bio TEXT,
     avatar_url TEXT,

@@ -38,6 +38,7 @@ export async function register(credentials) {
     const email = credentials.email;
     const password = credentials.password;
     const affiliation = credentials.affiliation;
+    const location = credentials.location;
     const role = credentials.role;
 
     // Checking for missing authentication credentials
@@ -65,6 +66,7 @@ export async function register(credentials) {
         first_name: firstName,
         last_name: lastName,
         affiliation: affiliation,
+        location: location,
         role: role,
     });
 
