@@ -19,6 +19,7 @@ const mockResolvedUser = {
     first_name: "Apostolis",
     last_name: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
@@ -35,6 +36,7 @@ const mockResolvedProfile = {
     first_name: "Apostolis",
     last_name: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
@@ -50,6 +52,7 @@ const registrationCredentials = {
     firstName: "Apostolis",
     lastName: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatarURL: "None"
@@ -222,14 +225,15 @@ describe("userRepository", () => {
                 first_name: registrationCredentials.firstName,
                 last_name: registrationCredentials.lastName,
                 affiliation: registrationCredentials.affiliation,
+                location: registrationCredentials.location,
                 role: registrationCredentials.role
             });
 
         const [query, params] = pool.query.mock.calls[0];
 
         expect(query).toContain("INSERT INTO users (username, email, password_hash,");
-        expect(query).toContain("first_name, last_name, affiliation, role)");
-        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7)");
+        expect(query).toContain("first_name, last_name, affiliation, location, role)");
+        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7, $8)");
         expect(query).toContain("RETURNING id, username, email;");
 
         
@@ -240,6 +244,7 @@ describe("userRepository", () => {
             registrationCredentials.firstName,
             registrationCredentials.lastName,
             registrationCredentials.affiliation,
+            registrationCredentials.location,
             registrationCredentials.role
         ]);
         expect(pool.query).toHaveBeenCalledTimes(1);
@@ -260,6 +265,7 @@ describe("userRepository", () => {
                 first_name: registrationCredentials.firstName,
                 last_name: registrationCredentials.lastName,
                 affiliation: registrationCredentials.affiliation,
+                location: registrationCredentials.location,
                 role: registrationCredentials.role
             }
         )).rejects.toThrow("Database query failed");
@@ -267,8 +273,8 @@ describe("userRepository", () => {
         const [query, params] = pool.query.mock.calls[0];
 
         expect(query).toContain("INSERT INTO users (username, email, password_hash");
-        expect(query).toContain("first_name, last_name, affiliation, role)");
-        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7)");
+        expect(query).toContain("first_name, last_name, affiliation, location, role)");
+        expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7, $8)");
         expect(query).toContain("RETURNING id, username, email;");
 
         expect(params).toEqual([
@@ -278,6 +284,7 @@ describe("userRepository", () => {
             registrationCredentials.firstName,
             registrationCredentials.lastName,
             registrationCredentials.affiliation,
+            registrationCredentials.location,
             registrationCredentials.role
         ]);
 

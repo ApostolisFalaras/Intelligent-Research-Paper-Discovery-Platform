@@ -19,6 +19,7 @@ const mockResolvedUser = {
     first_name: "Apostolis",
     last_name: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
@@ -33,6 +34,7 @@ const registrationCredentials = {
     firstName: "Apostolis",
     lastName: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatarURL: "None"

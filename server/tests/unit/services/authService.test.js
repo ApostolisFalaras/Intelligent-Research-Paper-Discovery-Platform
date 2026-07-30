@@ -20,6 +20,7 @@ const mockResolvedUser = {
     first_name: "Apostolis",
     last_name: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
@@ -34,6 +35,7 @@ const registrationCredentials = {
     firstName: "Apostolis",
     lastName: "Falaras",
     affiliation: "None",
+    location: "Greece",
     role: "Full-Stack Software Engineer",
     avatarURL: "None"
 };
@@ -109,6 +111,7 @@ describe("authService", () => {
             first_name: registrationCredentials.firstName,
             last_name: registrationCredentials.lastName,
             affiliation: registrationCredentials.affiliation,
+            location: registrationCredentials.location,
             role: registrationCredentials.role
         });
 
@@ -124,7 +127,7 @@ describe("authService", () => {
             username: "ApostolisCoder",
             email: "apostolisCoder@email.com"
         });
-});
+    });
 
     // ---------- FAILED REGISTRATION ------------
 
