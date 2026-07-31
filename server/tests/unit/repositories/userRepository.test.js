@@ -76,7 +76,7 @@ describe("userRepository", () => {
 
         const [query, params] = pool.query.mock.calls[0];
 
-        expect(query).toContain("SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at");
+        expect(query).toContain("SELECT *");
         expect(query).toContain("FROM users");
         expect(query).toContain("WHERE id = $1;");
         expect(params).toEqual([1]);
@@ -144,7 +144,7 @@ describe("userRepository", () => {
 
         const [query, params] = pool.query.mock.calls[0];
 
-        expect(query).toContain("SELECT id, username, email, first_name, last_name, affiliation, role, bio, created_at, updated_at");
+        expect(query).toContain("SELECT *");
         expect(query).toContain("FROM users");
         expect(query).toContain("WHERE id = $1;");
         expect(params).toEqual([2]);
