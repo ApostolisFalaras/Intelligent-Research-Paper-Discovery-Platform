@@ -79,6 +79,7 @@ CREATE TABLE paper_authors (
     id BIGSERIAL PRIMARY KEY,
     paper_id BIGINT NOT NULL,
     author_id BIGINT NOT NULL,
+    author_exists BOOLEAN DEFAULT FALSE,
 
     -- Used in cases where author id's are null, but we still need to display the author
     author_order INT NOT NULL, 
@@ -433,6 +434,16 @@ CREATE TABLE user_search_history (
     result_count INTEGER,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Authors each user follows
+CREATE TABLE user_follows_authors (
+    user_id INTEGER NOT NULL,
+    author_id BIGINT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, author_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
 );
 
 -- RECOMMENDATION-RELATED TABLES
