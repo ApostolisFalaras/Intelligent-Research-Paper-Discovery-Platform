@@ -8,7 +8,19 @@ import { fetchProjectFoldersById,
          insertPapertoFolder,
          fetchPaperInFolder,
          deletePaperFromFolder } from "../repositories/userFolderRepository.js";
+
 import { fetchPaperById } from "./../repositories/paperRepository.js"; 
+
+import { fetchUserTotalViewedPapers,
+         fetchUserRecentlyViewedPapers,
+         fetchUserTotalSavedPapers,
+         fetchUserRecentlySavedPapers,
+         fetchUserTotalFolders,
+         fetchUserFoldersPreview,
+         fetchUserFollowedAuthors,
+         fetchUserTopResearchTopics
+} from "./../repositories/profileRepository.js";
+
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -39,6 +51,71 @@ export async function getUserMe(id) {
         createdAt: userProfile.created_at,
         updatedAt: userProfile.updated_at 
     };
+}
+
+// User retrieves their profile info: activity totals, recent activity, top folders, recent followed authors
+export async function getMyProfile(id) {
+    // Validate user id
+    const parsedId = parseUserId(id);
+
+    const [
+        totalViewedPapers,
+        previewViewedPapers,
+        totalSavedPapers, 
+        previewSavedPapers,
+        totalFolders,
+        previewFolders,
+        authorsFollowed,
+        researchTopics
+    ] = await Promise.all([
+        fetchUserTotalViewedPapers(parsedId),
+        fetchUserRecentlyViewedPapers(parsedId),
+        fetchUserTotalSavedPapers(parsedId),
+        fetchUserRecentlySavedPapers(parsedId),
+        fetchUserTotalFolders(parsedId),
+        fetchUserFoldersPreview(parsedId),
+        fetchUserFollowedAuthors(parsedId),
+        fetchUserTopResearchTopics(parsedId)
+    ]);
+
+    // Aggregate profile info DTO (Data-Transfer Object)
+    return {
+        totalViewedPapers: Number(totalViewedPapers.total_viewed_papers),
+        previewViewedPapers: previewViewedPapers.map((paper) => ({
+            id: paper.openalex_id,
+            internalId: paper.paper_id,
+            title: paper.title,
+            primaryTopic: paper.primary_topic_display_name,
+            authorCount: paper.author_count,
+            authorsPreview: paper.authors_preview,
+        })),
+
+        totalSavedPapers: Number(totalSavedPapers.total_saved_papers),
+        previewSavedPapers: previewSavedPapers.map((paper) => ({
+            id: paper.openalex_id,
+            internalId: paper.paper_id,
+            title: paper.title,
+            primaryTopic: paper.primary_topic_display_name,
+            authorCount: paper.author_count,
+            authorsPreview: paper.authors_preview,
+        })),
+
+        totalFolders: Number(totalFolders.total_user_folders),
+        previewFolders: previewFolders.map((folder) => ({
+            id: folder.id,
+            name: folder.name,
+            paperCount: folder.paper_count,
+            color: folder.color
+        })),
+
+        authorsFollowed: authorsFollowed.map((author) => ({
+            id: author.author_id,
+            authorName: author.author_name,
+        })),
+
+        researchTopics
+    };
+
 }
 
 // User fetches their search history

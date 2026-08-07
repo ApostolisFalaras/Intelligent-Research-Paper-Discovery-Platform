@@ -1,5 +1,6 @@
 import express from "express";
 import { getMe, 
+         getMyProfileController,
          getSearchHistoryController, 
          deleteSearchHistoryController, 
          getFoldersController,
@@ -14,6 +15,9 @@ const router = express.Router();
 
 // User views their profile
 router.get("/me", getMe);
+
+// User retrieves their profile info: activity totals, recent activity, top folders, recent followed authors
+router.get("/me/profile", getMyProfileController);
 
 // User views their search history
 router.get("/me/search-history", getSearchHistoryController);
