@@ -11,9 +11,26 @@ export async function upsertPaperView(userId, paperId) {
 		)
 		VALUES ($1, $2, 1, false, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 		ON CONFLICT (user_id, paper_id) DO UPDATE SET
-			view_count = user_paper_interactions.view_count + 1,
-			interest_score = user_paper_interactions.interest_score + 1,
-			last_interaction_at = CURRENT_TIMESTAMP;
+			view_count = 
+				CASE
+					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
+					THEN user_paper_interactions.view_count + 1
+					ELSE user_paper_interactions.view_count
+				END,
+
+			interest_score =
+				CASE
+					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
+					THEN user_paper_interactions.interest_score + 1
+					ELSE user_paper_interactions.interest_score
+				END,
+
+			last_interaction_at =
+				CASE
+					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
+					THEN CURRENT_TIMESTAMP
+					ELSE user_paper_interactions.last_interaction_at
+				END
 	`;
 
 	await pool.query(sqlQuery, [userId, paperId]);
