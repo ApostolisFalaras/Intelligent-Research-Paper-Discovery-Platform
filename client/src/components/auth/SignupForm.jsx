@@ -37,6 +37,7 @@ function SignupForm() {
 		password: "",
 		confirmPassword: "",
 		affiliation: "",
+		location: "",
 		role: ""
 	});
 	const [errors, setErrors] = useState({});
@@ -318,6 +319,21 @@ function SignupForm() {
 						setForm((prev) => ({
 							...prev,
 							affiliation
+						})
+					)}
+				/>
+			</Field>
+
+			<Field label="Location" hint="City, country, etc.">
+				<TextInput 
+					type="text"
+					value={form.location}
+					placeholder="Boston, Massachusetts"
+					autoComplete="location"
+					onChange={(location) =>
+						setForm((prev) => ({
+							...prev,
+							location
 						})
 					)}
 				/>
