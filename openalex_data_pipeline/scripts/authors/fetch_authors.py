@@ -93,7 +93,7 @@ def save_checkpoint(completed_batches: set[int]) -> None:
     temp_file.replace(CHECKPOINT_FILE)
     
     
-# --------- CALCULATE TOP 100K AUTHORS WITH MOST APPEARANCES ---------
+# --------- CALCULATE TOP 1M AUTHORS WITH MOST APPEARANCES ---------
 
 def calculate_top_author_ids():
     conn = None
@@ -117,13 +117,14 @@ def calculate_top_author_ids():
             FROM paper_authors
             WHERE author_openalex_id IS NOT NULL
             GROUP BY author_openalex_id
-            ORDER BY occurrences DESC;
+            ORDER BY occurrences DESC
+            LIMIT 1000000;
         """)
         
         results = cur.fetchall()
         
         ids_to_fetch = []
-        for id_tuple in results[:100000]:
+        for id_tuple in results:
             ids_to_fetch.append(id_tuple[0]) 
         
     except Exception:

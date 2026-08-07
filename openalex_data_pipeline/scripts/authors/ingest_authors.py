@@ -316,7 +316,8 @@ def insert_remaining_tables_tuples(tuple_batches: dict, cur: cursor) -> None:
 def update_paper_author_ids(cur: cursor) -> None:
     query = """
         UPDATE paper_authors pa
-        SET author_id = a.id
+        SET author_id = a.id,
+            author_exists = true
         FROM authors a
         WHERE pa.author_openalex_id = a.openalex_id 
           AND pa.author_id IS NULL;
