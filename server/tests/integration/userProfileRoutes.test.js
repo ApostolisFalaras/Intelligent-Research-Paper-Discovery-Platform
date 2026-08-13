@@ -2,7 +2,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
 vi.mock("./../../src/repositories/userRepository.js", () => ({
-    fetchUserById: vi.fn()
+    fetchUserById: vi.fn(),
+    updateUserById: vi.fn(),
+	deleteUserById: vi.fn(),
 }));
 
 
@@ -22,16 +24,15 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
     }
 });
 
-import { fetchUserById } from "../../src/repositories/userRepository.js"; 
+import { fetchUserById, updateUserById, deleteUserById, upsertUserLoginTime } from "../../src/repositories/userRepository.js"; 
 import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
 import app from "../../src/app.js";
 
 
-const mockResolveUserProfile = {
+const mockResolvedUser = {
     id: 1,
     username: "ApostolisCoder",
     email: "apostolisCoder@email.com",
-    password_hash: "$2b$12$UMTLXzUIPGvMbmnMtjvW4u43BQXoZG6oKK3Yhm.ai9kclBAB/0xD6",
     first_name: "Apostolis",
     last_name: "Falaras",
     affiliation: "None",
@@ -40,7 +41,8 @@ const mockResolveUserProfile = {
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
     created_at: "2026-05-09 16:58:35.442164+03",
-    updated_at: "2026-05-09 16:58:35.442164+03"
+    updated_at: "2026-05-09 16:58:35.442164+03",
+    last_login_at: "2026-05-09 16:58:35.442164+03"
 };
 
 describe("GET /api/users/me", () => {
@@ -52,7 +54,7 @@ describe("GET /api/users/me", () => {
     // ---------- SUCCESSFUL USER PROFILE RETRIEVAL -> 200 OK -----------
 
     it("Returns 200 when the user profile is retrieved", async () => {
-        fetchUserById.mockResolvedValue(mockResolveUserProfile);
+        fetchUserById.mockResolvedValue(mockResolvedUser);
 
         const response = await request(app).get("/api/users/me").expect(200);
 
@@ -61,17 +63,35 @@ describe("GET /api/users/me", () => {
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
-            id: 1,
-            username: mockResolveUserProfile.username,
-            email: mockResolveUserProfile.email,
-            firstName: mockResolveUserProfile.first_name,
-            lastName: mockResolveUserProfile.last_name,
-            affiliation: mockResolveUserProfile.affiliation,
-            location: mockResolveUserProfile.location,
-            role: mockResolveUserProfile.role,
-            bio: mockResolveUserProfile.bio,
-            createdAt: mockResolveUserProfile.created_at,
-            updatedAt: mockResolveUserProfile.updated_at
+            id: mockResolvedUser.id,
+            username: mockResolvedUser.username,
+            email: mockResolvedUser.email,
+            firstName: mockResolvedUser.first_name,
+            lastName: mockResolvedUser.last_name,
+            affiliation: mockResolvedUser.affiliation,
+            location: mockResolvedUser.location,
+            role: mockResolvedUser.role,
+            bio: mockResolvedUser.bio,
+            avatarURL: "None",
+            createdAt: mockResolvedUser.created_at,
+            updatedAt: mockResolvedUser.updated_at,
+            createdAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(mockResolvedUser.created_at)),
+
+            updatedAt: mockResolvedUser.updated_at,
+
+            lastLoginAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(mockResolvedUser.last_login_at))
         });
     });
 
@@ -115,5 +135,148 @@ describe("GET /api/users/me", () => {
         expect(response.body.status).toBe("error");
         expect(response.body.message).toBe("Database query failed");
     });
-
 });
+
+describe("PATCH /api/users/me/profile", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        mockAuthenticatedUser = {id: 1};
+    });
+
+    // ---------- SUCCESSFUL CASES ----------
+
+    it("Returns 200 when the user profile is successfully updated", async () => {
+		updateUserById.mockResolvedValue(1);
+
+		const response = await request(app)
+			.patch("/api/users/me/profile")
+			.send({ 
+                firstName: "Apostolis", lastName: "Falaras",
+				location: "Greece", role: "Software Engineer"
+			})
+			.expect(200);
+
+		expect(updateUserById).toHaveBeenCalledWith(1, {
+			firstName: "Apostolis",
+			lastName: "Falaras",
+			location: "Greece",
+			role: "Software Engineer"
+		});
+
+		expect(response.body.status).toEqual("success");
+        expect(response.body.message).toEqual("User profile updated successfully");
+	});
+
+    // ---------- ERROR CASES ----------
+
+	it("Returns 400 when no modified fields are provided", async () => {
+		const response = await request(app)
+			.patch("/api/users/me/profile")
+			.send({})
+			.expect(400);
+
+		expect(updateUserById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe(
+			"No modified fields were provided"
+		);
+	});
+
+	it("Returns 400 when profile update data is invalid", async () => {
+		const response = await request(app)
+			.patch("/api/users/me/profile")
+			.send({
+				firstName: 123
+			})
+			.expect(400);
+
+		expect(updateUserById).not.toHaveBeenCalled();
+
+		expect(response.body.status).toBe("fail");
+	});
+
+	it("Returns 404 when the user does not exist", async () => {
+		updateUserById.mockResolvedValue(0);
+
+		const response = await request(app)
+			.patch("/api/users/me/profile")
+			.send({
+				firstName: "Apostolis"
+			})
+			.expect(404);
+
+		expect(updateUserById).toHaveBeenCalledWith(1, {
+			firstName: "Apostolis"
+		});
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("User not found");
+	});
+
+	it("Returns 500 when profile update unexpectedly fails", async () => {
+		updateUserById.mockRejectedValue(
+			new Error("Unexpected DB error")
+		);
+
+		const response = await request(app)
+			.patch("/api/users/me/profile")
+			.send({
+				firstName: "Apostolis"
+			})
+			.expect(500);
+
+		expect(response.body.status).toBe("error");
+		expect(response.body.message).toBe("Unexpected DB error");
+	});
+});
+
+
+describe("DELETE /api/users/me/profile", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        mockAuthenticatedUser = {id: 1};
+    });
+
+    // ---------- SUCCESSFUL CASES ----------
+
+    it("Returns 200 when the user profile is successfully deleted", async () => {
+		deleteUserById.mockResolvedValue(1);
+
+		const response = await request(app)
+			.delete("/api/users/me/profile")
+			.expect(200);
+
+		expect(deleteUserById).toHaveBeenCalledWith(1);
+		expect(deleteUserById).toHaveBeenCalledTimes(1);
+
+		expect(response.body.status).toEqual("success");
+        expect(response.body.message).toEqual("User profile deleted successfully");
+	});
+
+	it("Returns 404 when the user does not exist", async () => {
+		deleteUserById.mockResolvedValue(0);
+
+		const response = await request(app)
+			.delete("/api/users/me/profile")
+			.expect(404);
+
+		expect(deleteUserById).toHaveBeenCalledWith(1);
+
+		expect(response.body.status).toBe("fail");
+		expect(response.body.message).toBe("User not found");
+	});
+
+	it("Returns 500 when profile deletion unexpectedly fails", async () => {
+		deleteUserById.mockRejectedValue(
+			new Error("Unexpected DB error")
+		);
+
+		const response = await request(app)
+			.delete("/api/users/me/profile")
+			.expect(500);
+
+		expect(response.body.status).toBe("error");
+		expect(response.body.message).toBe("Unexpected DB error");
+	});
+})

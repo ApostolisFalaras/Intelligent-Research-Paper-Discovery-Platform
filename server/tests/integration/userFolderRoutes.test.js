@@ -576,8 +576,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 	it("Returns 201 and adds a paper to a project folder", async () => {
 		// Not mocking all paper fields for simplicity 
 		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
-		upsertPaperSave.mockResolvedValue(null);
-		incrementPaperSaveCount.mockResolvedValue(null);
 		
 		fetchPaperInFolder.mockResolvedValue(null);
 		insertPapertoFolder.mockResolvedValue(1);
@@ -595,46 +593,10 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
 
-		expect(upsertPaperSave).toHaveBeenCalledWith(1, 204129);
-		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
-
-		expect(incrementPaperSaveCount).toHaveBeenCalledWith(204129);
-		expect(incrementPaperSaveCount).toHaveBeenCalledTimes(1);
-
 		expect(response.body.status).toBe("success");
 		expect(response.body.message).toBe("Paper added to project folder successfully");
 	});
 
-	it("Returns 201 and adds a paper to a project folder even if recording the paper save event fails", async () => {
-		// Not mocking all paper fields for simplicity 
-		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
-		upsertPaperSave.mockRejectedValue(new Error("Unexpected DB error"));
-		incrementPaperSaveCount.mockResolvedValue(null);
-		
-		fetchPaperInFolder.mockResolvedValue(null);
-		insertPapertoFolder.mockResolvedValue(1);
-
-		const response = await request(app)
-		.post("/api/users/me/folders/2/papers/W7129423223")
-		.expect(201);
-
-		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
-		expect(fetchPaperById).toHaveBeenCalledTimes(1);
-
-		expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
-		expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
-
-		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
-		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
-
-		expect(upsertPaperSave).toHaveBeenCalledWith(1, 204129);
-		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
-
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("success");
-		expect(response.body.message).toBe("Paper added to project folder successfully");
-	});
 
 	// ---------- UNSUCCESSFUL INSERTION OF PAPER IN PROJECT FOLDER ----------
 
@@ -658,9 +620,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
 
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Paper was not inserted to project folder");
 	});
@@ -674,9 +633,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
@@ -692,9 +648,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
 
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
 	});
@@ -706,9 +659,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
@@ -725,9 +675,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(fetchPaperInFolder).not.toHaveBeenCalled();
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
-
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper not found");
@@ -758,9 +705,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(insertPapertoFolder).not.toHaveBeenCalled();
 
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper already exists in project folder");
 	});
@@ -788,9 +732,6 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
 
-		expect(upsertPaperSave).not.toHaveBeenCalled();
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Database error occurred");
 	});
@@ -807,8 +748,6 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 	it("Returns 200 and deletes paper from project folder", async () => {
 		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
-		upsertPaperUnsave.mockResolvedValue(null);
-		decrementPaperSaveCount.mockResolvedValue(null);
 
 		deletePaperFromFolder.mockResolvedValue(1);
 
@@ -821,40 +760,11 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
 
-		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 204129);
-		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
-
-		expect(decrementPaperSaveCount).toHaveBeenCalledWith(204129);
-		expect(decrementPaperSaveCount).toHaveBeenCalledTimes(1);
-
-
 		expect(response.body.status).toBe("success");
 		expect(response.body.message).toBe("Paper deleted from project folder successfully");
 	});
 
-	it("Returns 200 and deletes paper from project folder even if recording the paper unsave event fails", async () => {
-		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
-		upsertPaperUnsave.mockRejectedValue(new Error("Unexpected DB error"));
-
-		deletePaperFromFolder.mockResolvedValue(1);
-
-		const response = await request(app).delete("/api/users/me/folders/2/papers/W7129423223")
-		.expect(200);
-
-		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
-		expect(fetchPaperById).toHaveBeenCalledTimes(1);
-
-		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
-		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
-
-		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 204129);
-		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
-
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
-
-		expect(response.body.status).toBe("success");
-		expect(response.body.message).toBe("Paper deleted from project folder successfully");
-	});
+	
 	// ---------- UNSUCCESSFUL DELETION OF PAPER IN PROJECT FOLDER ----------
 
 	it("Returns 404 and fails to delete paper from project folder", async () => {

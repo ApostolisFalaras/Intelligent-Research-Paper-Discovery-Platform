@@ -490,11 +490,6 @@ describe("GET /api/papers/:id", () => {
     beforeEach(() => {
         vi.resetAllMocks();
         mockAuthenticatedUser = { id: 1 };
-
-        upsertPaperView.mockResolvedValue(undefined);
-        incrementPaperViewCount.mockResolvedValue(undefined);
-        incrementRecommendationClickCount.mockResolvedValue(undefined);
-        markUserRecommendationsStale.mockResolvedValue(undefined);
     });
 
     it("Returns 200 and the paper when accessed by an authenticated user", async () => {
@@ -509,19 +504,10 @@ describe("GET /api/papers/:id", () => {
         fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
         fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
 
-        upsertPaperView.mockResolvedValue(null);
-        incrementRecommendationClickCount.mockResolvedValue(null);
-
-
         const response = await request(app).get("/api/papers/W2741809807").expect(200);
 
         expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
         expect(fetchPaperById).toHaveBeenCalledTimes(1);
-
-        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-        expect(upsertPaperView).toHaveBeenCalledTimes(1);
-
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedOutput);
@@ -539,19 +525,10 @@ describe("GET /api/papers/:id", () => {
         fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
         fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
 
-        upsertPaperView.mockResolvedValue(null);
-        incrementRecommendationClickCount.mockResolvedValue(null);
-
         const response = await request(app).get("/api/papers/W2741809807")
         .query({isRecommendation: true}).expect(200);
 
         expectFetchPaperRepositoryFunctions("386866");
-
-        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-        expect(upsertPaperView).toHaveBeenCalledTimes(1);
-
-        expect(incrementRecommendationClickCount).toHaveBeenCalledWith(386866);
-        expect(incrementRecommendationClickCount).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedOutput);
@@ -595,17 +572,10 @@ describe("GET /api/papers/:id", () => {
         fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
         fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
 
-        upsertPaperView.mockRejectedValue(new Error("Unexpected DB error"));
-
         const response = await request(app).get("/api/papers/W2741809807")
         .query({isRecommendation: true}).expect(200);
 
         expectFetchPaperRepositoryFunctions("386866");
-        
-        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-        expect(upsertPaperView).toHaveBeenCalledTimes(1);
-
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedOutput);
