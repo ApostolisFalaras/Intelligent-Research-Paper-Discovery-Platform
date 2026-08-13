@@ -394,7 +394,8 @@ CREATE TABLE users (
     bio TEXT,
     avatar_url TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMPTZ
 );
 
 -- Each user might create different paper groupings called Project Folders
