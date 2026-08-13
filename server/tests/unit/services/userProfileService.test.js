@@ -2,12 +2,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../../src/repositories/userRepository.js", () => ({
     fetchUserById: vi.fn(),
+    updateUserById: vi.fn(),
+    deleteUserById: vi.fn()
 }));
 
 
-import { fetchUserById } from "../../../src/repositories/userRepository.js";
-import { getUserMe } from "../../../src/services/userService.js";
+vi.mock("bcryptjs", () => ({
+    default: {
+        hash: vi.fn()
+    }
+}));
 
+
+import { fetchUserById, updateUserById, deleteUserById } from "../../../src/repositories/userRepository.js";
+import { getUserMe, patchMyProfile, deleteMyProfile } from "../../../src/services/userService.js";
+import bcryptjs from "bcryptjs";
 
 
 const mockResolvedUser = {
@@ -22,7 +31,8 @@ const mockResolvedUser = {
     bio: "Junior Full-Stack Engineer currently studying Node.js and React",
     avatar_url: "None",
     created_at: "2026-05-09 16:58:35.442164+03",
-    updated_at: "2026-05-09 16:58:35.442164+03"
+    updated_at: "2026-05-09 16:58:35.442164+03",
+    last_login_at: "2026-05-09 16:58:35.442164+03"
 };
 
 
@@ -46,8 +56,26 @@ describe("getUserMe", () => {
             location: mockResolvedUser.location,
             role: mockResolvedUser.role,
             bio: mockResolvedUser.bio,
+            avatarURL: "None",
             createdAt: mockResolvedUser.created_at,
-            updatedAt: mockResolvedUser.updated_at 
+            updatedAt: mockResolvedUser.updated_at,
+            createdAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(mockResolvedUser.created_at)),
+
+            updatedAt: mockResolvedUser.updated_at,
+
+            lastLoginAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(mockResolvedUser.last_login_at))
         };
 
         // Assuming req.user.id = 1
@@ -98,6 +126,134 @@ describe("getUserMe", () => {
 
 });
 
+
+describe("patchMyProfile", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    // ---------- SUCCESSFUL CASES ----------
+    
+    it("Updates the provided profile fields", async () => {
+        const updates = {
+            firstName: "Apostolis",
+            lastName: "Falaras",
+            affiliation: "University of Thessaly",
+            location: "Greece",
+            role: "Software Engineer",
+            bio: "Backend and systems developer"
+        };
+
+        updateUserById.mockResolvedValue(1);
+
+        await patchMyProfile(42, updates);
+
+        expect(updateUserById).toHaveBeenCalledWith(42, updates);
+        expect(updateUserById).toHaveBeenCalledTimes(1);
+
+        expect(bcryptjs.hash).not.toHaveBeenCalled();
+    });
+
+
+    it("Hashes a new password before updating the user", async () => {
+        const updates = {
+            username: "apostolis",
+            password: "newPassword123"
+        };
+
+        bcryptjs.hash.mockResolvedValue("hashed-password");
+        updateUserById.mockResolvedValue(1);
+
+        await patchMyProfile(42, updates);
+
+        expect(bcryptjs.hash).toHaveBeenCalledWith("newPassword123", 12);
+
+        expect(updateUserById).toHaveBeenCalledWith(42, {
+            username: "apostolis",
+            passwordHash: "hashed-password"
+        });
+    });
+
+    // ---------- ERROR CASES ----------
+
+    it("Throws 400 when no modified fields are provided", async () => {
+        await expect(patchMyProfile(42, {}))
+            .rejects
+            .toThrow("No modified fields were provided");
+
+        expect(updateUserById).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 when no supported fields are provided", async () => {
+        await expect(patchMyProfile(42, { invalidField: "value"}))
+            .rejects
+            .toThrow("No valid modified fields were provided");
+
+        expect(updateUserById).not.toHaveBeenCalled();
+    });
+
+    it("Throws 404 when the user does not exist", async () => {
+        updateUserById.mockResolvedValue(0);
+
+        await expect(patchMyProfile(42, { firstName: "Apostolis" }))
+            .rejects
+            .toThrow("User not found");
+
+        expect(updateUserById).toHaveBeenCalledWith(42, {
+            firstName: "Apostolis"
+        });
+    });
+
+    it("Propagates repository errors", async () => {
+        updateUserById.mockRejectedValue(
+            new Error("Unexpected DB error")
+        );
+
+        await expect(patchMyProfile(42, { firstName: "Apostolis" }))
+            .rejects
+            .toThrow("Unexpected DB error");
+    });
+});
+
+
+describe("deleteMyProfile", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    // ---------- SUCCESSFUL CASES ----------
+
+    it("Deletes the current user", async () => {
+        deleteUserById.mockResolvedValue(1);
+
+        await deleteMyProfile(42);
+
+        expect(deleteUserById).toHaveBeenCalledWith(42);
+        expect(deleteUserById).toHaveBeenCalledTimes(1);
+    });
+
+    // ---------- ERROR CASES ----------
+
+    it("Throws 404 when the user does not exist", async () => {
+        deleteUserById.mockResolvedValue(0);
+
+        await expect(
+            deleteMyProfile(42)
+        ).rejects.toThrow("User not found");
+
+        expect(deleteUserById).toHaveBeenCalledWith(42);
+    });
+
+    it("Propagates repository errors", async () => {
+        deleteUserById.mockRejectedValue(
+            new Error("Unexpected DB error")
+        );
+
+        await expect(
+            deleteMyProfile(42)
+        ).rejects.toThrow("Unexpected DB error");
+    });
+});
 
 
 
