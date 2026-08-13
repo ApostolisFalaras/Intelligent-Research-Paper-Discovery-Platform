@@ -152,10 +152,10 @@ export async function fetchUserFoldersPreview(id) {
 // Fetches a preview of the followed author names, specifically the 3 most recent follows
 export async function fetchUserFollowedAuthors(id) {
 	const sqlQuery = `
-		SELECT DISTINCT ufa.author_id, pa.author_display_name AS author_name, ufa.created_at
+		SELECT DISTINCT ufa.author_id, a.display_name AS author_name, ufa.created_at
 		FROM user_follows_authors ufa
-		JOIN paper_authors pa 
-		  ON ufa.author_id = pa.author_id 
+		JOIN authors a 
+		  ON ufa.author_id = a.id 
 		WHERE ufa.user_id = $1
 		ORDER BY ufa.created_at DESC, ufa.author_id ASC;
 	`;
