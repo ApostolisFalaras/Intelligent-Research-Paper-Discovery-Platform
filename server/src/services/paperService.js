@@ -115,6 +115,7 @@ export async function getPaperById(id) {
 
         authors: authors.map(author => ({
             id: author.author_openalex_id,
+            authorExists: author.author_exists,
             orcid: author.author_orcid,
             displayName: author.author_display_name,
             rawAuthorName: author.raw_author_name,
