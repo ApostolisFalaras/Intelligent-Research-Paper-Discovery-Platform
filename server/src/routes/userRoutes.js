@@ -1,6 +1,8 @@
 import express from "express";
 import { getMe, 
          getMyProfileController,
+         patchMyProfileController,
+         deleteMyProfileController,
          getSearchHistoryController, 
          deleteSearchHistoryController, 
          getFoldersController,
@@ -18,6 +20,12 @@ router.get("/me", getMe);
 
 // User retrieves their profile info: activity totals, recent activity, top folders, recent followed authors
 router.get("/me/profile", getMyProfileController);
+
+// User modifies their profile info
+router.patch("/me/profile", patchMyProfileController);
+
+// User deletes their profile
+router.delete("/me/profile", deleteMyProfileController);
 
 // User views their search history
 router.get("/me/search-history", getSearchHistoryController);

@@ -1,5 +1,7 @@
 import { getUserMe, 
          getMyProfile,
+         patchMyProfile,
+         deleteMyProfile,
          getUserSearchHistory, 
          deleteUserSearchHistoryById, 
          getProjectFoldersById, 
@@ -33,6 +35,34 @@ export async function getMyProfileController(req, res, next) {
         res.status(200).json({
             status: "success",
             data: profileInfo
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User modifies their profile info
+export async function patchMyProfileController(req, res, next) {
+    try {
+        await patchMyProfile(req.user.id, req.body);
+
+        res.status(200).json({
+            status: "success",
+            message: "User profile updated successfully" 
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User deletes their profile
+export async function deleteMyProfileController(req, res, next) {
+    try {
+        await deleteMyProfile(req.user.id);
+
+        res.status(200).json({
+            status: "success",
+            message: "User profile deleted successfully" 
         });
     } catch (error) {
         next(error);

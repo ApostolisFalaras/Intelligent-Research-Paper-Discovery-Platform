@@ -16,6 +16,65 @@ export async function fetchUserById(id) {
     return result.rows[0] ?? null;
 }
 
+export async function updateUserById(id, updates) {
+    const columnMap = {
+        username: "username",
+        email: "email",
+        passwordHash: "password_hash",
+        firstName: "first_name",
+        lastName: "last_name",
+        affiliation: "affiliation",
+        location: "location",
+        role: "role",
+        bio: "bio",
+        avatarURL: "avatar_url"
+    };
+
+    const setClauses = [];
+    const values = [];
+
+    for (const [field, value] of Object.entries(updates)) {
+        const column = columnMap[field];
+
+        if (!column) {
+            continue;
+        }
+
+        values.push(value);
+        setClauses.push(`${column} = $${values.length}`);
+    }
+
+    
+    if (setClauses.length === 0) {
+        return null;
+    }
+
+    values.push(id);
+    const userIdIndex = values.length;
+
+    const sqlQuery = `
+        UPDATE users
+        SET ${setClauses.join(", ")},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $${userIdIndex};
+    `;
+
+    const result = await pool.query(sqlQuery, values);
+
+    return result.rowCount;
+}  
+
+// User deletes their profile
+export async function deleteUserById(id) {
+    const sqlQuery = `
+        DELETE FROM users
+        WHERE id = $1;
+    `;
+
+    const result = await pool.query(sqlQuery, [id]);
+    return result.rowCount;
+}
+
 // Fetch user data based on the user's unique username
 export async function fetchUserByUsername(username) {
     const sqlQuery = `
@@ -62,4 +121,16 @@ export async function createUser(credentials) {
 
     const result = await pool.query(sqlQuery, values);
     return result.rows[0] ?? null;
+}
+
+// Update user login time
+export async function upsertUserLoginTime(id) {
+    const sqlQuery = `
+        UPDATE users
+        SET last_login_at = CURRENT_TIMESTAMP
+        WHERE id = $1;
+    `;
+
+    const result = await pool.query(sqlQuery, [id]);
+    return result.rowCount; 
 }

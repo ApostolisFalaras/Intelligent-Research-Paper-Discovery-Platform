@@ -1,4 +1,5 @@
-import { fetchUserById } from "./../repositories/userRepository.js";
+import { fetchUserById, updateUserById, deleteUserById } from "./../repositories/userRepository.js";
+import { upsertUserLoginTime } from "./../repositories/userRepository.js";
 import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
 import { fetchProjectFoldersById, 
          createProjectFolder, 
@@ -23,6 +24,7 @@ import { fetchUserTotalViewedPapers,
 
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
+import bcryptjs from "bcryptjs";
 
 // Helper function that parses User id
 
@@ -48,9 +50,37 @@ export async function getUserMe(id) {
         location: userProfile.location,
         role: userProfile.role,
         bio: userProfile.bio,
-        createdAt: userProfile.created_at,
-        updatedAt: userProfile.updated_at 
+        avatarURL: userProfile.avatar_url,
+
+        createdAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(userProfile.created_at)),
+
+        updatedAt: userProfile.updated_at,
+
+        lastLoginAt: new Intl.DateTimeFormat("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).format(new Date(userProfile.last_login_at))
     };
+}
+
+export async function updateUserLoginTime(id) {
+    // Validate user id
+    const parsedId = parseUserId(id);
+
+    const updatedUser = await upsertUserLoginTime(parsedId);
+
+    if (updatedUser === 0) {
+        throw new AppError("User login time was not updated.", 500);
+    }
 }
 
 // User retrieves their profile info: activity totals, recent activity, top folders, recent followed authors
@@ -116,6 +146,94 @@ export async function getMyProfile(id) {
         researchTopics
     };
 
+}
+
+// User modifies their profile
+export async function patchMyProfile(userId, updates) {
+    // Validate user Id
+    const parsedUserId = parseUserId(userId);
+
+    // Validate profile update options
+    if (!updates || Object.keys(updates).length === 0) {
+        throw new AppError("No modified fields were provided", 400);
+    }
+
+    const parsedUpdates = validateUserProfileInfo(updates);
+
+    if (Object.keys(parsedUpdates).length === 0) {
+        throw new AppError("No valid modified fields were provided", 400);
+    }
+
+    // Hash the new password and store the password hash in the DB
+    if (parsedUpdates.password !== undefined) {
+        parsedUpdates.passwordHash = await bcryptjs.hash(parsedUpdates.password, 12);
+
+        delete parsedUpdates.password;
+    }
+
+    const updatedUser = await updateUserById(parsedUserId, parsedUpdates);
+
+    if (updatedUser === 0) {
+        throw new AppError("User not found", 404);
+    }
+}
+
+function validateUserProfileInfo(userInfo) {
+    const parsedUpdates = {};
+
+    if (userInfo?.firstName !== undefined) {
+        parsedUpdates.firstName = parseString(userInfo?.firstName, "firstName");
+    }
+
+    if (userInfo?.lastName !== undefined) {
+        parsedUpdates.lastName = parseString(userInfo?.lastName, "lastName");
+    }
+
+    if (userInfo?.username !== undefined) {
+        parsedUpdates.username = parseString(userInfo?.username, "username");
+    }
+
+    if (userInfo?.password !== undefined) {
+        parsedUpdates.password = parseString(userInfo?.password, "password");
+    }
+
+    if (userInfo?.email !== undefined) {
+        parsedUpdates.email = parseString(userInfo?.email, "email");
+    }
+
+    if (userInfo?.affiliation !== undefined) {
+        parsedUpdates.affiliation = parseString(userInfo?.affiliation, "affiliation");
+    }
+
+    if (userInfo?.bio !== undefined) {
+        parsedUpdates.bio = parseString(userInfo?.bio, "bio");
+    }
+
+    if (userInfo?.location !== undefined) {
+        parsedUpdates.location = parseString(userInfo?.location, "location");
+    }
+
+    if (userInfo?.role !== undefined) {
+        parsedUpdates.role = parseString(userInfo?.role, "role");
+    }
+
+    if (userInfo?.avatarURL !== undefined) {
+        parsedUpdates.avatarURL = parseString(userInfo?.avatarURL, "avatarURL");
+    }
+
+    return parsedUpdates;
+}
+
+// User deletes their profile info
+export async function deleteMyProfile(userId) {
+    // Validate user id
+    const parsedId = parseUserId(userId);
+
+    const userDeleted = await deleteUserById(parsedId);
+
+    if (userDeleted === 0) {
+        throw new AppError("User not found", 404);
+    }
 }
 
 // User fetches their search history
