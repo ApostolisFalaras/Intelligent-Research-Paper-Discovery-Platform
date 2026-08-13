@@ -1,4 +1,5 @@
-import { login, register } from "../services/authService.js";
+import { login, register } from "./../services/authService.js";
+import { updateUserLoginTime } from "./../services/userService.js";
 
 // User logs in 
 export async function loginController(req, res, next) {
@@ -6,6 +7,8 @@ export async function loginController(req, res, next) {
         const user = await login(req.body);
 
         req.session.userId = user.id;
+
+        updateUserLoginTime(req.session.userId);
 
         // Successful retrieval of user credentials
         return res.status(200).json({
