@@ -8,7 +8,8 @@ vi.mock("../../../src/config/db.js", () => ({
 }));
 
 import pool from "../../../src/config/db.js";
-import { fetchUserByUsername, fetchUserByEmail, createUser, fetchUserById } from "../../../src/repositories/userRepository.js";
+import { fetchUserByUsername, fetchUserByEmail, createUser, 
+        fetchUserById, updateUserById, deleteUserById } from "../../../src/repositories/userRepository.js";
 
 
 const mockResolvedUser = {
@@ -290,4 +291,109 @@ describe("userRepository", () => {
 
         expect(pool.query).toHaveBeenCalledTimes(1);
     });
+});
+
+describe("updateUserById", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+
+    it("dynamically updates only the provided profile fields", async () => {
+        pool.query.mockResolvedValue({
+            rowCount: 1
+        });
+
+        const updates = {
+            firstName: "Apostolis",
+            affiliation: "University of Thessaly",
+            role: "Software Engineer"
+        };
+
+        const result = await updateUserById(42, updates);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("UPDATE users");
+
+        expect(query).toContain("first_name = $1");
+        expect(query).toContain("affiliation = $2");
+        expect(query).toContain("role = $3");
+
+        expect(query).toContain(
+            "updated_at = CURRENT_TIMESTAMP"
+        );
+
+        expect(query).toContain("WHERE id = $4");
+        expect(params).toEqual([ "Apostolis", "University of Thessaly","Software Engineer", 42]);
+        expect(result).toBe(1);
+    });
+
+    it("maps passwordHash to the password_hash database column", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        await updateUserById(42, { passwordHash: "hashed-password" });
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("password_hash = $1");
+        expect(query).toContain("WHERE id = $2");
+        expect(params).toEqual([ "hashed-password", 42 ]);
+    });
+
+    it("ignores unsupported fields", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        await updateUserById(42, { firstName: "Apostolis", invalidField: "ignored" });
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("first_name = $1");
+        expect(query).not.toContain("invalidField");
+        expect(params).toEqual([ "Apostolis", 42 ]);
+    });
+
+    it("Returns null without querying when no valid fields are provided", async () => {
+        const result = await updateUserById(42, { invalidField: "ignored" });
+
+        expect(result).toBeNull();
+        expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    it("Returns zero when no user row was updated", async () => {
+        pool.query.mockResolvedValue({ rowCount: 0 });
+
+        const result = await updateUserById(999, { firstName: "Apostolis"});
+
+        expect(result).toBe(0);
+    });
+});
+
+
+describe("deleteUserById", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Deletes the user by id", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        const result = await deleteUserById(42);
+
+        expect(pool.query).toHaveBeenCalledWith(
+            expect.stringContaining("DELETE FROM users"),
+            [42]
+        );
+
+        expect(result).toBe(1);
+    });
+
+    it("Returns zero when the user does not exist", async () => {
+        pool.query.mockResolvedValue({ rowCount: 0 });
+
+        const result = await deleteUserById(999);
+
+        expect(result).toBe(0);
+    });
+    
 });
