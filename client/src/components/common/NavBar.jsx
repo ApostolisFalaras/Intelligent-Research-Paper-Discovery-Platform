@@ -38,7 +38,7 @@ function NavBar() {
 				/>
 			</NavLink>
 
-			{ !isHomePage && <div id="app-label-separator" /> }
+			{ !isHomePage && !isAuthPage && <div id="app-label-separator" /> }
 
 			{/* Search bar appears in the navbar everywhere except the home page */}
 			{ !isHomePage && !isAuthPage && (
@@ -82,7 +82,11 @@ function NavBar() {
 			{authLoading ?
 				<div id="navbar-auth-placeholder" />
 				: user ? (
-					<InitialsAvatar initials={initials} variant={isHomePage ? "light" : "dark"} />
+					<InitialsAvatar 
+						initials={initials} 
+						avatarURL={user?.avatarURL}
+						variant={isHomePage ? "light" : "dark"} 
+					/>
 				) 
 				: isAuthPage ? (
 					<NavLink to="/" id="back-to-home">

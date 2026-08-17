@@ -6,7 +6,7 @@ import "../../styles/common.css";
 
 
 
-function InitialsAvatar({ initials, variant }) {
+function InitialsAvatar({ initials, avatarURL, variant }) {
 	const [isOpen, setIsOpen] = useState(false);
 	const { logout } = useAuth();
 	const navigate = useNavigate();
@@ -43,14 +43,19 @@ function InitialsAvatar({ initials, variant }) {
 	}
 
 	return (
-	<div ref={containerRef} id={`profile-avatar ${variant ?? ""}`}>
+	<div ref={containerRef} id="profile-avatar" className={variant ?? ""}>
 		<button 
 			type="button"
 			className={`${variant ?? ""} ${isOpen ? "open" : ""}`}
 			id="avatar-button"
 			onClick={() => setIsOpen((prev) => !prev)}
 		>
-			<span id="avatar-text">{initials}</span>
+			{avatarURL ? (
+				<img src={avatarURL} alt="Profile" id="navbar-avatar-image" />
+			) : (
+				<span id="avatar-text">{initials}</span>
+			)}
+			
 		</button>
 
 		{isOpen && (
