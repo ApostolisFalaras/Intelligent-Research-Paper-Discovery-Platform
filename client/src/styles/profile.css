@@ -1,0 +1,587 @@
+/* ---------- Profile Page > Profile Header ---------- */
+#profile-page {
+    margin-top: 66.4px; 
+}
+
+#profile-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid rgba(26,26,20,0.08);
+}
+
+#profile-header > div {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 40px 0;
+}
+
+#profile-header > div > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    margin-bottom: 32px;
+}
+
+#profile-avatar-image {
+    width: 84px;
+    height: 84px;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+#large-initials-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background-color: #2D6A4F;
+    border: 2.5px solid rgba(149,213,178,0.45);
+    box-shadow: 0 0 0 5px rgba(149,213,178,0.12);
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#large-initials-avatar > span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #95D5B2; 
+    user-select: none;
+}
+
+#user-info { flex: 1; }
+
+#user-info > div {
+    display: flex; 
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+#user-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 700; 
+    color: #212529;
+    margin: 0 0 4px;
+}
+
+#user-at {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #9B9B8A;
+    margin: 0 0 10px;
+    text-transform: lowercase;
+}
+
+#user-at + div {
+    display: flex;
+    align-items: center;
+    gap: 18px; 
+    flex-wrap: wrap; 
+}
+
+#user-affiliation, #user-location {
+    display: flex;
+    align-items: center;
+    gap: 5px; 
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #6B6B5A;
+}
+
+#user-role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #2D6A4F;
+    background-color: #2D6A4F14;
+    border: 1px solid #2D6A4F30;
+    border-radius: 3px;
+    padding: 2px 8px; 
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+#account-settings-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #6B6B5A;
+    background-color: #F8F9FA;
+    border: 1px solid rgba(26,26,20,0.14);
+    border-radius: 5px;
+    padding: 7px 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.15s;
+}
+
+#user-bio {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #6B6B5A;
+    line-height: 1.6;
+    margin-top: 14px;
+    max-width: 560px;
+}
+
+#user-stats-strip {
+    display: flex;
+    gap: 0; 
+    border-top: 1px solid rgba(26,26,20,0.07);
+    margin: 0 -40px 16px !important;
+    padding-left: 40px;
+}
+
+.user-stat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px 14px 0;
+    border-right: 1px solid rgba(26,26,20,0.07);
+    margin-right: 28px;
+}
+
+.user-stat.last { border-right: none; margin-right: 0; }
+
+.user-stat > span { color: #2D6A4F;}
+
+.user-stat .stat-value {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.user-stat .stat-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #9B9B8A;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+#tabs {
+    display: flex;
+    gap: 0;
+    margin: 4px -40px 0 !important; 
+    padding-left: 40px; 
+}
+
+.tab-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #9B9B8A;
+    background: none; 
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 18px;
+    margin-right: 8px;
+    cursor: pointer; 
+    text-transform: capitalize;
+    transition: color 0.15s;  
+}
+
+.tab-btn.active {
+    font-weight: 600;
+    color: #1B4332;
+    border-bottom: 2px solid #2D6A4F;
+}
+
+/* ---------- Profile Page > Tabs Content ---------- */
+
+#tabs-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+    display: flex;
+    gap: 32px;
+}
+
+/* ---------- Profile Page > Tabs Content > Main Column ---------- */
+
+#main-column { display: 1; min-width: 0; }
+
+#recent-activity-tab, #saved-papers-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#recent-activity-tab > h2, #saved-papers-tab > h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 4px;
+}
+
+#recent-activity-tab > div, #saved-papers-tab > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#about-tab {
+    display: flex; 
+    flex-direction: column;
+    gap: 24px;
+}
+
+#about-tab > h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 10px; 
+}
+
+#topic-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-topic-pill {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #2D6A4F;
+    background: #2D6A4F0F; 
+    border: 1px solid #2D6A4F25;
+    border-radius: 20px;
+    padding: 5px 14px;
+}
+
+#affiliation-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529; 
+    margin-bottom: 10px;
+}
+
+#affiliation-description {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #6B6B5A;
+    line-height: 1.6;
+}
+
+/* ---------- Profile Page > Tabs Content > Sidebar ---------- */
+
+#tabs-sidebar {
+    width: 220px; 
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column; 
+    gap: 20px;
+}
+
+#library-shortcut {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,26,20,0.09);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#library-shortcut-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(26,26,20,0.07);
+    padding: 14px 16px;   
+}
+
+#library-shortcut-header > span {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #212529;
+}
+
+#library-link {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #2D6A4F;
+    text-decoration: none;
+}
+
+.folder-reference {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    background-color: transparent;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(26,26,20,0.05);
+    transition: background-color 0.12s;
+}
+
+.folder-reference:hover { background-color: #F8F9FA; }
+
+.folder-bullet-point {
+    width: 8px; 
+    height: 8px; 
+    border-radius: 2px;  
+    flex-shrink: 0;
+}
+
+.folder {
+    flex: 1; 
+    min-width: 0;
+}
+
+.folder-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #212529;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.folder-paper-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #9B9B8A; 
+    margin: 1px 0 0;
+}
+
+/* ---------- Profile Page > Following Authors ---------- */
+
+#following-authors {
+    padding: 14px 16px;
+    background-color: #FFFFFF;
+    border: 1px solid rgba(26, 26, 20, 0.09);
+    border-radius: 6px;
+}
+
+#following-authors-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0;
+}
+
+#following-authors-header.has-content {
+    margin-bottom: 10px;
+}
+
+#following-authors-header > p {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #212529;
+}
+
+#total-authors-followed {
+    margin-left: 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+    font-weight: 400;
+    color: #9B9B8A;
+}
+
+#view-authors-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    color: #2D6A4F;
+    cursor: pointer;
+}
+
+#view-authors-btn:hover {
+    color: #1B4332;
+}
+
+#no-available-authors {
+    margin: 0;
+    padding-top: 4px;
+    text-align: center;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: #9B9B8A;
+}
+
+#followed-authors-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.followed-author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.author-initials-container {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #B7E4C7;
+    border-radius: 50%;
+    background:
+        linear-gradient(
+            135deg,
+            #2D6A4F22,
+            #1B433218
+        );
+}
+
+.author-initials {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px !important;
+    font-weight: 700;
+    color: #2D6A4F;
+}
+
+.author-link {
+    min-width: 0;
+    overflow: hidden;
+    color: #212529;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border: none;
+    background: none;
+    transition: color 0.15s ease;
+}
+
+.author-link,
+.author-link:link,
+.author-link:visited,
+.author-link:hover,
+.author-link:active {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    outline: none;
+    text-decoration: none;
+    color: #212529;
+}
+
+.author-link:hover {
+    color: #2D6A4F;
+}
+
+#authors-hidden {
+    margin: 4px 0 0;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    color: #9B9B8A;
+}
+
+#authors-search {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+    padding: 5px 9px;
+    border: 1px solid rgba(26, 26, 20, 0.14);
+    border-radius: 4px;
+    outline: none;
+    background-color: #F8F9FA;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: #212529;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+#authors-search:focus {
+    border-color: #74C69D;
+    box-shadow: 0 0 0 2px rgba(116, 198, 157, 0.12);
+}
+
+#authors-list {
+    max-height: 240px;
+    margin-right: -4px;
+    margin-left: -4px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color:
+        rgba(26, 26, 20, 0.15)
+        transparent;
+}
+
+#no-filtered-authors {
+    margin: 0;
+    padding: 14px 0;
+    text-align: center;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    color: #9B9B8A;
+}
+
+.followed-author.expanded {
+    padding: 5px 4px;
+    border-radius: 5px;
+    transition: background-color 0.1s;
+}
+
+.followed-author.expanded:hover {
+    background-color: #F8F9FA;
+}
+
+.followed-author.expanded .author-initials-container {
+    width: 26px;
+    height: 26px;
+}
+
+.followed-author.expanded .author-initials {
+    font-size: 9px;
+}
+
+.author-link.filtered {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+}
+
+.unfollow-author {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 3px;
+    border: none;
+    border-radius: 3px;
+    visibility: hidden;
+    opacity: 0;
+    background: none;
+    color: #C0392B;
+    cursor: pointer;
+    transition:
+        opacity 0.1s ease,
+        background-color 0.1s ease;
+}
+
+.followed-author.expanded:hover .unfollow-author,
+.unfollow-author:focus-visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+.unfollow-author:hover {
+    background-color: #FEF2F2;
+}
