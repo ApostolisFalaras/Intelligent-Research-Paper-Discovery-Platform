@@ -40,6 +40,19 @@ export function AuthProvider({ children }) {
 		}
 	}, []);
 
+	const updateUser = useCallback((updates) => {
+		setUser((prev) => {
+			if (!prev) {
+				return prev;
+			}
+
+			return {
+				...prev,
+				...updates
+			};
+		});
+	}, []);
+
 	// Runs once upon application startup and tries to fetch the user data
 	useEffect(() => {
 		async function initializeAuth() {
@@ -76,7 +89,7 @@ export function AuthProvider({ children }) {
 	/* The auth provider covers the whole application <App />, 
 	 so that the user is reachable from all components */
 	return (
-		<AuthContext.Provider value={{user, authLoading, setUser, refreshUser, logout }}>
+		<AuthContext.Provider value={{user, authLoading, setUser, refreshUser, logout, updateUser }}>
 			{children}
 		</AuthContext.Provider>
 	);
