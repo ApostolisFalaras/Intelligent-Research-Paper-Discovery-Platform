@@ -4,68 +4,68 @@ import pool from "./../config/db.js";
 
 // User views a paper -> update their individual paper interactions 
 export async function upsertPaperView(userId, paperId) {
-	const sqlQuery = `
-		INSERT INTO user_paper_interactions (
-			user_id, paper_id, view_count, is_saved, interest_score,
-			first_viewed_at, last_interaction_at
-		)
-		VALUES ($1, $2, 1, false, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		ON CONFLICT (user_id, paper_id) DO UPDATE SET
-			view_count = 
-				CASE
-					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
-					THEN user_paper_interactions.view_count + 1
-					ELSE user_paper_interactions.view_count
-				END,
+    const sqlQuery = `
+        INSERT INTO user_paper_interactions (
+            user_id, paper_id, view_count, is_saved, first_viewed_at, last_interaction_at
+        )
+        VALUES ($1, $2, 1, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        
+		ON CONFLICT (user_id, paper_id)
+        DO UPDATE SET
+            view_count = user_paper_interactions.view_count + 1,
+            last_interaction_at = CURRENT_TIMESTAMP
 
-			interest_score =
-				CASE
-					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
-					THEN user_paper_interactions.interest_score + 1
-					ELSE user_paper_interactions.interest_score
-				END,
+        WHERE user_paper_interactions.last_interaction_at
+              < CURRENT_TIMESTAMP - INTERVAL '1 second'
 
-			last_interaction_at =
-				CASE
-					WHEN CURRENT_TIMESTAMP - user_paper_interactions.last_interaction_at > INTERVAL '1 second'
-					THEN CURRENT_TIMESTAMP
-					ELSE user_paper_interactions.last_interaction_at
-				END
-	`;
+        RETURNING paper_id;
+    `;
 
-	await pool.query(sqlQuery, [userId, paperId]);
+    const result = await pool.query(sqlQuery, [userId, paperId]);
+
+    return result.rowCount > 0;
 }
 
 // User saves a paper to a folder -> update their individual paper interactions
 export async function upsertPaperSave(userId, paperId) {
-	const sqlQuery = `
-		INSERT INTO user_paper_interactions (
-			user_id, paper_id, view_count, is_saved, interest_score,
-			first_viewed_at, last_interaction_at
-		)
-		VALUES ($1, $2, 1, true, 6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-		ON CONFLICT (user_id, paper_id) DO UPDATE SET
-			is_saved = true,
-			interest_score = user_paper_interactions.interest_score + 5,
-			last_interaction_at = CURRENT_TIMESTAMP;
-	`;
+	// Removed interest_score = interest_score + 5, 
+    const sqlQuery = `
+        UPDATE user_paper_interactions
+        SET
+            is_saved = true,
+            last_interaction_at = CURRENT_TIMESTAMP
+        
+		WHERE user_id = $1
+          AND paper_id = $2
+          AND is_saved = false
 
-	await pool.query(sqlQuery, [userId, paperId]);
+        RETURNING paper_id;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, paperId]);
+
+    return result.rowCount > 0;
 }
 
 // User un-saves a paper from a folder -> update their individual paper interactions
 export async function upsertPaperUnsave(userId, paperId) {
+	// Removed interest_score = view_count,
 	const sqlQuery = `
 		UPDATE user_paper_interactions
 		SET 
 			is_saved = false,
-			interest_score = view_count,
 			last_interaction_at = CURRENT_TIMESTAMP
+		
 		WHERE user_id = $1 
-		  AND paper_id = $2;
+		  AND paper_id = $2
+		  AND is_saved = true
+		
+		RETURNING paper_id;
 	`;
 
-	await pool.query(sqlQuery, [userId, paperId]);
+	const result = await pool.query(sqlQuery, [userId, paperId]);
+
+	return result.rowCount;
 }
 
 

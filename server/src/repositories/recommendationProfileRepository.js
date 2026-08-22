@@ -1,6 +1,7 @@
 import pool from "./../config/db.js";
 
 // Fetch a user's interaction with any papers, along with the paper recommendation data
+// Added subquery that fetches the number of folders a paper is saved in 'saved_folder_count'
 export async function fetchUserInteractionRows(userId) {
 	const sqlQuery = `
 		SELECT
@@ -8,8 +9,9 @@ export async function fetchUserInteractionRows(userId) {
 			upi.paper_id,
 			upi.view_count,
 			upi.is_saved,
-			upi.interest_score,
 			upi.last_interaction_at,
+
+			COALESCE(folder_data.saved_folder_count, 0) AS saved_folder_count,
 
 			prf.topic_vector,
 			prf.domain_vector,
@@ -19,9 +21,23 @@ export async function fetchUserInteractionRows(userId) {
 			prf.keyword_vector,
 			prf.citation_score,
 			prf.recency_score
+
 		FROM user_paper_interactions upi
-		JOIN paper_recommendation_features prf ON upi.paper_id = prf.paper_id 
-		WHERE user_id = $1
+		
+		JOIN paper_recommendation_features prf 
+		  ON upi.paper_id = prf.paper_id 
+
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) AS saved_folder_count
+			FROM user_folder_papers ufp
+			JOIN user_folders uf
+			  ON uf.id = ufp.folder_id
+			WHERE uf.user_id = upi.user_id
+			  AND ufp.paper_id = upi.paper_id
+		) folder_data ON true
+
+		WHERE upi.user_id = $1
+		
 		ORDER BY upi.last_interaction_at DESC;
 	`;
 

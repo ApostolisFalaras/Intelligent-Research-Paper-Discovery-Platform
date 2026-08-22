@@ -456,7 +456,6 @@ CREATE TABLE user_paper_interactions (
 
     view_count INTEGER NOT NULL DEFAULT 0,
     is_saved BOOLEAN NOT NULL DEFAULT FALSE,
-    interest_score NUMERIC(10, 4) NOT NULL DEFAULT 0,
 
     first_viewed_at TIMESTAMPTZ,
     last_interaction_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -724,9 +723,6 @@ CREATE INDEX idx_topics_works_count ON topics(works_count DESC);
 CREATE INDEX idx_topics_cited_by_count ON topics(cited_by_count DESC);
 
 -- Indexes for user_paper_interactions
-CREATE INDEX idx_user_paper_interactions_interest_score
-ON user_paper_interactions(user_id, interest_score DESC);
-
 CREATE INDEX idx_user_paper_interactions ON user_paper_interactions(paper_id);
 
 -- Indexes for paper_metrics

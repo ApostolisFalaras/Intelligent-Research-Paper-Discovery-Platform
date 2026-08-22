@@ -34,6 +34,7 @@ export async function fetchCandidatePapersBySubfields(subfieldIds, limit = 5000)
 
 // It fetches "limit" candidate papers that similar users interacted with
 // It's used for collaborative & hybrid recommendation scores
+// Add the folder count field, since folder saves are converted from a single boolean flag to the actual save count
 export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000) {
 	const sqlQuery = `
 		SELECT
@@ -41,18 +42,32 @@ export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000)
 			upi.paper_id,
 			upi.view_count,
 			upi.is_saved,
-			upi.interest_score,
-			usc.similarity_score
+			usc.similarity_score,
+			COALESCE(folder_data.saved_folder_count, 0) AS saved_folder_count
+
 		FROM user_similarity_cache usc
+
 		JOIN user_paper_interactions upi
 		  ON upi.user_id = usc.similar_user_id
+
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) AS saved_folder_count
+			FROM user_folder_papers ufp
+			JOIN user_folders uf
+			  ON uf.id = ufp.folder_id
+			WHERE uf.user_id = upi.user_id
+			  AND ufp.paper_id = upi.paper_id
+		) folder_data ON true
+
 		WHERE usc.user_id = $1
 		  AND upi.paper_id NOT IN (
 		  	SELECT paper_id
 			FROM user_paper_interactions
 			WHERE user_id = $1
 		  )
-		ORDER BY usc.similarity_score DESC, upi.interest_score DESC
+
+		ORDER BY usc.similarity_score DESC, upi.last_interaction_at DESC
+
 		LIMIT $2;
 	`;
 
@@ -62,22 +77,52 @@ export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000)
 
 // It fetches "limit" candidate papers that are similar to the papers the user saved in folders
 // It's used for similar-to-saved-paper, home, hybrid recommendation scores
+// Now that a paper stored in more folders should be a stronger signal, 
+// the folder count for each source paper is fetched and uses a diminishing folder boost.
 export async function fetchCandidatePapersFromSavedPaper(userId, limit = 5000) {
 	const sqlQuery = `
-		SELECT psc.similar_paper_id AS paper_id
+		SELECT
+			psc.similar_paper_id AS paper_id,
+
+			MAX(
+				psc.similarity_score *
+				(
+					1 + LN(1 + COALESCE(folder_data.saved_folder_count, 0))
+				)
+			) AS weighted_similarity_score
+
 		FROM user_paper_interactions upi
+
 		JOIN paper_similarity_cache psc
 		  ON psc.paper_id = upi.paper_id
+
 		JOIN paper_recommendation_features prf
 		  ON prf.paper_id = psc.similar_paper_id
+
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) AS saved_folder_count
+			FROM user_folder_papers ufp
+
+			JOIN user_folders uf
+			  ON uf.id = ufp.folder_id
+
+			WHERE uf.user_id = upi.user_id
+			  AND ufp.paper_id = upi.paper_id
+		) folder_data ON true
+
 		WHERE upi.user_id = $1
 		  AND upi.is_saved = true
+
 		  AND psc.similar_paper_id NOT IN (
-		  	  SELECT paper_id
-			  FROM user_paper_interactions
-			  WHERE user_id = $1
+		  	SELECT paper_id
+			FROM user_paper_interactions
+			WHERE user_id = $1
 		  )
-		ORDER BY psc.similarity_score DESC
+
+		GROUP BY psc.similar_paper_id
+
+		ORDER BY weighted_similarity_score DESC
+
 		LIMIT $2;
 	`;
 
