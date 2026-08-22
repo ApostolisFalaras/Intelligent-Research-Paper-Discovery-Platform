@@ -9,9 +9,11 @@ import {
     fetchPaperReferencesById,
     fetchPaperRelatedById,
     fetchPaperCountsByYearById } from "./../repositories/paperRepository.js";
+
+import { fetchPaperIsSaved, fetchPaperSavedFolders } from "./../repositories/userFolderRepository.js";
 import { formatPage } from "./../utils/formatPages.js";
 import { AppError } from "./../utils/AppError.js";
-import { parseString } from "./../utils/parseData.js";
+import { parseString, parseInteger, parseUserId } from "./../utils/parseData.js";
 
 // Fetch a paper with a particular "id" 
 export async function getPaperById(id) {
@@ -40,7 +42,7 @@ export async function getPaperById(id) {
             fetchPaperLocationsById(paper.id),
             fetchPaperReferencesById(paper.id),
             fetchPaperRelatedById(paper.id),
-            fetchPaperCountsByYearById(paper.id)
+            fetchPaperCountsByYearById(paper.id),
         ]);
 
     // Paper Data Transfer Object (DTO)
@@ -216,4 +218,40 @@ export async function getPaperById(id) {
             citedByCount: count.cited_by_count
         }))
     };
+}
+
+// Verifies whether a paper is saved in any folder
+export async function paperIsSaved(userId, paperId) {
+    const parsedUserId = parseUserId(userId);
+    const parsedPaperId = parseInteger(paperId, "paper id");
+
+    return await fetchPaperIsSaved(parsedUserId, parsedPaperId);
+}
+
+// Retrieves the folders a paper is saved in 
+export async function getPaperSavedFolders(userId, paperId) {
+    // Validate inputs 
+    const parsedUserId = parseUserId(userId);
+    const parsedPaperId = parseString(paperId, "paper Id");
+
+    if (!/^W\d+$/.test(parsedPaperId)) {
+        throw new AppError("Invalid paper id", 400);
+    }
+
+    // Retrieve paper's internal Id number
+    const paper = await fetchPaperById(parsedPaperId);
+
+    if (!paper) {
+        throw new AppError("Paper not found", 404);
+    }
+
+    const folders = await fetchPaperSavedFolders(parsedUserId, paper.id);
+
+    return folders.map((folder) => ({
+        id: folder.id,
+        name: folder.name,
+        summary: folder.summary,
+        color: folder.color,
+        paperCount: folder.paper_count
+    }));
 }
