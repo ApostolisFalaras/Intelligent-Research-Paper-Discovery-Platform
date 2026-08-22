@@ -8,7 +8,9 @@ import { fetchProjectFoldersById,
          fetchPapersFromFolderById,
          insertPapertoFolder,
          fetchPaperInFolder,
-         deletePaperFromFolder } from "../repositories/userFolderRepository.js";
+         deletePaperFromFolder, 
+         incrementFolderPaperCount,
+         decrementFolderPaperCount} from "../repositories/userFolderRepository.js";
 
 import { fetchPaperById } from "./../repositories/paperRepository.js"; 
 
@@ -17,6 +19,7 @@ import { fetchUserTotalViewedPapers,
          fetchUserTotalSavedPapers,
          fetchUserRecentlySavedPapers,
          fetchUserTotalFolders,
+         fetchFolderPapersPreview,
          fetchUserFoldersPreview,
          fetchUserFollowedAuthors,
          fetchUserTopResearchTopics
@@ -25,6 +28,7 @@ import { fetchUserTotalViewedPapers,
 import { parseUserId, parseInteger, parseString, parseBoolean } from "../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 import bcryptjs from "bcryptjs";
+import { markUserRecommendationsStale } from "../repositories/recommendationRefreshRepository.js";
 
 // Helper function that parses User id
 
@@ -218,7 +222,9 @@ function validateUserProfileInfo(userInfo) {
     }
 
     if (userInfo?.avatarURL !== undefined) {
-        parsedUpdates.avatarURL = parseString(userInfo?.avatarURL, "avatarURL");
+        parsedUpdates.avatarURL = userInfo.avatarURL === null 
+                                        ? null  
+                                        : parseString(userInfo?.avatarURL, "avatarURL");
     }
 
     return parsedUpdates;
@@ -301,20 +307,54 @@ export async function getProjectFoldersById(userId) {
 
     const userProjectFolders = await fetchProjectFoldersById(parsedId);
 
-    return userProjectFolders.map((folder) => ({
-        id: folder.id,
-        userId: folder.user_id,
-        name: folder.name,
-        summary: folder.summary,
-        paperCount: folder.paper_count,
-        isPinned: folder.is_pinned,
-        color: folder.color,
-        visibility: folder.visibility,
-        icon: folder.icon,
-        createdAt: folder.created_at,
-        updatedAt: folder.updated_at
-    }));
+    // Fetch 2 papers as a preview 
+    const foldersWithPreviews = await Promise.all(
+        userProjectFolders.map(async (folder) => {
+            const papersPreview = await fetchFolderPapersPreview(
+                parsedId,
+                folder.id
+            );
 
+            return {
+                id: folder.id,
+                userId: folder.user_id,
+                name: folder.name,
+                summary: folder.summary,
+                paperCount: folder.paper_count,
+                isPinned: folder.is_pinned,
+                color: folder.color,
+                visibility: folder.visibility,
+                icon: folder.icon,
+
+                createdAt: new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }).format(new Date(folder.created_at)),
+
+                updatedAt: new Intl.DateTimeFormat("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }).format(new Date(folder.updated_at)),
+
+                papersPreview: papersPreview.map((paper) => ({
+                    id: paper.openalex_id,
+                    internalId: paper.paper_id,
+                    title: paper.title,
+                    primaryTopic: paper.primary_topic_display_name,
+                    authorCount: Number(paper.author_count),
+                    authorsPreview: paper.authors_preview
+                }))
+            };
+        })
+    );
+
+    return foldersWithPreviews;
 }
 
 // User creates a new project folder
@@ -429,7 +469,7 @@ export async function getPapersFromFolderById(userId, folderId) {
 
 // User adds paper to a project folder
 export async function addPapertoFolderById(userId, folderId, paperId) {
-    // Validate user & project folder id
+    // Validate input ids
     const parsedUserId = parseUserId(userId);
     const parsedFolderId = parseInteger(folderId, "Folder Id");
 
@@ -437,7 +477,6 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
         throw new AppError("Project folder id is required", 400);
     }
 
-    // Validate paper id
     const parsedPaperId = parseString(paperId, "paper id");
 
     // Validate paper id format: "W" followed by digits
@@ -459,13 +498,23 @@ export async function addPapertoFolderById(userId, folderId, paperId) {
     if (addedPapers === 0)
         throw new AppError("Paper was not inserted to project folder", 500);
 
+
+    // Increment current folder's paper count
+    const updatedFolder = await incrementFolderPaperCount(parsedUserId, parsedFolderId);
+
+    if (updatedFolder === 0) 
+        throw new AppError("Paper count could not be incremented for folder", 500);
+
+    // Folder membership changed -> recommendation profile changed
+    await markUserRecommendationsStale(parsedUserId, "paper_added_to_folder", 2);
+
     return paper.id;
 }
 
 
 // User deletes paper from project folder
 export async function deletePaperFromFolderById(userId, folderId, paperId) {
-    // Validate user & project folder id
+    // Validate input ids
     const parsedUserId = parseUserId(userId);
     const parsedFolderId = parseInteger(folderId, "Folder Id");
 
@@ -473,7 +522,6 @@ export async function deletePaperFromFolderById(userId, folderId, paperId) {
         throw new AppError("Project folder id is required", 400);
     }
 
-    // Validate paper id
     const parsedPaperId = parseString(paperId, "paper id");
 
     // Validate paper id format: "W" followed by digits
@@ -489,6 +537,16 @@ export async function deletePaperFromFolderById(userId, folderId, paperId) {
 
     if (deletedPapers === 0)
         throw new AppError("Paper wasn't stored in project folder", 404);
+
+    // Decrement current folder's paper count
+    const updatedFolder = await decrementFolderPaperCount(parsedUserId, parsedFolderId);
+
+    if (updatedFolder === 0) 
+        throw new AppError("Paper count could not be decremented for folder", 500);
+
+    // Folder membership changed -> recommendation profile changed
+    await markUserRecommendationsStale(parsedUserId, "paper_removed_from_folder", 2);
+
 
     return paper.id;
 }

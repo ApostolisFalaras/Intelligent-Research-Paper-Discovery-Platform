@@ -92,6 +92,31 @@ export async function updateProjectFolder(userId, folderId, updates) {
     return result.rowCount;
 }
 
+// Increment a folder's number of papers
+export async function incrementFolderPaperCount(userId, folderId) {
+    const sqlQuery = `
+        UPDATE user_folders
+        SET paper_count = paper_count + 1
+        WHERE user_id = $1 
+          AND id = $2; 
+    `;
+    
+    const result = await pool.query(sqlQuery, [userId, folderId]);
+    return result.rowCount;
+}
+
+// Decrement a folder's number of papers
+export async function decrementFolderPaperCount(userId, folderId) {
+    const sqlQuery = `
+        UPDATE user_folders
+        SET paper_count = paper_count - 1
+        WHERE user_id = $1
+          AND id = $2;
+    `;
+    
+    const result = await pool.query(sqlQuery, [userId, folderId]);
+    return result.rowCount;
+}
 
 // Delete a project folder
 export async function deleteProjectFolder(userId, folderId) {
@@ -155,6 +180,43 @@ export async function fetchPapersFromFolderById(userId, folderId) {
 `;
 
     const result = await pool.query(sqlQuery, [userId, folderId]);
+    return result.rows;
+}
+
+export async function fetchPaperIsSaved(userId, paperId) {
+    const sqlQuery = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM user_folder_papers ufp
+            JOIN user_folders uf
+              ON uf.id = ufp.folder_id
+            WHERE uf.user_id = $1
+              AND ufp.paper_id = $2
+        ) AS is_saved;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, paperId]);
+    return result.rows[0].is_saved;
+}
+
+// Helper function that checks if a paper is saved in any of the user's folders
+export async function fetchPaperSavedFolders(userId, paperId) {
+    const sqlQuery = `
+        SELECT
+            uf.id,
+            uf.name,
+            uf.summary,
+            uf.color,
+            uf.paper_count
+        FROM user_folder_papers ufp
+        JOIN user_folders uf
+          ON uf.id = ufp.folder_id
+        WHERE uf.user_id = $1
+          AND ufp.paper_id = $2
+        ORDER BY uf.name;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId, paperId]);
     return result.rows;
 }
 
