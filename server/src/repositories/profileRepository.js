@@ -149,6 +149,57 @@ export async function fetchUserFoldersPreview(id) {
     return result.rows;   
 }
 
+// Fetches a preview of a folder's papers
+export async function fetchFolderPapersPreview(userId, folderId) {
+	const sqlQuery = `
+        SELECT
+            p.openalex_id,
+            ufp.paper_id,
+            COALESCE(p.title, p.display_name) AS title,
+            p.primary_topic_display_name,
+
+            COUNT(pa.author_openalex_id)::INTEGER AS author_count,
+
+            COALESCE(
+                json_agg(
+                    json_build_object(
+                        'id', pa.author_openalex_id,
+                        'name', pa.author_display_name
+                    )
+                    ORDER BY pa.author_order
+                ) FILTER (
+                    WHERE pa.author_order <= 2
+                      AND pa.author_openalex_id IS NOT NULL
+                ),
+                '[]'::json
+            ) AS authors_preview
+
+        FROM user_folder_papers ufp
+
+        JOIN user_folders uf
+          ON uf.id = ufp.folder_id
+
+        JOIN papers p
+          ON p.id = ufp.paper_id
+
+        LEFT JOIN paper_authors pa
+          ON pa.paper_id = p.id
+
+        WHERE uf.user_id = $1
+          AND ufp.folder_id = $2
+
+        GROUP BY ufp.paper_id, p.openalex_id, p.title, 
+            p.display_name, p.primary_topic_display_name, ufp.added_at
+
+        ORDER BY ufp.added_at DESC, ufp.paper_id ASC
+
+        LIMIT 2;
+    `;
+
+	const result = await pool.query(sqlQuery, [userId, folderId]);
+	return result.rows;
+}
+
 // Fetches a preview of the followed author names, specifically the 3 most recent follows
 export async function fetchUserFollowedAuthors(id) {
 	const sqlQuery = `
