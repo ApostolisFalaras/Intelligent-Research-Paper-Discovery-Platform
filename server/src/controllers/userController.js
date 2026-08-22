@@ -1,3 +1,4 @@
+import { removeUserAvatar } from "../services/avatarService.js";
 import { getUserMe, 
          getMyProfile,
          patchMyProfile,
@@ -63,6 +64,43 @@ export async function deleteMyProfileController(req, res, next) {
         res.status(200).json({
             status: "success",
             message: "User profile deleted successfully" 
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User uploads a profile avatar image
+export async function postMyAvatarController(req, res, next) {
+    try {
+        if (!req.file) {
+            throw new AppError("Avatar image is required", 400);
+        }
+
+        const avatarURL = `/uploads/avatars/${req.file.filename}`;
+
+        await patchMyProfile(req.session.userId, { avatarURL });
+
+        res.status(200).json({
+            status: "success",
+            data: {
+                avatarURL
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+// User deletes their avatar image
+export async function deleteMyAvatarController(req, res, next) {
+    try {
+        await removeUserAvatar(req.session.userId);
+
+        res.status(200).json({
+            status: "success",
+            message: "User avatar deleted successfully"
         });
     } catch (error) {
         next(error);

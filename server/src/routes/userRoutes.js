@@ -1,8 +1,11 @@
 import express from "express";
+import { avatarUpload } from "./../middlewares/avatarUpload.js";
 import { getMe, 
          getMyProfileController,
          patchMyProfileController,
          deleteMyProfileController,
+         postMyAvatarController,
+         deleteMyAvatarController,
          getSearchHistoryController, 
          deleteSearchHistoryController, 
          getFoldersController,
@@ -26,6 +29,12 @@ router.patch("/me/profile", patchMyProfileController);
 
 // User deletes their profile
 router.delete("/me/profile", deleteMyProfileController);
+
+// User uploads an avatar image
+router.post("/me/profile/avatar", avatarUpload.single("avatar"), postMyAvatarController);
+
+// User deletes their avatar image
+router.delete("/me/profile/avatar", deleteMyAvatarController);
 
 // User views their search history
 router.get("/me/search-history", getSearchHistoryController);

@@ -9,6 +9,7 @@ import recommendationRouter from "./routes/recommendationRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
 import { authMiddleware, optionalAuthMiddleware } from "./middlewares/authMiddleware.js";
+import path from "path";
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(express.json());
 
 // Append session data to request, through req.session 
 app.use(sessionMiddleware);
+
+app.use("/uploads", express.static(path.resolve("uploads")));
 
 // Redirect every request to the appropriate router based on the URL prefix
 app.use("/api/auth", authRouter);
