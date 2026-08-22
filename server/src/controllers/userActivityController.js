@@ -1,7 +1,8 @@
 import { 
 	recordPaperView,
 	recordPaperSave,
-	recordPaperUnsave
+	recordPaperUnsave,
+	recordPaperRecommendationClick
 } from "./../services/recommendationEventService.js";
 
 export async function recordPaperViewController(req, res, next) {
@@ -39,6 +40,20 @@ export async function recordPaperUnsaveController(req, res, next) {
 		return res.status(200).json({
 			status: "success",
 			message: `User ${req.user.id} unsave on paper ${req.params.id} recorded successfully`
+		});
+
+	} catch (error) {
+		next(error);
+	}
+}
+
+export async function recordPaperRecommendationClickController(req, res, next) {
+	try {
+		await recordPaperRecommendationClick(req.user.id, req.params.id);
+
+		return res.status(200).json({
+			status: "success",
+			message: `User ${req.user.id} recommendation click on paper ${req.params.id} recorded successfully`
 		});
 
 	} catch (error) {
