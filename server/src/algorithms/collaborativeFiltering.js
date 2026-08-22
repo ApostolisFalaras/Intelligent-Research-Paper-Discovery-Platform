@@ -11,12 +11,18 @@ export function generateCollaborativeRecommendations(similarUserInteractions, ex
 		if (excludedPaperIds.has(paperId))
 			continue;
 
-		// we calculate its individual contribution to the collaborative score
 		const similarityScore = Number(interaction.similarity_score ?? 0);
-		const interestScore = Number(interaction.interest_score ?? 0);
+
+		const viewCount = Math.max(Number(interaction.view_count ?? 0), 0);
+		const folderCount = Math.max(Number(interaction.saved_folder_count ?? 0), 0);
+		
+		const viewWeight = Math.log1p(viewCount);
+		const saveWeight = (folderCount > 0) ? 5 + 2 * Math.log1p(folderCount) : 0;
+
+		const interactionWeight = viewWeight + saveWeight;
 		
 		// Using log to prevent users with extreme interest scores from dominating the rest of the users
-		const contribution = similarityScore * Math.log1p(interestScore);
+		const contribution = similarityScore * Math.log1p(interactionWeight);
 
 		// and sum up all collaborative scores of each paper
 		scoreMap.set(paperId, (scoreMap.get(paperId) ?? 0) + contribution);

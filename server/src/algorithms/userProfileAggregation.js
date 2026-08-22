@@ -11,7 +11,15 @@ export function buildProfilePreferences(interactionFeatures) {
 
 	for (const interaction of interactionFeatures) {
 		// Interest score captures the interaction's weight
-		const weight = Math.max(Number(interaction.interest_score ?? 0), 0);
+		// Added separate weights for paper views and paper saves, 
+		// as the paper saves describe number of saves instead of a boolean flag (denoted by +5)
+		const viewCount = Math.max(Number(interaction.view_count ?? 0), 0);
+		const folderCount = Math.max(Number(interaction.saved_folder_count ?? 0), 0);
+		
+		const viewWeight = Math.log1p(viewCount);
+		const saveWeight = (folderCount > 0) ? 5 + 2 * Math.log1p(folderCount) : 0;
+
+		const weight = viewWeight + saveWeight;
 
 		addWeightVector(topicPreferences, interaction.topic_vector, weight);
 		addWeightVector(domainPreferences, interaction.domain_vector, weight);
