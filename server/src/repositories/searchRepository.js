@@ -3,23 +3,25 @@ import pool from "./../config/db.js";
 export async function searchPapersByTextQuery(filters) {
     const filterValues = [filters.query];
 
-    // Create WHERE clause by concatenating the specified filters with the AND operator
+    // Construct query WHERE & ORDER BY clauses
     const whereClause = buildWHEREClause(filters, filterValues).join(" AND ");
-    // Construct the ORDER BY clause
     const orderByClause = buildORDERBYClause(filters);
-    
-    // Running a helper query that retrieves the number of papers that match the submitted search query
-    const countValues = [...filterValues];
 
-    const helperQuery = `
-        SELECT COUNT(DISTINCT p.id) AS total_results
-        
-        FROM papers p
-        LEFT JOIN paper_authors pa ON pa.paper_id = p.id
+    let totalResults = null;
 
-        WHERE ${whereClause};`;
+    if (filters.includeCount) {
+        const helperQuery = `
+            SELECT COUNT(DISTINCT p.id) AS total_results
+            FROM papers p
+            LEFT JOIN paper_authors pa
+                ON pa.paper_id = p.id
+            WHERE ${whereClause};
+        `;
 
-    const helperResult = await pool.query(helperQuery, countValues);
+        const helperResult = await pool.query(helperQuery, [...filterValues]);
+
+        totalResults = Number(helperResult.rows[0].total_results);
+    }
 
     const searchValues = [...filterValues, filters.limit, filters.offset];
     const limitIndex = filterValues.length + 1; // value for the query '$' parameters
@@ -77,7 +79,7 @@ export async function searchPapersByTextQuery(filters) {
 
     return {
         papers: result.rows,
-        totalResults: Number(helperResult.rows[0].total_results)
+        totalResults
     }
 }
 

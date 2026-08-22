@@ -12,18 +12,21 @@ export async function searchPapers(user_id, queryParams) {
     const searchResults = await searchPapersByTextQuery(filters);
     
     // Add query to the user search history, only if the user is logged in
-    const { query, page, limit, offset, ...searchHistoryFilters } = filters;
+    const { query, page, limit, offset, includeCount, ...searchHistoryFilters } = filters;
 
     // If the user is logged in, add search query as a record to user search history
-    if (user_id) {
-        try {
-            await addToSearchHistory(user_id, query, searchHistoryFilters, searchResults.totalResults);
-        } catch (error) {
-            // Failing to add the record in the search history 
-            // should not interrupt the search operation
-            console.error("Failed to save search history", error);
-        }
-    }
+    if (user_id && filters.includeCount) {
+            try {
+                await addToSearchHistory(
+                    user_id,
+                    query,
+                    searchHistoryFilters,
+                    searchResults.totalResults
+                );
+            } catch (error) {
+                console.error("Failed to save search history", error);
+            }
+}
     
     // Papers filed Data Transfer Object (DTO)
     const papers = searchResults.papers.map((paper) => ({
@@ -60,6 +63,7 @@ function validateSearchFilters(searchFilters) {
     
     // Pagination filters
     const page = parseInteger(searchFilters.page, "page") ?? 1;
+    const includeCount = parseBoolean(searchFilters.includeCount, "includeCount") ?? true;
     const limit = parseInteger(searchFilters.limit, "limit") ?? 25;
 
     if (page < 1)
@@ -134,6 +138,7 @@ function validateSearchFilters(searchFilters) {
         sort,
         page,
         limit,  // Acts like papers/page filter
-        offset: (page - 1) * limit
+        offset: (page - 1) * limit,
+        includeCount
     }
 }
