@@ -28,7 +28,6 @@ export async function upsertPaperView(userId, paperId) {
 
 // User saves a paper to a folder -> update their individual paper interactions
 export async function upsertPaperSave(userId, paperId) {
-	// Removed interest_score = interest_score + 5, 
     const sqlQuery = `
         UPDATE user_paper_interactions
         SET
@@ -49,7 +48,6 @@ export async function upsertPaperSave(userId, paperId) {
 
 // User un-saves a paper from a folder -> update their individual paper interactions
 export async function upsertPaperUnsave(userId, paperId) {
-	// Removed interest_score = view_count,
 	const sqlQuery = `
 		UPDATE user_paper_interactions
 		SET 
