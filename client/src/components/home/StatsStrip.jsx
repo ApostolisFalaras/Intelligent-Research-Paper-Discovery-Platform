@@ -3,7 +3,7 @@ import "./../../styles/home.css";
 // Global-level application stats
 const appStats = [
 	{ label: "Papers Indexed", value: "1M+" },
-	{ label: "Authors", value: "100K" },
+	{ label: "Authors", value: "1M+" },
 	{ label: "Scientific Topics", value: "4.5K+" },
 	{ label: "Open Access", value: "40%" }
 ];

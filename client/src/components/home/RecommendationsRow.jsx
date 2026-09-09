@@ -1,9 +1,10 @@
+import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import PaperCard from "../papers/PaperCard.jsx";
 import "./../../styles/home.css";
 
 
-function RecommendationsRow({ label, sublabel, icon, papers }) {
+function RecommendationsRow({ type, label, sublabel, icon, papers }) {
 	return (
 		<section className="recom-section">
 
@@ -14,9 +15,9 @@ function RecommendationsRow({ label, sublabel, icon, papers }) {
 					<span className="section-sublabel">{sublabel}</span>
 				</div>
 
-				<button className="see-all-btn">
+				<Link to={`/recommendations?type=${type}`} className="see-all-btn">
 					See all <ChevronRight size={14} />
-				</button>
+				</Link>
 			</div>
 
 			<div className="paper-card-row">

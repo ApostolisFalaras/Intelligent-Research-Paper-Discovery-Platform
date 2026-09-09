@@ -50,6 +50,7 @@ function RecommendationsSection({ recommendations, status, fetchError, retrySear
 			{recommendations.sections.map((section) => (
 				<RecommendationsRow
 					key={section.header}
+					type={section.type}
 					label={section.header}
 					icon={sectionIcons[section.header]}
 					papers={section.papers}
