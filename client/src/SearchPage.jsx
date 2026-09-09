@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X, Minus } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, X, Minus, Plus } from "lucide-react";
 import FilterSection from "./components/search/FilterSection.jsx";
 import ToggleItem from "./components/search/ToggleItem.jsx";
 import TopicSelect from "./components/search/TopicSelect.jsx";
@@ -260,6 +260,7 @@ function buildSearchParams({ query, filters, debouncedAuthor, page, limit}) {
 
     params.set("page", String(page));
     params.set("limit", String(limit));
+    params.set("includeCount", page === 1 ? "true": "false");
     params.set("sort", filters.sort);
 
     if (filters.openAccessOnly) { params.set("isOpenAccess", "true"); }
@@ -486,10 +487,11 @@ function SearchPage() {
 
             const results = await response.json();
 
-            setSearchResults(results.data ?? {
-                totalResults: 0,
-                papers: []
-            });
+            setSearchResults((prev) => ({
+                totalResults: results.data.totalResults ?? prev.totalResults,
+                papers: results.data.papers ?? []
+            }));
+
             setStatus("success");
         } catch (error) {
             console.error("Failed to fetch search results:", error);
@@ -783,7 +785,12 @@ function SearchPage() {
                     <div id="results-overview">
                         <div id="results-totals">
                             <div>
-                                <span id="total">{resultsCount}</span>
+                                <span id="total">
+                                    {resultsCount === 1001 
+                                        ? <>1000<Plus size={11}/></> 
+                                        : resultsCount
+                                    }
+                                </span>
                                 <span id="query">
                                     {" "}results{" "}
                                     {query && (<>for "{query}"</>)}
