@@ -41,15 +41,3 @@ export async function getPaperSavedFoldersController(req, res, next) {
     }
 
 }
-
-// Retrieves recommendations based on a single paper,
-// Finds most similar papers
-export async function getPaperRecommendationsController(req, res) {
-    try {
-        const paperId = req.params.id;
-        const papers = await getPaperRecommendations(paperId);
-        res.status(200).json(papers);
-    } catch(error) {
-        next(error);
-    }
-}
