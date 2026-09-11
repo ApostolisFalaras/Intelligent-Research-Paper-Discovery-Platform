@@ -1,180 +1,238 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../../src/repositories/recommendationEventRepository.js", () => ({
-	upsertPaperView: vi.fn(),
-	upsertPaperSave: vi.fn(),
-	upsertPaperUnsave: vi.fn(),
-	incrementPaperViewCount: vi.fn(),
-	incrementPaperSaveCount: vi.fn(),
-	decrementPaperSaveCount: vi.fn(),
-	incrementRecommendationClickCount: vi.fn()
+    upsertPaperView: vi.fn(),
+    upsertPaperSave: vi.fn(),
+    upsertPaperUnsave: vi.fn(),
+    incrementPaperViewCount: vi.fn(),
+    incrementPaperSaveCount: vi.fn(),
+    decrementPaperSaveCount: vi.fn(),
+    incrementRecommendationClickCount: vi.fn()
 }));
 
 vi.mock("../../../src/repositories/recommendationRefreshRepository.js", () => ({
-	markUserRecommendationsStale: vi.fn()
+    markUserRecommendationsStale: vi.fn()
+}));
+
+vi.mock("../../../src/repositories/popularityRefreshRepository.js", () => ({
+    markPopularityDirty: vi.fn()
 }));
 
 
+import {
+    upsertPaperView,
+    upsertPaperSave,
+    upsertPaperUnsave,
+    incrementPaperViewCount,
+    incrementPaperSaveCount,
+    decrementPaperSaveCount,
+    incrementRecommendationClickCount
+} from "../../../src/repositories/recommendationEventRepository.js";
 
-import { 
-	upsertPaperView,
-	upsertPaperSave,
-	upsertPaperUnsave,
-	incrementPaperViewCount,
-	incrementPaperSaveCount,
-	decrementPaperSaveCount,
-	incrementRecommendationClickCount } from "../../../src/repositories/recommendationEventRepository.js";
-import { markUserRecommendationsStale } from "../../../src/repositories/recommendationRefreshRepository.js";
-import { recordPaperView, recordPaperSave, recordPaperUnsave } from "../../../src/services/recommendationEventService.js";
+import {
+    markUserRecommendationsStale
+} from "../../../src/repositories/recommendationRefreshRepository.js";
+
+import {
+    markPopularityDirty
+} from "../../../src/repositories/popularityRefreshRepository.js";
+
+import {
+    recordPaperView,
+    recordPaperSave,
+    recordPaperUnsave,
+    recordPaperRecommendationClick
+} from "../../../src/services/recommendationEventService.js";
+
 
 describe("recordPaperView", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
 
-	// ---------- SUCCESSFUL TESTS ----------
 
-	it("Record paper view successfully", async () => {
-		upsertPaperView.mockResolvedValue(null);
-		incrementPaperViewCount.mockResolvedValue(null);
-		markUserRecommendationsStale.mockResolvedValue(null);
+    // ---------- SUCCESSFUL CASES ----------
 
-		await recordPaperView(1, 386866, false);
+    it("Records paper view successfully", async () => {
+        upsertPaperView.mockResolvedValue(true);
+        incrementPaperViewCount.mockResolvedValue(undefined);
+        markPopularityDirty.mockResolvedValue(undefined);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
 
-		expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperView).toHaveBeenCalledTimes(1);
+        await recordPaperView(1, 386866);
 
-		expect(incrementPaperViewCount).toHaveBeenCalledWith(386866);
-		expect(incrementPaperViewCount).toHaveBeenCalledTimes(1);
+        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
+        expect(incrementPaperViewCount).toHaveBeenCalledWith(386866);
+        expect(markPopularityDirty).toHaveBeenCalledTimes(1);
+        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_viewed", 1);
+    });
 
-		expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
 
-		expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_viewed", 1);
-		expect(markUserRecommendationsStale).toHaveBeenCalledTimes(1);
-	});
+    it("Does not update global metrics when the view was not newly recorded", async () => {
+        upsertPaperView.mockResolvedValue(false);
 
-	it("Record paper view successfully as a recommendation", async () => {
-		upsertPaperView.mockResolvedValue(null);
-		incrementPaperViewCount.mockResolvedValue(null);
-		markUserRecommendationsStale.mockResolvedValue(null);
+        await recordPaperView(1, 386866);
 
-		await recordPaperView(1, 386866, true);
+        expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
+        expect(incrementPaperViewCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 
-		expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperView).toHaveBeenCalledTimes(1);
 
-		expect(incrementPaperViewCount).toHaveBeenCalledWith(386866);
-		expect(incrementPaperViewCount).toHaveBeenCalledTimes(1);
+    // ---------- ERROR CASES ----------
 
-		expect(incrementRecommendationClickCount).toHaveBeenCalledWith(386866);
-		expect(incrementRecommendationClickCount).toHaveBeenCalledTimes(1);
-		
-		expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "recommendation_clicked", 2);
-		expect(markUserRecommendationsStale).toHaveBeenCalledTimes(1);
-	});
+    it("Propagates repository error when recording paper view fails", async () => {
+        upsertPaperView.mockRejectedValue(new Error("Unexpected DB error"));
 
-	// ---------- DB ERROR ----------
+        await expect(recordPaperView(1, 386866))
+			.rejects
+			.toThrow("Unexpected DB error");
 
-	it("Record paper view failed", async () => {
-		upsertPaperView.mockRejectedValue(new Error("Unexpected DB error"));
-
-		// Similar ERROR TESTS could be produced for these 2 functions
-		incrementPaperViewCount.mockResolvedValue(null);
-		markUserRecommendationsStale.mockResolvedValue(null);
-
-		await expect(recordPaperView(1, 386866, false)).rejects.toThrow("Unexpected DB error");
-
-		expect(upsertPaperView).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperView).toHaveBeenCalledTimes(1);
-
-		expect(incrementPaperViewCount).not.toHaveBeenCalled();
-		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
-	});
+        expect(incrementPaperViewCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 });
 
 
 describe("recordPaperSave", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
 
-	// ---------- SUCCESSFUL TESTS ----------
 
-	it("Record paper save successfully", async () => {
-		upsertPaperSave.mockResolvedValue(null);
-		incrementPaperSaveCount.mockResolvedValue(null);
-		markUserRecommendationsStale.mockResolvedValue(null);
+    // ---------- SUCCESSFUL CASES ----------
 
-		await recordPaperSave(1, 386866);
+    it("Records paper save successfully", async () => {
+        upsertPaperSave.mockResolvedValue(true);
+        incrementPaperSaveCount.mockResolvedValue(undefined);
+        markPopularityDirty.mockResolvedValue(undefined);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
 
-		expect(upsertPaperSave).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
+        await recordPaperSave(1, 386866);
 
-		expect(incrementPaperSaveCount).toHaveBeenCalledWith(386866);
-		expect(incrementPaperSaveCount).toHaveBeenCalledTimes(1);
+        expect(upsertPaperSave).toHaveBeenCalledWith(1, 386866);
+        expect(incrementPaperSaveCount).toHaveBeenCalledWith(386866);
+        expect(markPopularityDirty).toHaveBeenCalledTimes(1);
+        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_saved", 3);
+    });
 
-		expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_saved", 3);
-		expect(markUserRecommendationsStale).toHaveBeenCalledTimes(1);
-	});
 
-	// ---------- DB ERROR ----------
+    it("Does not update global metrics when save was not newly recorded", async () => {
+        upsertPaperSave.mockResolvedValue(false);
 
-	it("Record paper save failed", async () => {
-		upsertPaperSave.mockRejectedValue(new Error("Unexpected DB error"));
+        await recordPaperSave(1, 386866);
 
-		// Similar error tests could be produced for these 2 functions:
-		// inrementPaperSaveCount, markUserRecommendationsStale
+        expect(upsertPaperSave).toHaveBeenCalledWith(1, 386866);
+        expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 
-		await expect(recordPaperSave(1, 386866)).rejects.toThrow("Unexpected DB error");
 
-		expect(upsertPaperSave).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperSave).toHaveBeenCalledTimes(1);
+    // ---------- ERROR CASES ----------
 
-		expect(incrementPaperSaveCount).not.toHaveBeenCalled();
-		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
-	});
+    it("Propagates repository error when recording paper save fails", async () => {
+        upsertPaperSave.mockRejectedValue(new Error("Unexpected DB error"));
+
+        await expect(recordPaperSave(1, 386866))
+			.rejects
+			.toThrow("Unexpected DB error");
+
+        expect(incrementPaperSaveCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 });
 
 
 describe("recordPaperUnsave", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
 
-	});
 
-	// ---------- SUCCESSFUL TESTS ----------
+    // ---------- SUCCESSFUL CASES ----------
 
-	it("Record paper unsave successfully", async () => {
-		upsertPaperUnsave.mockResolvedValue(null);
-		decrementPaperSaveCount.mockResolvedValue(null);
-		markUserRecommendationsStale.mockResolvedValue(null);
+    it("Records paper unsave successfully", async () => {
+        upsertPaperUnsave.mockResolvedValue(true);
+        decrementPaperSaveCount.mockResolvedValue(undefined);
+        markPopularityDirty.mockResolvedValue(undefined);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
 
-		await recordPaperUnsave(1, 386866, false);
+        await recordPaperUnsave(1, 386866);
 
-		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
+        expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 386866);
+        expect(decrementPaperSaveCount).toHaveBeenCalledWith(386866);
+        expect(markPopularityDirty).toHaveBeenCalledTimes(1);
+        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_unsaved", 3);
+    });
 
-		expect(decrementPaperSaveCount).toHaveBeenCalledWith(386866);
-		expect(decrementPaperSaveCount).toHaveBeenCalledTimes(1);
 
-		expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_unsaved", 3);
-		expect(markUserRecommendationsStale).toHaveBeenCalledTimes(1);
-	});
+    it("Does not update global metrics when unsave was not newly recorded", async () => {
+        upsertPaperUnsave.mockResolvedValue(false);
 
-	// ---------- DB ERROR ----------
+        await recordPaperUnsave(1, 386866);
 
-	it("Record paper unsave failed", async () => {
-		upsertPaperUnsave.mockRejectedValue(new Error("Unexpected DB error"));
+        expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 386866);
+        expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 
-		// Similar error tests could be produced for these 2 functions:
-		// decrementPaperSaveCount, markUserRecommendationsStale
 
-		await expect(recordPaperUnsave(1, 386866)).rejects.toThrow("Unexpected DB error");
+    // ---------- ERROR CASES ----------
 
-		expect(upsertPaperUnsave).toHaveBeenCalledWith(1, 386866);
-		expect(upsertPaperUnsave).toHaveBeenCalledTimes(1);
+    it("Propagates repository error when recording paper unsave fails", async () => {
+        upsertPaperUnsave.mockRejectedValue(new Error("Unexpected DB error"));
 
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
-		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
-	});
+        await expect(recordPaperUnsave(1, 386866))
+			.rejects
+			.toThrow("Unexpected DB error");
+
+        expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
+});
+
+
+describe("recordPaperRecommendationClick", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+
+    // ---------- SUCCESSFUL CASES ----------
+
+    it("Records a recommendation click successfully", async () => {
+        incrementRecommendationClickCount.mockResolvedValue(undefined);
+        markPopularityDirty.mockResolvedValue(undefined);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
+
+        
+		await recordPaperRecommendationClick(1, 386866);
+
+
+        expect(incrementRecommendationClickCount).toHaveBeenCalledWith(386866);
+
+        expect(markPopularityDirty).toHaveBeenCalledTimes(1);
+
+        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "recommendation_clicked", 2);
+    });
+
+
+    // ---------- ERROR CASES ----------
+
+    it("Propagates repository error when recommendation click recording fails", async () => {
+        incrementRecommendationClickCount.mockRejectedValue(new Error("Unexpected DB error"));
+
+        await expect(recordPaperRecommendationClick(1, 386866))
+			.rejects
+			.toThrow("Unexpected DB error");
+
+        expect(markPopularityDirty).not.toHaveBeenCalled();
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 });

@@ -7,6 +7,7 @@ import {
 	decrementPaperSaveCount,
 	incrementRecommendationClickCount } from "./../repositories/recommendationEventRepository.js";
 import { markUserRecommendationsStale } from "./../repositories/recommendationRefreshRepository.js";
+import { markPopularityDirty } from "./../repositories/popularityRefreshRepository.js";
 import { parseUserId, parseInteger } from "./../utils/parseData.js";
 import { AppError } from "./../utils/AppError.js";
 
@@ -34,6 +35,9 @@ export async function recordPaperView(userId, paperId) {
 
 	await incrementPaperViewCount(parsedPaperId);
 
+	// Add pending event increment for popularity refresh state after each successful paper interaction
+	await markPopularityDirty();
+
 	await markUserRecommendationsStale(parsedUserId, "paper_viewed", 1);
 } 
 
@@ -50,6 +54,7 @@ export async function recordPaperSave(userId, paperId) {
 	}
 
 	await incrementPaperSaveCount(parsedPaperId);
+	await markPopularityDirty();
 
 	// A paper save has the highest priority
 	await markUserRecommendationsStale(parsedUserId, "paper_saved", 3);
@@ -67,7 +72,9 @@ export async function recordPaperUnsave(userId, paperId) {
 		return;
 	}
 
+
 	await decrementPaperSaveCount(parsedPaperId);
+	await markPopularityDirty();
 
 	// Also, a paper un-save has the highest priority
 	await markUserRecommendationsStale(parsedUserId, "paper_unsaved", 3);
@@ -77,7 +84,9 @@ export async function recordPaperUnsave(userId, paperId) {
 export async function recordPaperRecommendationClick(userId, paperId) {
     const [parsedUserId, parsedPaperId] = validateUserAndPaperIds(userId, paperId);
 
+
     await incrementRecommendationClickCount(parsedPaperId);
+	await markPopularityDirty();
 
     await markUserRecommendationsStale(parsedUserId, "recommendation_clicked", 2);
 }
