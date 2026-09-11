@@ -4,7 +4,11 @@ vi.mock("../../../src/repositories/recommendationRepository.js", () => ({
 	fetchPopularRecommendations: vi.fn(),
 	fetchContentRecommendations: vi.fn(),
 	fetchUserRecommendations: vi.fn(),
-	fetchTopicRecommendations: vi.fn()
+	fetchTopicRecommendations: vi.fn(),
+
+	countContentRecommendations: vi.fn(),
+    countUserRecommendations: vi.fn(),
+    countTopicRecommendations: vi.fn()
 }));
 
 vi.mock("../../../src/repositories/recommendationProfileRepository.js", () => ({
@@ -12,14 +16,19 @@ vi.mock("../../../src/repositories/recommendationProfileRepository.js", () => ({
 }));
 
 import {
-	fetchPopularRecommendations, fetchContentRecommendations,
-	fetchUserRecommendations, fetchTopicRecommendations
+	fetchPopularRecommendations, 
+	fetchContentRecommendations,
+	fetchUserRecommendations, 
+	fetchTopicRecommendations,
+	countContentRecommendations,
+    countUserRecommendations,
+    countTopicRecommendations
 } from "../../../src/repositories/recommendationRepository.js";
 
 import { fetchUserInteractionsCount } from "../../../src/repositories/recommendationProfileRepository.js";
 import {
-	getHomeRecommendations, getPopularRecommendations, getContentRecommendations,
-	getUserRecommendations, getTopicRecommendations } from "../../../src/services/recommendationService.js";
+	getHomeRecommendations, 
+	getRecommendationsPage } from "../../../src/services/recommendationService.js";
 
 
 function expectedPaperDTO(papers) {
@@ -239,6 +248,7 @@ describe("getHomeRecommendations", () => {
 			authenticated: false,
 			sections: [
 				{
+					type: "popular",
 					header: "Popular papers",
 					papers: popularPapersDTO
 				}
@@ -263,6 +273,7 @@ describe("getHomeRecommendations", () => {
 			authenticated: true,
 			sections: [
 				{
+					type: "popular",
 					header: "Popular papers",
 					papers: popularPapersDTO
 				}
@@ -284,6 +295,7 @@ describe("getHomeRecommendations", () => {
 			authenticated: true,
 			sections: [
 				{
+					type: "popular",
 					header: "Popular papers",
 					papers: popularPapersDTO
 				}
@@ -305,10 +317,12 @@ describe("getHomeRecommendations", () => {
 
 		expect(result.sections).toEqual([
 			{
+				type: "activity",
 				header: "Because you viewed",
 				papers: contentBasedRecomsDTO
 			},
 			{
+				type: "popular",
 				header: "Popular papers",
 				papers: popularPapersDTO
 			}
@@ -327,14 +341,17 @@ describe("getHomeRecommendations", () => {
 
 		expect(result.sections).toEqual([
 			{
+				type: "activity",
 				header: "Based on your interests",
 				papers: contentBasedRecomsDTO
 			},
 			{
+				type: "topics",
 				header: "Explore your research topics",
 				papers: topicBasedRecomsDTO
 			},
 			{
+				type: "popular",
 				header: "Popular papers",
 				papers: popularPapersDTO
 			}
@@ -355,113 +372,207 @@ describe("getHomeRecommendations", () => {
 
 		expect(result.sections).toEqual([
 			{
+				type: "activity",
 				header: "Based on your interests",
 				papers: contentBasedRecomsDTO
 			},
 			{
+				type: "similar",
 				header: "Researchers with similar interests also viewed",
 				papers: userBasedRecomsDTO
 			},
 			{
+				type: "topics",
 				header: "Explore your research topics",
 				papers: topicBasedRecomsDTO
 			},
-			
 		]);
 	});
 
 });
 
 
-describe("getPopularRecommendations", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
+describe("getRecommendationsPage", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
 
-	it("Returns paginated popular recommendations", async () => {
-		fetchPopularRecommendations.mockResolvedValue(popularPapers);
 
-		const result = await getPopularRecommendations(2, 2);
+	// ---------- UNAUTHENTICATED USER CASE ----------
 
-		expect(fetchPopularRecommendations).toHaveBeenCalledWith(2,2);
-		expect(fetchPopularRecommendations).toHaveBeenCalledTimes(1);
+    it("Returns popular recommendations for an unauthenticated user", async () => {
+        fetchPopularRecommendations.mockResolvedValue(popularPapers);
 
-		expect(result).toEqual(popularPapers);
-	});
+        const result = await getRecommendationsPage(null, "popular", 2, 10);
 
+        expect(fetchPopularRecommendations).toHaveBeenCalledWith(10, 10);
+
+        expect(fetchUserInteractionsCount).not.toHaveBeenCalled();
+
+        expect(result).toEqual({
+            availableTypes: ["popular"],
+            type: "popular",
+            page: 2,
+            limit: 10,
+            totalPapers: 100,
+            papers: popularPapersDTO
+        });
+    });
+
+	// ---------- UNAUTHENTICATED USER CASES (ACCORDING TO NUMBER OF USER INTERACTIONS) ----------
+
+	it("Returns only popular as available type for authenticated users with no interactions", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 0 });
+        fetchPopularRecommendations.mockResolvedValue(popularPapers);
+
+        const result = await getRecommendationsPage(42, "popular", 1, 10);
+
+        expect(fetchUserInteractionsCount).toHaveBeenCalledWith(42);
+        expect(fetchPopularRecommendations).toHaveBeenCalledWith(10, 0);
+
+        expect(result).toEqual({
+            availableTypes: ["popular"],
+            type: "popular",
+            page: 1,
+            limit: 10,
+            totalPapers: 100,
+            papers: popularPapersDTO
+        });
+    });
+
+
+	it("Returns activity and popular types for users with fewer than 3 interactions", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 2 });
+
+        fetchContentRecommendations.mockResolvedValue(contentBasedRecoms);
+        countContentRecommendations.mockResolvedValue("42");
+
+        const result = await getRecommendationsPage(42, "activity", 2, 5);
+
+        expect(fetchContentRecommendations).toHaveBeenCalledWith(42, 5, 5);
+        expect(countContentRecommendations).toHaveBeenCalledWith(42);
+
+        expect(result).toEqual({
+            availableTypes: [
+                "activity",
+                "popular"
+            ],
+            type: "activity",
+            page: 2,
+            limit: 5,
+            totalPapers: 42,
+            papers: contentBasedRecomsDTO
+        });
+    });
+
+
+	it("Returns topic recommendations for users with 3 to 9 interactions", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 5 });
+
+        fetchTopicRecommendations.mockResolvedValue(topicBasedRecoms);
+        countTopicRecommendations.mockResolvedValue("27");
+
+        const result = await getRecommendationsPage(42, "topics", 1, 10);
+
+        expect(fetchTopicRecommendations).toHaveBeenCalledWith(42, 10, 0);
+        expect(countTopicRecommendations).toHaveBeenCalledWith(42);
+
+
+		expect(result).toEqual({
+            availableTypes: [
+                "activity",
+				"topics",
+                "popular"
+            ],
+            type: "topics",
+            page: 1,
+            limit: 10,
+            totalPapers: 27,
+            papers: topicBasedRecomsDTO
+        });
+    });
+
+
+	it("Returns collaborative recommendations for users with at least 10 interactions", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 10 });
+
+        fetchUserRecommendations.mockResolvedValue(userBasedRecoms);
+        countUserRecommendations.mockResolvedValue("18");
+
+        const result = await getRecommendationsPage(42, "similar", 1, 10);
+
+		expect(fetchUserRecommendations).toHaveBeenCalledWith(42, 10, 0);
+        expect(countUserRecommendations).toHaveBeenCalledWith(42);
+
+		
+		expect(result).toEqual({
+			availableTypes: ["activity", "similar", "topics"],
+			type: "similar",
+			page: 1,
+			limit: 10,
+			totalPapers: 18,
+			papers: userBasedRecomsDTO
+		});
+    });
+
+	// ---------- FALLBACK CASE ----------
+
+	it("Falls back to the first available type when the requested type is unavailable", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 2 });
+
+        fetchContentRecommendations.mockResolvedValue(contentBasedRecoms);
+        countContentRecommendations.mockResolvedValue("12");
+
+        const result = await getRecommendationsPage(42, "similar", 1, 10);
+
+        expect(fetchContentRecommendations).toHaveBeenCalledWith(42, 10, 0);
+        expect(fetchUserRecommendations).not.toHaveBeenCalled();
+
+		expect(result).toEqual({
+			type: "activity",
+			availableTypes: ["activity", "popular"],
+			page: 1,
+			limit: 10,
+			totalPapers: 12,
+			papers: contentBasedRecomsDTO
+		});
+    });
+
+
+	it("Maximum-retrieved papers are capped at a 100", async () => {
+        fetchUserInteractionsCount.mockResolvedValue({ num_interactions: 5 });
+
+        fetchContentRecommendations.mockResolvedValue(contentBasedRecoms);
+        countContentRecommendations.mockResolvedValue("350");
+
+        const result = await getRecommendationsPage(42, "activity", 1, 10);
+
+        expect(result.totalPapers).toBe(100);
+    });
+
+	// ---------- ERROR CASES ----------
+	
 	it("Throws 400 when page is invalid", async () => {
-		await expect(getPopularRecommendations(0, 10))
-			.rejects
-			.toThrow("'page' must be greater than or equal to 1");
+        await expect(getRecommendationsPage(null, "popular", 0, 10))
+            .rejects
+            .toThrow("'page' must be greater than or equal to 1");
 
-		expect(fetchPopularRecommendations).not.toHaveBeenCalled();
-	});
+        expect(fetchPopularRecommendations).not.toHaveBeenCalled();
+    });
 
 	it("Throws 400 when limit is invalid", async () => {
-		await expect(getPopularRecommendations(1, 101))
+		await expect(getRecommendationsPage(null, "popular", 1, 101))
 			.rejects
 			.toThrow("'limit' must be between 1 and 100");
 
 		expect(fetchPopularRecommendations).not.toHaveBeenCalled();
-	});
+    });
 
-	
-});
+	it("Throws when user id is invalid", async () => {
+        await expect(getRecommendationsPage("invalid", "activity", 1, 10)).rejects.toThrow();
 
-describe("getContentRecommendations", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	it("Returns paginated content-based recommendations", async () => {
-		fetchContentRecommendations.mockResolvedValue(contentBasedRecoms);
-
-		const result = await getContentRecommendations(81, 2, 4);
-
-		expect(fetchContentRecommendations).toHaveBeenCalledWith(81,4,4);
-		expect(fetchContentRecommendations).toHaveBeenCalledTimes(1);
-
-		expect(result).toEqual(contentBasedRecoms);
-	});
-
-	it("Throws 400 when authenticated recommendation getter receives an invalid user id", async () => {
-		await expect(getContentRecommendations("invalid", 1, 10)).rejects.toThrow();
-
-		expect(fetchContentRecommendations).not.toHaveBeenCalled();
-	});
-});
-	
-describe("getUserRecommendations", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	it("Returns paginated user-based recommendations", async () => {
-		fetchUserRecommendations.mockResolvedValue(userBasedRecoms);
-
-		const result = await getUserRecommendations(81,2,3);
-
-		expect(fetchUserRecommendations).toHaveBeenCalledWith(81,3,3);
-		expect(fetchUserRecommendations).toHaveBeenCalledTimes(1);
-
-		expect(result).toEqual(userBasedRecoms);
-	});
-});
-
-
-describe("getTopicRecommendations", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	it("Returns paginated topic-based recommendations", async () => {
-		fetchTopicRecommendations.mockResolvedValue(topicBasedRecoms);
-
-		const result = await getTopicRecommendations(81, 2, 2);
-
-		expect(fetchTopicRecommendations).toHaveBeenCalledWith(81,2,2);
-		expect(fetchTopicRecommendations).toHaveBeenCalledTimes(1);
-
-		expect(result).toEqual(topicBasedRecoms);
-	});
+        expect(fetchContentRecommendations).not.toHaveBeenCalled();
+        expect(fetchUserRecommendations).not.toHaveBeenCalled();
+        expect(fetchTopicRecommendations).not.toHaveBeenCalled();
+    });
 });

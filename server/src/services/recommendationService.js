@@ -2,7 +2,10 @@ import {
 	fetchPopularRecommendations,
 	fetchContentRecommendations,
 	fetchUserRecommendations,
-	fetchTopicRecommendations
+	fetchTopicRecommendations,
+	countContentRecommendations,
+	countUserRecommendations,
+	countTopicRecommendations
 } from "./../repositories/recommendationRepository.js";
 import { fetchUserInteractionsCount } from "./../repositories/recommendationProfileRepository.js";
 import { parseInteger, parseUserId } from "./../utils/parseData.js";
@@ -54,7 +57,7 @@ export async function getHomeRecommendations(userId) {
 	if (!userId) {
 		const popularPapers = await fetchPopularRecommendations(10);
 
-		const sections = [{ header: "Popular papers", papers: paperRecomDTO(popularPapers) }];
+		const sections = [{ type: "popular", header: "Popular papers", papers: paperRecomDTO(popularPapers) }];
 		return {
 			authenticated: false,
 			sections
@@ -74,7 +77,7 @@ export async function getHomeRecommendations(userId) {
 		if (numInteractions === 0) {
 			const popularPapers = await fetchPopularRecommendations(10);
 
-			sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
+			sections.push({ type: "popular", header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			
 		}
 		else {
@@ -93,24 +96,25 @@ export async function getHomeRecommendations(userId) {
 			const hasRecommendations = contentBased.length > 0 || userBased.length > 0 || topicBased.length > 0;
 
 			if (!hasRecommendations) {
-				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
+				sections.push({ type: "popular", header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			}
 			else if (numInteractions < 3) {
-				sections.push({ header: "Because you viewed", papers: paperRecomDTO(contentBased) });
-				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers)});
+				sections.push({ type: "activity", header: "Because you viewed", papers: paperRecomDTO(contentBased) });
+				sections.push({ type: "popular", header: "Popular papers", papers: paperRecomDTO(popularPapers)});
 			}
 			else if (numInteractions < 10) {
-				sections.push({ header: "Based on your interests", papers: paperRecomDTO(contentBased) });
-				sections.push({ header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
-				sections.push({ header: "Popular papers", papers: paperRecomDTO(popularPapers) });
+				sections.push({ type: "activity", header: "Based on your interests", papers: paperRecomDTO(contentBased) });
+				sections.push({ type: "topics", header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
+				sections.push({ type: "popular", header: "Popular papers", papers: paperRecomDTO(popularPapers) });
 			}
 			else {
-				sections.push({ header: "Based on your interests", papers: paperRecomDTO(contentBased) });
+				sections.push({ type: "activity", header: "Based on your interests", papers: paperRecomDTO(contentBased) });
 				sections.push({ 
+					type: "similar",
 					header: "Researchers with similar interests also viewed", 
 					papers: paperRecomDTO(userBased) 
 				});
-				sections.push({ header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
+				sections.push({ type: "topics", header: "Explore your research topics", papers: paperRecomDTO(topicBased) });
 			}
 
 		} 
@@ -122,45 +126,98 @@ export async function getHomeRecommendations(userId) {
 	}
 }
 
+const MAX_RECOMMENDATIONS = 100;
+
 // Retrieves popular recommendations for an unauthenticated user
-export async function getPopularRecommendations(page, limit) {
-	// Validate pagination filters
+export async function getRecommendationsPage(userId, type, page, limit) {
 	const { parsedPage, parsedLimit } = validatePagination(page, limit);
 
 	const offset = (parsedPage - 1) * parsedLimit;
-	return fetchPopularRecommendations(parsedLimit, offset);
-}
 
+	// In case user is unauthenticated (only popular recommendations)
+	if (!userId) {
+		const availableTypes = ["popular"];
+		const totalPapers = MAX_RECOMMENDATIONS;
+		const papers = await fetchPopularRecommendations(parsedLimit, offset);
+		
+		return {
+			availableTypes,
+			type: "popular",
+			page: parsedPage,
+			limit: parsedLimit,
+			totalPapers: Number(totalPapers),
+			papers: paperRecomDTO(papers)
+		}
+	}
 
-// Retrieves content-based recommendations for a user
-export async function getContentRecommendations(userId, page, limit) {
 	const parsedUserId = parseUserId(userId);
 
-	// Validate pagination filters
-	const { parsedPage, parsedLimit } = validatePagination(page, limit);
+	// Using the user's total number of interactions, similarly to the home page
+	// but for the recommendation option buttons in the recommendations page
+	const count = await fetchUserInteractionsCount(parsedUserId);
+	const numInteractions = Number(count.num_interactions);
 
-	const offset = (parsedPage - 1) * parsedLimit;
-	return fetchContentRecommendations(parsedUserId, parsedLimit, offset);
-}
+	let availableTypes;
 
-// Retrieves user-based recommendations for a user
-export async function getUserRecommendations(userId, page, limit) {
-	const parsedUserId = parseUserId(userId);
+	if (numInteractions === 0) { 
+		availableTypes = ["popular"]; 
+	}
+	else if (numInteractions < 3) { 
+		availableTypes = ["activity", "popular"]; 
+	}
+	else if (numInteractions < 10) { 
+		availableTypes = ["activity", "topics", "popular"]; 
+	}
+	else { 
+		availableTypes = ["activity", "similar", "topics"]; 
+	}
 
-	// Validate pagination filters
-	const { parsedPage, parsedLimit } = validatePagination(page, limit);
+	const selectedType = availableTypes.includes(type)
+							? type
+							: availableTypes[0];
 
-	const offset = (parsedPage - 1) * parsedLimit;
-	return fetchUserRecommendations(parsedUserId, parsedLimit, offset);
-}
+	
+	// Fetch the papers of the currently selected recommendation type
+	let papers;
+	let actualTotal;
 
-// Retrieves topic-based recommendations for a user
-export async function getTopicRecommendations(userId, page, limit) {
-	const parsedUserId = parseUserId(userId);
+	switch(selectedType) {
+		case "popular":
+			actualTotal = MAX_RECOMMENDATIONS;
+			papers = await fetchPopularRecommendations(parsedLimit, offset);
+			break;
 
-	// Validate pagination filters
-	const { parsedPage, parsedLimit } = validatePagination(page, limit);
+		case "activity":
+			[papers, actualTotal] = await Promise.all([
+				fetchContentRecommendations(parsedUserId, parsedLimit, offset),
+				countContentRecommendations(parsedUserId)
+			]);
+			break;
 
-	const offset = (parsedPage - 1) * parsedLimit;
-	return fetchTopicRecommendations(parsedUserId, parsedLimit, offset);
+		case "similar":
+			[papers, actualTotal] = await Promise.all([
+				fetchUserRecommendations(parsedUserId, parsedLimit, offset),
+				countUserRecommendations(parsedUserId)
+			]);
+			break;
+
+		case "topics":
+			[papers, actualTotal] = await Promise.all([
+				fetchTopicRecommendations(parsedUserId, parsedLimit, offset),
+				countTopicRecommendations(parsedUserId)
+			]);
+			break;
+	}
+
+	const totalPapers = Math.min(actualTotal, MAX_RECOMMENDATIONS);
+	
+
+	return {
+		availableTypes,
+		type: selectedType,
+		page: parsedPage,
+		limit: parsedLimit,
+		totalPapers: Number(totalPapers),
+		papers: paperRecomDTO(papers)
+	};
 }
