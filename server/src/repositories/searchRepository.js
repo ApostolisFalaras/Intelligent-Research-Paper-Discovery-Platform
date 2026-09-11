@@ -10,12 +10,15 @@ export async function searchPapersByTextQuery(filters) {
     let totalResults = null;
 
     if (filters.includeCount) {
+
         const helperQuery = `
-            SELECT COUNT(DISTINCT p.id) AS total_results
-            FROM papers p
-            LEFT JOIN paper_authors pa
-                ON pa.paper_id = p.id
-            WHERE ${whereClause};
+            SELECT COUNT(*) AS total_results
+            FROM (
+                SELECT p.id
+                FROM papers p
+                WHERE ${whereClause}
+                LIMIT 1001
+            ) AS matching_rows;
         `;
 
         const helperResult = await pool.query(helperQuery, [...filterValues]);
@@ -30,6 +33,22 @@ export async function searchPapersByTextQuery(filters) {
     // Query to extract the minimum info needed to present the result paper cards.
     // Also performs a left join with "paper_authors" in order to mention a few of the authors in the paper card.
     const sqlQuery = `
+        WITH page_papers AS (
+            SELECT
+                p.id,
+                ts_rank(
+                    p.search_vector,
+                    websearch_to_tsquery('english', $1)
+                ) AS rank
+            
+            FROM papers p
+            WHERE ${whereClause}
+            
+            ${orderByClause}
+            LIMIT $${limitIndex}
+            OFFSET $${offsetIndex}
+        )
+        
         SELECT 
             p.id, 
             p.openalex_id, 
@@ -43,10 +62,7 @@ export async function searchPapersByTextQuery(filters) {
             p.primary_topic_display_name,
             p.is_open_access,
             p.open_access_status,
-            ts_rank(
-                p.search_vector,
-                websearch_to_tsquery('english', $1)
-            ) AS rank,
+            pp.rank,
 
             COUNT(pa.author_openalex_id) as author_count,
 
@@ -63,14 +79,12 @@ export async function searchPapersByTextQuery(filters) {
                 '[]'::json
             ) AS authors_preview
         
-        FROM papers p
-        LEFT JOIN paper_authors pa ON pa.paper_id = p.id
+        FROM page_papers pp
+        JOIN papers p ON p.id = pp.id
+        LEFT JOIN paper_authors pa ON pa.paper_id = pp.id
 
-        WHERE ${whereClause}
-        GROUP BY p.id
-        ${orderByClause}
-        LIMIT $${limitIndex}
-        OFFSET $${offsetIndex};
+        GROUP BY p.id, pp.rank
+        ${orderByClause};
     `;
 
     // Any potential DB errors propagate to the controller, 
@@ -123,7 +137,14 @@ function buildWHEREClause(filters, values) {
 
     if (filters.authorName !== null) {
         values.push(filters.authorName);
-        whereClause.push(`pa.author_display_name = $${values.length}`);
+        whereClause.push(`
+            EXISTS (
+                SELECT 1
+                FROM paper_authors pa
+                WHERE pa.paper_id = p.id
+                AND pa.author_display_name = $${values.length}
+            )
+        `);
     }
 
     // Don't check, since isOpenAccess is true by default
@@ -148,13 +169,33 @@ function buildORDERBYClause(filters) {
     // For each case provide secondary sorting filters
     switch (filters.sort) {
         case "citations":
-            return `ORDER BY p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
+            return `
+                ORDER BY 
+                    p.cited_by_count DESC NULLS LAST, 
+                    rank DESC NULLS LAST,
+                    p.id DESC
+                `;
         case "impact":
-            return `ORDER BY p.fwci DESC NULLS LAST, p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST`;
+            return `
+                ORDER BY
+                    p.fwci DESC NULLS LAST, 
+                    p.cited_by_count DESC NULLS LAST, 
+                    rank DESC NULLS LAST,
+                    p.id DESC
+                `;
         case "year":
-            return `ORDER BY p.publication_year DESC NULLS LAST, rank DESC NULLS LAST`;
+            return `
+                ORDER BY 
+                    p.publication_year DESC NULLS LAST, 
+                    rank DESC NULLS LAST,
+                    p.id DESC
+                `;
         case "relevance":
         case "default":
-            return `ORDER BY rank DESC NULLS LAST, p.cited_by_count DESC NULLS LAST`;
+            return `
+                ORDER BY rank DESC NULLS LAST, 
+                p.cited_by_count DESC NULLS LAST,
+                p.id DESC
+            `;
     }
 }

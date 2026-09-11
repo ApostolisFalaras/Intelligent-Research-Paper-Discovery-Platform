@@ -26,29 +26,38 @@ const defaultFilters = {
     sort: "relevance",
     page: 1,
     limit: 25,
-    offset: 0
+    offset: 0,
+    includeCount: true
 };
 
 // Helper function to assert a query with DEFAULT filters
 function expectDefaultCountQuery(query) {
-    expect(query).toContain("SELECT COUNT(DISTINCT p.id) AS total_results");
+    expect(query).toContain("SELECT COUNT(*) AS total_results");
+    expect(query).toContain("FROM (");
+    expect(query).toContain("SELECT p.id");
     expect(query).toContain("FROM papers p");
-    expect(query).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
     expect(query).toContain("WHERE p.search_vector @@ websearch_to_tsquery('english', $1)");
     expect(query).toContain("p.is_open_access = $2");
     expect(query).toContain("p.is_retracted = $3");
+    expect(query).toContain("LIMIT 1001");
+    expect(query).toContain(") AS matching_rows");
 }
 
 function expectDefaultSearchQuery(query) {
-    expect(query).toContain("SELECT");
+    expect(query).toContain("WITH page_papers AS");
     expect(query).toContain("FROM papers p");
-    expect(query).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
     expect(query).toContain("WHERE p.search_vector @@ websearch_to_tsquery('english', $1)");
     expect(query).toContain("p.is_open_access = $2");
     expect(query).toContain("p.is_retracted = $3");
-    expect(query).toContain("ORDER BY rank DESC NULLS LAST, p.cited_by_count DESC NULLS LAST");
+    expect(query).toContain("ORDER BY rank DESC NULLS LAST");
+    expect(query).toContain("p.cited_by_count DESC NULLS LAST");
+    expect(query).toContain("p.id DESC");
     expect(query).toContain("LIMIT $4");
-    expect(query).toContain("OFFSET $5;");
+    expect(query).toContain("OFFSET $5");
+    expect(query).toContain("FROM page_papers pp");
+    expect(query).toContain("JOIN papers p ON p.id = pp.id");
+    expect(query).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = pp.id");
+    expect(query).toContain("GROUP BY p.id, pp.rank");
 }
 
 
@@ -181,52 +190,41 @@ const mockRows3 = [
 
 
 describe("searchPapersByTextQuery", () => {
-    // Reseting the mock's call history before every test
     beforeEach(() => {
         vi.resetAllMocks();
     });
 
-    it("Queries the DB with the default filters", async () => {
+    it("Queries the DB with the default filters and includes the result count", async () => {
         pool.query
-            .mockResolvedValueOnce({ rows: [{total_results: 2}]})
+            .mockResolvedValueOnce({ rows: [{ total_results: "2" }] })
             .mockResolvedValueOnce({ rows: mockRows1 });
 
-        const results = await searchPapersByTextQuery({
-            ...defaultFilters,
-            query: "Machine Learning"
-        });
+        const result = await searchPapersByTextQuery({ ...defaultFilters, query: "Machine Learning"});
 
-        // Validating the query structure and the query parameter
         const [countQuery, countParams] = pool.query.mock.calls[0];
         const [searchQuery, searchParams] = pool.query.mock.calls[1];
-        
+
         expectDefaultCountQuery(countQuery);
         expect(countParams).toEqual(["Machine Learning", true, false]);
 
         expectDefaultSearchQuery(searchQuery);
         expect(searchParams).toEqual(["Machine Learning", true, false, 25, 0]);
-            
+
         expect(pool.query).toHaveBeenCalledTimes(2);
-        expect(results).toEqual({
-            totalResults: 2,
-            papers: mockRows1
+        expect(result).toEqual({
+            papers: mockRows1,
+            totalResults: 2
         });
     });
 
 
-    it("Queries the DB with the default filters and retrieves an empty array", async () => {
-        // No matching papers for the query
+    it("Returns an empty paper array when no papers match", async () => {
         pool.query
-            .mockResolvedValueOnce({ rows: [{total_results: 0}]})
+            .mockResolvedValueOnce({ rows: [{ total_results: "0" }] })
             .mockResolvedValueOnce({ rows: [] });
 
-        const results = await searchPapersByTextQuery({
-            ...defaultFilters,
-            query: "Unknown query",
-        });
+        const result = await searchPapersByTextQuery({ ...defaultFilters, query: "Unknown query" });
 
-
-        // Validating the query structure and the query parameter
         const [countQuery, countParams] = pool.query.mock.calls[0];
         const [searchQuery, searchParams] = pool.query.mock.calls[1];
 
@@ -235,39 +233,61 @@ describe("searchPapersByTextQuery", () => {
 
         expectDefaultSearchQuery(searchQuery);
         expect(searchParams).toEqual(["Unknown query", true, false, 25, 0]);
-            
+
         expect(pool.query).toHaveBeenCalledTimes(2);
-        expect(results).toEqual({
-            totalResults: 0,
-            papers: []
+        expect(result).toEqual({
+            papers: [],
+            totalResults: 0
         });
     });
 
-    // ------------ QUERIES WITH FILTERS --------------
 
-    // An arbitrary combination of filters including PAGINATION
-    it("Queries the DB with fromYear, toYear, paperType, and Pagination filters", async () => {
+    it("Skips the count query when includeCount is false", async () => {
+        pool.query.mockResolvedValueOnce({ rows: mockRows1 });
+
+        const result = await searchPapersByTextQuery({
+            ...defaultFilters,
+            query: "Machine Learning",
+            includeCount: false
+        });
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+
+        const [searchQuery, searchParams] = pool.query.mock.calls[0];
+
+        expectDefaultSearchQuery(searchQuery);
+
+        expect(searchParams).toEqual(["Machine Learning", true, false, 25, 0]);
+
+        expect(result).toEqual({
+            papers: mockRows1,
+            totalResults: null
+        });
+    });
+
+
+    // ------------ QUERIES WITH FILTERS ------------
+
+    it("Queries the DB with year, paper type, and pagination filters", async () => {
         pool.query
-            .mockResolvedValueOnce({ rows: [{total_results: 2}]})
-            .mockResolvedValueOnce({ rows: mockRows2,});
+            .mockResolvedValueOnce({ rows: [{ total_results: "2" }] })
+            .mockResolvedValueOnce({ rows: mockRows2 });
 
-        const results = await searchPapersByTextQuery({
+        const result = await searchPapersByTextQuery({
             ...defaultFilters,
             query: "Machine Learning",
             fromYear: 2015,
             toYear: 2025,
             paperType: "article",
-            page: 2,
             limit: 2,
+            offset: 2
         });
 
         const [countQuery, countParams] = pool.query.mock.calls[0];
         const [searchQuery, searchParams] = pool.query.mock.calls[1];
 
-        expect(countQuery).toContain("SELECT");
-        expect(countQuery).toContain("FROM papers p");
-        expect(countQuery).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
-        expect(countQuery).toContain("WHERE p.search_vector @@ websearch_to_tsquery('english', $1)");
+        expect(countQuery).toContain("SELECT COUNT(*) AS total_results");
+        expect(countQuery).toContain("LIMIT 1001");
         expect(countQuery).toContain("p.publication_year >= $2");
         expect(countQuery).toContain("p.publication_year <= $3");
         expect(countQuery).toContain("p.paper_type = $4");
@@ -276,34 +296,35 @@ describe("searchPapersByTextQuery", () => {
 
         expect(countParams).toEqual(["Machine Learning", 2015, 2025, "article", true, false]);
 
-        expect(searchQuery).toContain("SELECT");
-        expect(searchQuery).toContain("FROM papers p");
-        expect(searchQuery).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
-        expect(searchQuery).toContain("WHERE p.search_vector @@ websearch_to_tsquery('english', $1)");
         expect(searchQuery).toContain("p.publication_year >= $2");
         expect(searchQuery).toContain("p.publication_year <= $3");
         expect(searchQuery).toContain("p.paper_type = $4");
         expect(searchQuery).toContain("p.is_open_access = $5");
         expect(searchQuery).toContain("p.is_retracted = $6");
-        expect(searchQuery).toContain("ORDER BY rank DESC NULLS LAST, p.cited_by_count DESC NULLS LAST");
+        expect(searchQuery).toContain("ORDER BY rank DESC NULLS LAST");
+        expect(searchQuery).toContain("p.cited_by_count DESC NULLS LAST");
+        expect(searchQuery).toContain("p.id DESC");
+        expect(searchQuery).toContain("p.id DESC");
         expect(searchQuery).toContain("LIMIT $7");
-        expect(searchQuery).toContain("OFFSET $8;");
+        expect(searchQuery).toContain("OFFSET $8");
+
+        expect(searchParams).toEqual(["Machine Learning", 2015, 2025, "article", true, false, 2, 2]);
 
         expect(pool.query).toHaveBeenCalledTimes(2);
 
-        expect(searchParams).toEqual(["Machine Learning", 2015, 2025, "article", true, false, 2, 0]);
-        expect(results).toEqual({
-            totalResults: 2,
-            papers: mockRows2
+        expect(result).toEqual({
+            papers: mockRows2,
+            totalResults: 2
         });
     });
 
-    it("Queries the DB with minCitations, topicId, and Sorting filters", async () => {
-        pool.query
-            .mockResolvedValueOnce({ rows: [{total_results: 2}]})
-            .mockResolvedValue({ rows: mockRows3 });
 
-        const results = await searchPapersByTextQuery({
+    it("Queries the DB with citation, topic, and impact sorting filters", async () => {
+        pool.query
+            .mockResolvedValueOnce({ rows: [{ total_results: "2" }] })
+            .mockResolvedValueOnce({ rows: mockRows3 });
+
+        const result = await searchPapersByTextQuery({
             ...defaultFilters,
             query: "Software engineering",
             minCitations: 50,
@@ -314,47 +335,63 @@ describe("searchPapersByTextQuery", () => {
         const [countQuery, countParams] = pool.query.mock.calls[0];
         const [searchQuery, searchParams] = pool.query.mock.calls[1];
 
-        expect(searchQuery).toContain("SELECT");
-        expect(searchQuery).toContain("FROM papers p");
-        expect(searchQuery).toContain("LEFT JOIN paper_authors pa ON pa.paper_id = p.id");
-        expect(searchQuery).toContain("WHERE p.search_vector @@ websearch_to_tsquery('english', $1)");
+        expect(countQuery).toContain("p.cited_by_count >= $2");
+        expect(countQuery).toContain("p.primary_topic_openalex_id = $3");
+        expect(countQuery).toContain("p.is_open_access = $4");
+        expect(countQuery).toContain("p.is_retracted = $5");
+        
+        expect(countParams).toEqual(["Software engineering", 50, "T10260", true, false]);
+
         expect(searchQuery).toContain("p.cited_by_count >= $2");
         expect(searchQuery).toContain("p.primary_topic_openalex_id = $3");
         expect(searchQuery).toContain("p.is_open_access = $4");
         expect(searchQuery).toContain("p.is_retracted = $5");
-        expect(searchQuery).toContain("ORDER BY p.fwci DESC NULLS LAST, p.cited_by_count DESC NULLS LAST, rank DESC NULLS LAST");
-        expect(searchQuery).toContain("LIMIT $6");
-        expect(searchQuery).toContain("OFFSET $7;");
+        expect(searchQuery).toContain("ORDER BY");
+    expect(searchQuery).toContain("p.fwci DESC NULLS LAST");
+    expect(searchQuery).toContain("p.cited_by_count DESC NULLS LAST");
+    expect(searchQuery).toContain("rank DESC NULLS LAST");
+    expect(searchQuery).toContain("p.id DESC");
+    expect(searchQuery).toContain("LIMIT $6");
+    expect(searchQuery).toContain("OFFSET $7");
+        
+        expect(searchParams).toEqual(["Software engineering", 50, "T10260", true, false, 25, 0]);
 
         expect(pool.query).toHaveBeenCalledTimes(2);
 
-        expect(searchParams).toEqual(["Software engineering", 50, "T10260", true, false, 25, 0]);
-        expect(results).toEqual({
-            totalResults: 2,
-            papers: mockRows3
+        expect(result).toEqual({
+            papers: mockRows3,
+            totalResults: 2
         });
     });
 
-    // ------------ DATABASE ERROR --------------
 
-    it("An unexpected database error occurs", async () => {
-        // The total rows were retrieved by the query that actally fetches the results fails
-        pool.query
-            .mockResolvedValueOnce({rows: [{total_results: 2}]})
-            .mockRejectedValueOnce(new Error("Unexpected DB error"));
+    // ------------ DATABASE ERRORS ------------
 
-        const result = await expect(searchPapersByTextQuery({
-                ...defaultFilters,
-                query: "Machine Learning"
-            })
-        )
-        .rejects.toThrow("Unexpected DB error");
+    it("Propagates an error from the count query", async () => {
+        pool.query.mockRejectedValueOnce(new Error("Unexpected DB error"));
 
-        // Although not neccesary, when pool.query fails
-        // Validating the query structure and the query parameter
+        await expect(searchPapersByTextQuery({...defaultFilters, query: "Machine Learning"}))
+            .rejects
+            .toThrow("Unexpected DB error");
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+
         const [countQuery, countParams] = pool.query.mock.calls[0];
 
         expectDefaultCountQuery(countQuery);
-        expect(countParams).toEqual(["Machine Learning", true, false]);
+        expect(countParams).toEqual(["Machine Learning", true, false ]);
+    });
+
+
+    it("Propagates an error from the search query", async () => {
+        pool.query
+            .mockResolvedValueOnce({ rows: [{ total_results: "2" }] })
+            .mockRejectedValueOnce(new Error("Unexpected DB error"));
+
+        await expect(searchPapersByTextQuery({...defaultFilters, query: "Machine Learning"}))
+            .rejects
+            .toThrow("Unexpected DB error");
+
+        expect(pool.query).toHaveBeenCalledTimes(2);
     });
 });
