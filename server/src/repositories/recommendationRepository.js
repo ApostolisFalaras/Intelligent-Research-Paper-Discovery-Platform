@@ -52,6 +52,22 @@ export async function fetchPopularRecommendations(limit = 5, offset = 0) {
 	return results.rows;
 }
 
+// Get the count of content recommendations for a user
+export async function countContentRecommendations(userId) {
+    const sqlQuery = `
+        SELECT COUNT(*) AS total
+        FROM user_recommendation_cache urc
+        JOIN papers p
+          ON p.id = urc.paper_id
+        WHERE urc.user_id = $1
+          AND urc.content_score IS NOT NULL;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId]);
+    return result.rows[0].total;
+}
+
+
 // Fetch the top content-based recommendations for a user,
 // according to their previous interactions with other papers
 export async function fetchContentRecommendations(userId, limit = 25, offset = 0) {
@@ -107,6 +123,23 @@ export async function fetchContentRecommendations(userId, limit = 25, offset = 0
 	return results.rows;
 }
 
+
+// Get the count of user recommendations for a user
+export async function countUserRecommendations(userId) {
+    const sqlQuery = `
+        SELECT COUNT(*) AS total
+        FROM user_recommendation_cache urc
+        JOIN papers p
+          ON p.id = urc.paper_id
+        WHERE urc.user_id = $1
+          AND urc.collaborative_score IS NOT NULL;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId]);
+    return result.rows[0].total;
+}
+
+
 // Fetch the top user-based recommendations for a user,
 // according to similar users' interactions
 export async function fetchUserRecommendations(userId, limit = 25, offset = 0) {
@@ -161,6 +194,23 @@ export async function fetchUserRecommendations(userId, limit = 25, offset = 0) {
 	const results = await pool.query(sqlQuery, [userId, limit, offset]);
 	return results.rows;
 }
+
+
+// Get the count of topic recommendations for a user
+export async function countTopicRecommendations(userId) {
+    const sqlQuery = `
+        SELECT COUNT(*) AS total
+        FROM user_recommendation_cache urc
+        JOIN papers p
+          ON p.id = urc.paper_id
+        WHERE urc.user_id = $1
+          AND urc.topic_score IS NOT NULL;
+    `;
+
+    const result = await pool.query(sqlQuery, [userId]);
+    return result.rows[0].total;
+}
+
 
 // Fetch the top topic-based recommendations for a user,
 // according to the topic preferences of the user

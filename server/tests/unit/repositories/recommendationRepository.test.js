@@ -11,8 +11,11 @@ import pool from "../../../src/config/db.js";
 import {
 	fetchPopularRecommendations,
 	fetchContentRecommendations,
+	countContentRecommendations,
 	fetchUserRecommendations,
-	fetchTopicRecommendations
+	countUserRecommendations,
+	fetchTopicRecommendations,
+	countTopicRecommendations
 } from "../../../src/repositories/recommendationRepository.js";
 
 // 1 representative success test case for each repository function
@@ -269,4 +272,84 @@ describe("fetchTopicRecommendations", () => {
 		expect(query).toContain("ORDER BY urc.topic_score DESC");
 		expect(params).toEqual([81, 2, 2]);
 	});
+});
+
+
+describe("countContentRecommendations", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	it("Returns the number of content recommendations for a user", async () => {
+		pool.query.mockResolvedValue({
+			rows: [ { total: "12" } ]
+		});
+
+		const result = await countContentRecommendations(81);
+		
+		const [query, params] = pool.query.mock.calls[0];
+		
+		expect(query).toContain("SELECT COUNT(*) AS total");
+        expect(query).toContain("FROM user_recommendation_cache urc");
+        expect(query).toContain("JOIN papers p");
+        expect(query).toContain("WHERE urc.user_id = $1");
+        expect(query).toContain("urc.content_score IS NOT NULL");
+
+        expect(params).toEqual([81]);
+
+		// PostgreSQL COUNT(*) is returned as a string.
+        expect(result).toBe("12");
+	});
+});
+
+
+describe("countUserRecommendations", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns the number of collaborative recommendations for a user", async () => {
+        pool.query.mockResolvedValue({
+            rows: [ { total: "8" } ]
+        });
+
+        const result = await countUserRecommendations(81);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT COUNT(*) AS total");
+        expect(query).toContain("FROM user_recommendation_cache urc");
+        expect(query).toContain("WHERE urc.user_id = $1");
+        expect(query).toContain("urc.collaborative_score IS NOT NULL");
+
+        expect(params).toEqual([81]);
+        
+		expect(result).toBe("8");
+    });
+});
+
+
+describe("countTopicRecommendations", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns the number of topic recommendations for a user", async () => {
+        pool.query.mockResolvedValue({
+            rows: [{ total: "15" }]
+        });
+
+        const result = await countTopicRecommendations(81);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT COUNT(*) AS total");
+        expect(query).toContain("FROM user_recommendation_cache urc");
+        expect(query).toContain("WHERE urc.user_id = $1");
+        expect(query).toContain("urc.topic_score IS NOT NULL");
+
+        expect(params).toEqual([81]);
+
+        expect(result).toBe("15");
+    });
 });
