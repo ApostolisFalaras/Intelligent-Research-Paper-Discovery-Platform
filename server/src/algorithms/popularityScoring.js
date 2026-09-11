@@ -1,21 +1,17 @@
-import { minmaxNormalizeArray } from "./../utils/vectorUtils.js";
+import { minMaxNormalization } from "./../utils/vectorUtils.js";
 
-export function calculatePopularityScores(papers) {
-	// The first 3 come from paper_metrics
-	const viewScores = minmaxNormalizeArray(papers.map(paper => paper.view_count ?? 0));
-	const saveScores = minmaxNormalizeArray(papers.map(paper => paper.save_count ?? 0));
-	const clickScores = minmaxNormalizeArray(papers.map(paper => paper.recommendation_click_count ?? 0));
 
-	// The last 2 come from paper_recommendation_features
-	const citationScores = minmaxNormalizeArray(papers.map(paper => paper.citation_score ?? 0));
-	const recencyScores = minmaxNormalizeArray(papers.map(paper => paper.recency_score ?? 0));
+// Calculate global popularity score for a single paper
+export function calculateGlobalPopularityScore(paper, ranges) {
 
-	// The popularity score is stored in the corresponding field of paper_metrics
-	// and at the time of user cache recomputation, it's assigned to the corresponding popularity_score
-	// field of the current user-paper pair
-	return papers.map((paper, index) => ({
-		paperId: paper.paper_id,
-		popularityScore: 0.30 * saveScores[index] + 0.20 * viewScores[index] + 0.15 * clickScores[index] +
-						 0.25 * citationScores[index] + 0.10 * recencyScores[index]
-	}));
+    const viewScore = minMaxNormalization(paper.view_count, ranges.min_views, ranges.max_views);
+    const saveScore = minMaxNormalization(paper.save_count, ranges.min_saves, ranges.max_saves);
+    const clickScore = minMaxNormalization(paper.recommendation_click_count, ranges.min_clicks, ranges.max_clicks);
+    const citationScore = minMaxNormalization(paper.citation_score, ranges.min_citations, ranges.max_citations);
+    const recencyScore = minMaxNormalization(paper.recency_score, ranges.min_recency, ranges.max_recency);
+
+    return (
+        0.30 * saveScore + 0.20 * viewScore + 0.15 * clickScore +
+        0.25 * citationScore + 0.10 * recencyScore
+    );
 }
