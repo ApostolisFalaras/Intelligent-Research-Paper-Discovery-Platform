@@ -1,0 +1,142 @@
+/* ---------- Recommendations Page ---------- */
+
+#recommendations-page {
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 40px 24px 80px;
+    margin-top: 66.4px;
+}
+
+#recommendations-header { margin-bottom: 36px; }
+
+#header-type {
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 6px;
+}
+
+#header-type > div {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    width: 30px; 
+    height: 30px; 
+    border-radius: 6px;
+    background-color: #EAE8E0; 
+}
+
+#header-type > h1 {
+    font-family: 'Playfair Display', serif; 
+    font-size: 22px; 
+    font-weight: 700; 
+    color: #212529; 
+    margin: 0; 
+    letter-spacing: -0.01em;
+}
+
+#header-info {
+    display: flex; 
+    align-items: center; 
+    gap: 16px;
+}
+
+#header-info p {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #9B9B8A; 
+    margin: 0;
+}
+
+#header-info span { color: #D1D1C7; }
+
+#recommendation-type-btns {
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 32px; 
+    flex-wrap: wrap;
+}
+
+.type-btn {
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    padding: 7px 14px; 
+    border-radius: 20px; 
+    border: 1px solid rgba(26,26,20,0.12); 
+    background-color: #FFFFFF; 
+    font-family: 'Inter', sans-serif;
+    font-size: 12px; 
+    font-weight: 400;
+    color: #6B6B5A; 
+    text-decoration: none; 
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.type-btn.active {
+    background-color: #1B4332;
+    border: 1px solid #1B4332;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+#papers-grid {
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 16px;
+}
+
+#recommendation-pages {
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 6px;
+    margin-top: 40px;
+}
+
+#recom-prev-btn, #recom-next-btn {
+    display: flex; 
+    align-items: center; 
+    gap: 4px; 
+    padding: 7px 12px; 
+    background-color: #FFFFFF; 
+    border: 1px solid rgba(26,26,20,0.15); 
+    border-radius: 5px; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    color: #212529; 
+    cursor: pointer;
+}
+
+#recom-prev-btn.page-1, #recom-next-btn.page-N {
+    color: #C0C0B4;
+    cursor: not-allowed;
+}
+
+.recom-ellipsis {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 12px; 
+    color: #9B9B8A; 
+    padding: 0 4px;
+}
+
+.recom-page-number {
+    width: 34px; 
+    height: 34px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background-color: #FFFFFF;
+    border: 1px solid rgba(26,26,20,0.15);
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #212529;
+    cursor: pointer;
+}
+
+.recom-page-number.active {
+    background-color: #1B4332;
+    border: 1px solid #1B4332;
+    color: #FFFFFF;
+}
