@@ -225,12 +225,7 @@ function ProfilePage() {
                         ))}
                     </div>
 
-                    <FollowingAuthors authors={[
-                        {id: 1, name: "Author A"},
-                        {id: 2, name: "Author B"},
-                        {id: 3, name: "Author C"}
-                    ]}/>
-                    {/*<FollowingAuthors authors={profileInfo?.previewFollowedAuthors}/>*/}
+                    <FollowingAuthors authors={profileInfo?.authorsFollowed}/>
                 </aside>
             </div>
         </div>
