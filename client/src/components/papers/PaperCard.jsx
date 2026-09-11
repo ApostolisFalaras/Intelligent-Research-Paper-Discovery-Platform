@@ -31,10 +31,36 @@ function PaperCard({ paper, variant="recommendation" }) {
 	
 	const authors = paper.authorCount;
 
+	// Record recommendation click count if PaperCard is clicked as a recommendation
+	async function handleRecommendationClick() {
+		try {
+			const response = await fetch(`/api/papers/${paper.internalId}/recommendation-click`, {
+				method: "POST",
+				credentials: "include"
+			});
+
+			if (!response.ok) 
+				throw new Error(`Request failed with status ${response.status}`);
+			
+
+		} catch (error) {
+			console.error("Couldn't record recommendation click:", error);
+		}
+	}
+
+	// Handle a PaperCard click
+	async function handlePaperClick() {
+		if (variant === "recommendation") {
+			await handleRecommendationClick();
+		}
+
+		navigate(`/papers/${paper.id}`);
+	}
+
 	return (
 		<div 
 			className={`card ${variant}`}
-			onClick={() => navigate(`/papers/${paper.id}`)}
+			onClick={handlePaperClick}
 		>
 			<div className={`card-header ${variant}`}>
 				<span 
