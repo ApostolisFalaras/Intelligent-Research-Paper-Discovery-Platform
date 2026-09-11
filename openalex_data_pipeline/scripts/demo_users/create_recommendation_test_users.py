@@ -9,6 +9,7 @@ from psycopg2.extras import execute_values, Json
 from psycopg2.extensions import cursor
 from pathlib import Path
 from scripts.utils.logging_utils import get_logger
+import bcrypt
 
 logger = None
 
@@ -32,7 +33,12 @@ SAVES_PER_USER = 10
 
 # Placeholder emails & hashed password for all users
 DEMO_EMAIL_DOMAIN = "demo-recs.local"
-DEFAULT_PASSWORD_HASH = "$2b$10$syntheticRecommendationDemoHashNotForLogin"
+
+DEFAULT_PASSWORD = "DemoPassword123!"
+DEFAULT_PASSWORD_HASH = bcrypt.hashpw(
+    DEFAULT_PASSWORD.encode("utf-8"),
+    bcrypt.gensalt(rounds=12)
+).decode("utf-8")
 
 # Folder metadata feature values for variability of folders
 FOLDER_COLORS = ["blue", "green", "purple", "orange", "red", "gray"]
@@ -214,26 +220,24 @@ def insert_interactions(cur: cursor, user_id: int, viewed_papers: list[int], sav
         
         # More views and higher interest score for a saved paper
         view_count = random.randint(3, 8) if is_saved else random.randint(1, 4)
-        interest_score = view_count + (5 if is_saved else 0)
         
         # Random initial view and last interaction timestamps
         first_viewed_at = now - timedelta(days=random.randint(1, 120))
         last_interaction_at = first_viewed_at + timedelta(days=random.randint(0, 10))
         
-        rows.append((user_id, paper_id, view_count, is_saved, interest_score, first_viewed_at, last_interaction_at))
+        rows.append((user_id, paper_id, view_count, is_saved, first_viewed_at, last_interaction_at))
         
     execute_values(
         cur,
         """
         INSERT INTO user_paper_interactions (
-            user_id, paper_id, view_count, is_saved, interest_score,
+            user_id, paper_id, view_count, is_saved,
             first_viewed_at, last_interaction_at
         )
         VALUES %s
         ON CONFLICT (user_id, paper_id) DO UPDATE SET
             view_count = EXCLUDED.view_count,
             is_saved = EXCLUDED.is_saved,
-            interest_score = EXCLUDED.interest_score,
             first_viewed_at = EXCLUDED.first_viewed_at,
             last_interaction_at = EXCLUDED.last_interaction_at;
         """,
@@ -265,8 +269,8 @@ def insert_folder_and_saved_papers(cur: cursor, user_id: int, persona: Persona, 
     if not saved_papers:
         return
     
-    # Assiming 1 or 2 folder per user for simplicity of simulation data 
-    folder_count = random.choices([1,2], weights=[70,30], k=1)[0]
+    # Assiming 1, 2, or 3 folders per user for simplicity of simulation data 
+    folder_count = random.choices([1,2,3], weights=[30,50,20], k=1)[0]
     
     folders = [
         create_folder(
@@ -277,23 +281,41 @@ def insert_folder_and_saved_papers(cur: cursor, user_id: int, persona: Persona, 
             is_pinned=True)
     ]
     
-    if folder_count == 2:
+    if folder_count >= 2:
         folders.append(
             create_folder(
                 cur,
                 user_id,
                 f"{persona.secondary_subfield} Papers",
                 f"Saved papers related to {persona.secondary_subfield}.",
-                is_pinned=False,
+                is_pinned=False
+            )
+        )
+        
+    if folder_count >= 3 and persona.minor_subfield:
+        folders.append(
+            create_folder(
+                cur,
+                user_id,
+                f"{persona.minor_subfield} Papers",
+                f"Saved papers related to {persona.minor_subfield}.",
+                is_pinned=False
             )
         )
         
     rows = []
-    for i, paper_id in enumerate(saved_papers):
-        
-        # Assigning papers in alternative folders (if there are 2 folders)
-        folder_id = folders[i % len(folders)]
-        rows.append((folder_id, paper_id))
+    
+    for paper_id in saved_papers:
+        # Every saved paper belongs to at least one folder
+        primary_folder = random.choice(folders)
+        rows.append((primary_folder, paper_id))
+
+        # Some papers are important enough to belong to multiple relevant folders
+        if len(folders) > 1 and random.random() < 0.30:
+            other_folders = [ folder_id for folder_id in folders if folder_id != primary_folder]
+
+            secondary_folder = random.choice(other_folders)
+            rows.append((secondary_folder, paper_id))
         
     execute_values(
         cur,
@@ -400,6 +422,22 @@ def update_paper_metrics(cur: cursor) -> None:
             updated_at = CURRENT_TIMESTAMP;
         """
     )
+
+# Assign pending event count for the generated user-paper interactions
+POPULARITY_REFRESH_THRESHOLD = 500
+
+def mark_popularity_state(cur: cursor) -> None:
+    
+    cur.execute(
+        """
+        UPDATE popularity_refresh_state
+        SET
+            pending_event_count = %s,
+            last_event_at = CURRENT_TIMESTAMP
+        WHERE id = 1;
+        """,
+        (POPULARITY_REFRESH_THRESHOLD, )
+    )
     
 
 # Mark user recommendation cache as stale/dirty
@@ -433,6 +471,46 @@ def delete_existing_user_dataset(cur: cursor) -> None:
         """,
         (f"%@{DEMO_EMAIL_DOMAIN}",)
     )
+    
+
+# Reset all user activity before generating the new user set
+def reset_recommendation_activity(cur: cursor) -> None:
+    # Per-user interaction/activity state
+    cur.execute("DELETE FROM user_paper_interactions;")
+    cur.execute("DELETE FROM user_search_history;")
+    cur.execute("DELETE FROM user_folder_papers;")
+    cur.execute("DELETE FROM user_folders;")
+
+    # Derived recommendation state
+    cur.execute("DELETE FROM user_profile_preferences;")
+    cur.execute("DELETE FROM user_similarity_cache;")
+    cur.execute("DELETE FROM user_recommendation_cache;")
+    cur.execute("DELETE FROM recommendation_refresh_queue;")
+
+    # Global behavioral metrics
+    cur.execute(
+        """
+        UPDATE paper_metrics
+        SET
+            view_count = 0,
+            save_count = 0,
+            recommendation_click_count = 0,
+            popularity_score = 0,
+            updated_at = CURRENT_TIMESTAMP;
+        """
+    )
+
+    # Reset global popularity refresh state
+    cur.execute(
+        """
+        UPDATE popularity_refresh_state
+        SET
+            pending_event_count = 0,
+            last_event_at = NULL,
+            last_refresh_at = NULL
+        WHERE id = 1;
+        """
+    )
 
 
 
@@ -453,8 +531,11 @@ def main() -> None:
         )
         cur = conn.cursor()
         
-        # Clean the user/recommendation portion of the dataset before resetting
+        # Delete previous synthetic accounts themselves
         delete_existing_user_dataset(cur)
+
+        # Clear activity for every remaining account too
+        reset_recommendation_activity(cur)
         
         logger.info("Creation of test users begins:")
         
@@ -475,6 +556,7 @@ def main() -> None:
             logger.info(f"User {index}/40, interactions, folders, search history created successfully")
             
         update_paper_metrics(cur)
+        mark_popularity_state(cur)
         mark_recommendation_state(cur, created_user_ids)
         
         conn.commit()
