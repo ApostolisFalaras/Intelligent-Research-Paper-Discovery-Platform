@@ -1,0 +1,619 @@
+/* ---------- Library Page ---------- */
+
+#library-page {
+    margin-top: 66.4px;
+}
+
+/* ---------- Library Page > Header ---------- */
+
+#library-header {
+    background-color: #FFFFFF; 
+    border-bottom: 1px solid rgba(26,26,20,0.08);
+}
+
+#library-header > div {
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 32px 40px 24px; 
+}
+
+#header-info {
+    display: flex;
+    align-items: flex-end; 
+    justify-content: space-between; 
+    margin-bottom: 20px;
+}
+
+#library-user {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 10px; 
+    letter-spacing: 0.12em; 
+    text-transform: uppercase; 
+    color: #9B9B8A; 
+    margin-bottom: 4px;
+}
+
+#library-title {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 26px; 
+    font-weight: 700; 
+    color: #212529; 
+    margin: 0 0 6px;
+}
+
+#library-totals {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px;
+    color: #9B9B8A; 
+    margin: 0;
+}
+
+#add-folder {
+    display: flex; 
+    align-items: center; 
+    gap: 7px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 600;
+    color: #FFFFFF; 
+    background-color: #1B4332;
+    border: none; 
+    border-radius: 5px; 
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+#add-collection:hover { background-color: #2D6A4F; }
+
+#search-filter {
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    background-color: #F8F9FA; 
+    border: 1.5px solid rgba(26,26,20,0.13); 
+    border-radius: 5px; 
+    padding: 8px 12px; 
+    max-width: 340px;
+}
+
+#search-folder-input {
+    border: none; 
+    outline: none; 
+    background: transparent; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #212529; 
+    flex: 1;
+}
+
+/* ---------- Library Page > Folders ---------- */
+
+#folders-section {
+    max-width: 1100px; 
+    margin: 0 auto; 
+    padding: 32px 40px 80px;
+}
+
+#no-available-folders {
+    text-align: center; 
+    padding: 80px 0; 
+    color: #9B9B8A; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 14px;
+}
+
+#folders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+    gap: 16px;
+}
+
+
+/* ---------- Library Page > Folder Card ---------- */
+
+.folder-card {
+    background-color: #FFFFFF;
+    border: 1px solid rgba(26,26,20,0.09);
+    border-radius: 7px; 
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(26,26,20,0.05);
+    transform: translateY(0);
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+    overflow: hidden;
+    display: flex; 
+    flex-direction: column;
+}
+
+.folder-card:hover {
+    border: 1px solid #95D5B2;
+    box-shadow: 0 6px 24px rgba(149,213,178,0.14);
+    transform: translateY(-2px);
+}
+
+.color-band {
+    height: 5px; 
+    flex-shrink: 0;
+}
+
+.folder-card-container {
+    padding: 18px 18px 14px;
+    display: flex; 
+    flex-direction: column;
+    flex: 1;
+}
+
+.folder-card-header {
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: space-between; 
+    margin-bottom: 6px;
+}
+
+.folder-card-header > div {
+    display: flex; 
+    align-items: center; 
+    gap: 8px;   
+}
+
+.folder-card-name {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 15px; 
+    font-weight: 600; 
+    color: #212529; 
+    margin: 0;
+}
+
+.folder-card-more {
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    color: #C0C0B4; 
+    padding: 0 0 0 4px;
+}
+
+.folder-card-description {
+    font-family: 'Inter', sans-serif; 
+    font-size: 14px; 
+    color: #6B6B5A;
+    line-height: 1.55; 
+    margin: 0 0 14px;
+    display: -webkit-box; 
+    -webkit-line-clamp: 2; 
+    line-clamp: 2;
+    -webkit-box-orient: vertical; 
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.folder-card-previews {
+    display: flex; 
+    flex-direction: column; 
+    flex: 1;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.empty-folder-preview {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 44px; 
+    border: 1px dashed rgba(26,26,20,0.14); 
+    border-radius: 5px;
+}
+
+.empty-folder-preview > span {
+    font-family: 'Inter', sans-serif; 
+    font-size: 11px; 
+    color: #C0C0B4;
+}
+
+.paper-preview {
+    display: flex; 
+    align-items: center; 
+    gap: 7px;
+    margin-bottom: 8px;
+}
+
+.paper-preview-topic {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 11px; 
+    font-weight: 500;
+    letter-spacing: 0.07em; 
+    border-radius: 2px;
+    padding: 1px 5px; 
+    text-transform: uppercase; 
+    flex-shrink: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 40px;
+}
+
+.paper-preview-title {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #6B6B5A;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+}
+
+.paper-preview-remaining {
+    font-family: 'Inter', sans-serif; 
+    font-size: 11px; 
+    color: #9B9B8A;  
+}
+
+.folder-card-footer {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    border-top: 1px solid rgba(26,26,20,0.06); 
+    padding-top: 10px;
+}
+
+.folder-card-footer > div {
+    display: flex; 
+    align-items: center;
+    gap: 12px;
+}
+
+.folder-card-footer-info {
+    display: flex; 
+    align-items: center; 
+    gap: 4px; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 11px; 
+    color: #9B9B8A;
+}
+
+.folder-card-expand {
+    color: #C0C0B4; 
+    transition: color 0.18s;
+}
+
+.folder-card-expand:hover { color: #95D5B2; }
+
+
+/* ---------- Library Page > New Folder Modal ---------- */
+
+#new-folder-modal {
+    position: fixed;
+    inset: 0; 
+    z-index: 50;
+    background-color: rgba(26,26,20,0.45);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+#new-folder-modal > div {
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 28px;
+    width: 420px;
+    box-shadow: 0 24px 64px rgba(26,26,20,0.18);
+}
+
+#modal-header {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    margin-bottom: 22px;
+}
+
+#modal-header > h2 {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 18px; 
+    font-weight: 600; 
+    color: #212529; 
+    margin: 0;
+}
+
+#modal-header > button {
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    color: #9B9B8A; 
+    padding: 0;
+}
+
+#folder-features {
+    display: flex; 
+    flex-direction: column; 
+    gap: 16px;
+}
+
+#insert-folder-name {
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px;
+}
+
+#insert-folder-name > label {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    font-weight: 600; 
+    color: #212529;
+}
+
+#insert-folder-name > input {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #212529;
+    background: #FFFFFF; 
+    border: 1.5px solid rgba(26,26,20,0.16);  
+    border-radius: 5px; 
+    padding: 9px 12px; 
+    outline: none; 
+    transition: border-color 0.15s;
+}
+
+#insert-folder-name > input.name-focused {
+    border: 1.5px solid #95D5B2;
+}
+
+#insert-description {
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px;
+}
+
+#insert-description > label {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    font-weight: 600; 
+    color: #212529;
+}
+
+#insert-description > textarea {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #212529;
+    background: #FFFFFF; 
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px; 
+    padding: 9px 12px; 
+    outline: none; 
+    resize: none;
+    transition: border-color 0.15s;
+}
+
+#insert-description > textarea.desc-focused {
+    border: 1.5px solid #95D5B2;
+}
+
+#select-folder-color {
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px;
+}
+
+#select-folder-color > label {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    font-weight: 600; 
+    color: #212529;
+}
+
+#select-folder-color > div {
+    display: flex; 
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.folder-color-option {
+    width: 24px; 
+    height: 24px; 
+    border-radius: 50%;
+    cursor: pointer; 
+    border-width: 2.5px;
+    border-style: solid;
+    padding: 0; 
+    transition: border-color 0.12s;
+}
+
+#modal-buttons {
+    display: flex; 
+    gap: 10px; 
+    margin-top: 24px;
+}
+
+#cancel-new-folder {
+    flex: 1; 
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; 
+    color: #6B6B5A; 
+    background: #F8F9FA; 
+    border: 1px solid rgba(26,26,20,0.14);
+    border-radius: 5px; 
+    padding: 10px; 
+    cursor: pointer;
+}
+
+#create-new-folder {
+    flex: 1; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 600;
+    color: #FFFFFF; 
+    background-color: #1B4332;
+    border: none; 
+    border-radius: 5px; 
+    padding: 10px; 
+    cursor: pointer;
+    transition: background-color 0.15s;   
+}
+
+#create-new-folder.invalid-name {
+    background-color: #9B9B8A;
+    cursor: not-allowed;
+}
+
+/* ---------- Library Page > Folder Detais Modal ---------- */
+
+#folder-panel {
+    position: fixed; 
+    inset: 0; 
+    z-index: 40;
+    background: rgba(26,26,20,0.35);
+    display: flex; 
+    justify-content: flex-end;
+}
+
+#folder-panel > div {
+    width: 440px; 
+    height: 100%; 
+    background: #FFFFFF;
+    box-shadow: -8px 0 40px rgba(26,26,20,0.12);
+    display: flex; 
+    flex-direction: column;
+    animation: slideIn 0.22s ease;
+}
+
+@keyframes slideIn { 
+    from { transform: translateX(100%); } 
+    to { transform: translateX(0); } 
+}
+
+#folder-panel-header {
+    padding: 24px 24px 0; 
+    border-bottom: 1px solid rgba(26,26,20,0.08); 
+    padding-bottom: 18px;
+}
+
+#folder-panel-header-name {
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: space-between; 
+    margin-bottom: 10px;
+}
+
+#folder-panel-name {
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+}
+
+#folder-panel-name > div {
+    width: 10px; 
+    height: 10px; 
+    border-radius: 2px; 
+    flex-shrink: 0;
+}
+
+#folder-panel-name > h2 {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 20px; 
+    font-weight: 700; 
+    color: #212529; 
+    margin: 0;
+}
+
+#close-folder-panel {
+    background: none; 
+    border: none; 
+    cursor: pointer;
+    color: #9B9B8A; 
+    padding: 0;
+}
+
+#folder-panel-description {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #6B6B5A; 
+    line-height: 1.6; 
+    margin: 0 0 12px;
+}
+
+#folder-panel-info {
+    display: flex; 
+    align-items: center; 
+    gap: 16px;
+}
+
+#folder-panel-info span {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 11px; 
+    color: #6B6B5A; 
+    display: flex; 
+    align-items: center; 
+    gap: 5px;
+}
+
+#folder-papers {
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 16px 24px; 
+    scrollbar-width: none;
+}
+
+#folder-papers > p {
+    font-family: 'Inter', sans-serif; 
+    font-size: 11px; 
+    font-weight: 600; 
+    letter-spacing: 0.08em; 
+    text-transform: uppercase; 
+    color: #9B9B8A; 
+    margin-bottom: 10px;
+}
+
+#folder-papers-empty {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 48px 0; 
+    gap: 10px;
+}
+
+#folder-papers-empty > div {
+    width: 40px; 
+    height: 40px;
+    border-radius: 50%; 
+    background-color: #F0EDE6; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
+#folder-papers-empty > p {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #9B9B8A; 
+    margin: 0; 
+    text-align: center;
+}
+
+#folder-papers-empth > p > span { font-size: 12px; }
+
+#folder-papers-list {
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px;
+}
+
+#folder-panel-footer {
+    padding: 16px 24px; 
+    border-top: 1px solid rgba(26,26,20,0.08);
+}
+
+#add-new-papers {
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 6px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 500;
+    color: #FFFFFF; 
+    background-color: #1B4332; 
+    border-radius: 5px;
+    padding: 10px; 
+    text-decoration: none; 
+    transition: background-color 0.15s;
+}
+
+#add-new-papers:hover { background-color: #2D6A4F; }
