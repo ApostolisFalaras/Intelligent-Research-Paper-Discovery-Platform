@@ -117,7 +117,8 @@ const defaultFilters = {
     sort: "relevance",
     page: 1,
     limit: 25,
-    offset: 0
+    offset: 0,
+    includeCount: true
 };
 
 describe("GET /api/search/?q=<search-query>", () => {

@@ -131,7 +131,8 @@ const defaultFilters = {
     sort: "relevance",
     page: 1,
     limit: 25,
-    offset: 0
+    offset: 0,
+    includeCount: true
 };
 
 describe("GET /api/search/?q=<search-query>", () => {
@@ -183,7 +184,7 @@ describe("GET /api/search/?q=<search-query>", () => {
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "Machine Learning", searchHistoryFilters, 2);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
 
@@ -206,7 +207,7 @@ describe("GET /api/search/?q=<search-query>", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "Unknown query", searchHistoryFilters, 0);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         
@@ -266,12 +267,13 @@ describe("GET /api/search/?q=<search-query>", () => {
             paperType: "article",
             page: 2,
             limit: 2,
-            offset: 2
+            offset: 2,
+            includeCount: true
         });
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         const searchFilters = {
             ...searchHistoryFilters, 
             fromYear: 2015,
@@ -332,7 +334,8 @@ describe("GET /api/search/?q=<search-query>", () => {
             paperType: "article",
             page: 2,
             limit: 2,
-            offset: 2
+            offset: 2,
+            includeCount: true
         });
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
