@@ -16,7 +16,6 @@ import { replaceUserRecommendationCache } from "./../repositories/recommendation
 import { generateContentBasedRecommendations } from "./../algorithms/contentBasedRecommendations.js";
 import { generateCollaborativeRecommendations } from "./../algorithms/collaborativeFiltering.js";
 import { generatePaperTopicScores } from "./../algorithms/topicRecommendations.js";
-import { calculatePopularityScores } from "./../algorithms/popularityScoring.js";
 import { calculateFinalRecommendationScores } from "./../algorithms/hybridRecommendationScoring.js";
 
 import { parseUserId } from "./../utils/parseData.js";
@@ -103,7 +102,10 @@ export async function rebuildUserRecommendationCache(userId) {
 	const topicScores = generatePaperTopicScores(userProfile, candidatePapers);
 
 	// 4) Popularity Recommendation Scores
-	const popularityScores = calculatePopularityScores(candidatePapers);
+	const popularityScores = candidatePapers.map((paper) => ({
+		paperId: Number(paper.paper_id),
+		popularityScore: Number(paper.popularity_score ?? 0)
+	}));
 
 	// And aggregating them to calculate the final top 100 recommendations
 	const finalRecommendations = calculateFinalRecommendationScores(
