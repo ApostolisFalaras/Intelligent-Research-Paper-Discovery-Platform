@@ -72,7 +72,8 @@ const defaultFilters = {
     isRetracted: false,
     page: 1,
     limit: 25,
-    offset: 0
+    offset: 0,
+    includeCount: true
 }
 
 describe("searchPapers", () => {
@@ -165,7 +166,7 @@ describe("searchPapers", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "Machine Learning", searchHistoryFilters, 2);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(results).toEqual(expectedOutput);
@@ -212,7 +213,7 @@ describe("searchPapers", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
         
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(results).toEqual({
@@ -240,7 +241,7 @@ describe("searchPapers", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, ...searchHistoryFilters } = defaultFilters;
+        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
         expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
         expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(result).toEqual({
@@ -275,6 +276,7 @@ describe("searchPapers", () => {
             sort: "impact",
             page: "2",
             limit: "10",
+            includeCount: "true",
         };
 
         const results = await searchPapers(null, searchFilters);
@@ -294,7 +296,8 @@ describe("searchPapers", () => {
             sort: "impact",
             page: 2,
             limit: 10,
-            offset: 10
+            offset: 10,
+            includeCount: true,
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
         expect(results).toEqual({
@@ -331,8 +334,10 @@ describe("searchPapers", () => {
             isRetracted: false,
             page: 1,
             limit: 25,
-            offset: 0
+            offset: 0,
+            includeCount: true,
         });
+        
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
         expect(results).toEqual({
             totalResults: 0,
@@ -439,7 +444,8 @@ describe("searchPapers", () => {
             isRetracted: false,
             page: 1,
             limit: 25,
-            offset: 0
+            offset: 0,
+            includeCount: true
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
     });
