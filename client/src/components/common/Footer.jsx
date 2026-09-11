@@ -9,7 +9,7 @@ function Footer() {
 	const isExplorePage = location.pathname === "/explore";
 
 	return (
-		(isHomePage || isExplorePage) && (
+		(isHomePage) && (
 			<footer id="footer">
 				<AppLabel 
 					iconSize={18} 
