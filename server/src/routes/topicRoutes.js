@@ -1,7 +1,5 @@
 import express from "express";
-import { getTopicByIdController, 
-		 getTopicPapersController,
-		 getAllTopicsController } from "./../controllers/topicController.js";
+import { getAllTopicsController } from "./../controllers/topicController.js";
 
 const router = express.Router();
 

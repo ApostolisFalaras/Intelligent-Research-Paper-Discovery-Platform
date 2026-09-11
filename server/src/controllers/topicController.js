@@ -1,5 +1,4 @@
-import { getTopicById, getTopicPapers, getAllTopics } from "./../services/topicService.js";
-import { AppError } from "./../utils/AppError.js";
+import { getAllTopics } from "./../services/topicService.js";
 
 
 // The app fetches all topics for the "Topic" dropdown search filter
