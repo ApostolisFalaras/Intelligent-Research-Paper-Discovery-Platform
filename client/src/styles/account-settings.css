@@ -1,0 +1,589 @@
+/* ---------- Account Settings Page ---------- */
+
+#account-settings-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 48px 80px;
+    margin-top: 66.4px;
+}
+
+#page-header {
+    padding-top: 20px;
+    margin-bottom: 28px;
+}
+
+#back-to-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #9B9B8A;
+    text-decoration: none;
+    margin-bottom: 12px;
+    transition: color 0.15s;
+}
+
+#back-to-profile:hover { color: #2D6A4F; }
+
+#account-settings-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+#page-sections {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+}
+
+/* ---------- Account Settings Page > Sidebar ---------- */
+
+#sidebar-options {
+    width: 200px; 
+    flex-shrink: 0; 
+    position: sticky;
+    top: 80px;
+}
+
+#sidebar-options > nav {
+    display: flex;
+    flex-direction: column; 
+    gap: 2px;
+}
+
+.settings-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px; 
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: #6B6B5A;
+    background-color: transparent;
+    border: none;
+    cursor: pointer; 
+    text-align: left;
+    transition: background-color 0.12s, color 0.12s;
+    width: 100%;
+}
+
+.settings-option-btn.danger.active { color: #C0392B; background-color: #FEF2F2; }
+
+.settings-option-btn.danger { color: #E07060; }
+
+.settings-option-btn.active { color: #1B4332; background-color: #EDF5F0; font-weight: 600; }
+
+#section-tabs {
+    flex: 1; 
+    min-width: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px;
+}
+
+/* ---------- Account Settings Page > Settings Section ---------- */
+
+.settings-section {
+    background: #FFFFFF;
+    border: 1px solid rgba(26,26,20,0.09);
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.settings-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(26,26,20,0.07);
+    background: transparent;
+}
+
+.settings-header.danger { border-bottom: 1px solid rgba(192,57,43,0.12); background-color: #FEF9F9; }
+
+.setting-section.danger { border: 1px solid rgba(192,57,43,0.2); }
+
+.section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600; 
+    color: #212529;
+    margin: 0 0 3px;
+}
+
+.section-title.danger { color: #C0392B; }
+
+.section-description {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; 
+    color: #9B9B8A;
+    margin: 0; 
+    line-height: 1.5;
+}
+
+.section-description.danger { color: #E07060; }
+
+/* ---------- Account Settings Page > Sections > Profile Tab ---------- */
+
+.section {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px 0;
+    gap: 18px;
+}
+
+#avatar-placeholder {
+    display: flex; 
+    align-items: center; 
+    gap: 16px; 
+    padding-bottom: 18px;
+    padding-left: 8px; 
+    border-bottom: 1px solid rgba(26,26,20,0.07);
+}
+
+#avatar-initials {
+    width: 64px; 
+    height: 64px; 
+    border-radius: 50%;
+    background-color: #F0EDE6; 
+    border: 1.5px solid rgba(26,26,20,0.15); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0;
+}
+
+#avatar-initials > img {
+    width: 100%; 
+    height: 100%;
+    object-fit: cover;
+}
+
+#avatar-initials > span {
+    font-family: 'Inter', sans-serif; 
+    font-size: 22px; 
+    font-weight: 700; 
+    color: #212529;
+}
+
+#avatar-upload {
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px;
+}
+
+#avatar-upload-btn {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    font-weight: 500; 
+    color: #2D6A4F; 
+    background: none; 
+    border: 1px solid #2D6A4F40; 
+    border-radius: 4px; 
+    padding: 6px 14px; 
+    cursor: pointer;
+}
+
+#avatar-rmv {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    color: #C0392B; 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 0; 
+    text-align: left;
+}
+
+#avatar-upload > p {
+    font-family: 'Inter', sans-serif; 
+    font-size: 11px; 
+    color: #9B9B8A; 
+    margin: 0;
+}
+
+#name-fields {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 14px;
+}
+
+#bio-textarea {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #212529; 
+    background-color: #FFFFFF; 
+    border: 1.5px solid rgba(26,26,20,0.16); 
+    border-radius: 5px; 
+    padding: 10px 12px; 
+    outline: none; 
+    resize: vertical; 
+    transition: border-color 0.15s; 
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+#save-profile {
+    display: flex; 
+    justify-content: flex-end; 
+    padding-top: 4px;
+}
+
+#account-origin {
+    background-color: #F8F9FA; 
+    border: 1px solid rgba(26,26,20,0.08); 
+    border-radius: 5px; 
+    padding: 12px 14px;
+}
+
+#account-origin > p {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #6B6B5A;
+    margin: 0; 
+    line-height: 1.6;
+}
+
+strong { color: #212529; }
+
+#save-account, #save-password {
+    display: flex; 
+    justify-content: flex-end;
+}
+
+
+/* ---------- Account Settings Page > Password verification elements ---------- */
+
+.password-container {
+    display: flex;
+    align-items: center;
+    background: #FFFFFF;
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px;
+    transition: border-color 0.15s;
+    overflow: hidden;
+}
+
+.password-container.has-error {
+    border: 1.5px solid #C0392B;
+}
+
+.password-container.focused {
+    border: 1.5px solid #95D5B2;
+}
+
+.password-input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #212529;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 10px 12px;
+}
+
+.password-eye {
+    background: none;
+    border: none;
+    padding: 0 12px;
+    cursor: pointer;
+    color: #9B9B8A;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.forgot-password {
+    display: flex; 
+    justify-content: flex-end;
+}
+
+.forgot-password > button {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #2D6A4F;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+#passwords-match {
+    display: flex; 
+    align-items: center; 
+    gap: 4px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px;
+    color: #2D6A4F;
+}
+
+#passwords-mismatch {
+    display: flex; 
+    align-items: center; 
+    gap: 4px;
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px;
+    color: #C0392B;
+}
+
+.danger-section {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    gap: 24px;
+}
+
+#delete-title {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #212529; 
+    margin: 0 0 3px;
+}
+
+#delete-msg {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #9B9B8A; 
+    margin: 0;
+    line-height: 1.5;
+}
+
+#delete-btn {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #C0392B; 
+    background-color: #FFFFFF; 
+    border: 1.5px solid rgba(192,57,43,0.35); 
+    border-radius: 5px; 
+    padding: 9px 18px; 
+    cursor: pointer; 
+    white-space: nowrap; 
+    flex-shrink: 0;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+#delete-btn:hover {
+    background-color: #FEF2F2;
+    border-color: #C0392B;
+}
+
+#delete-btn > span {
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+}
+
+/* ---------- Account Settings Page > Password strength bar styles ---------- */
+
+#strength-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+#strength-bar {
+    flex: 1; 
+    height: 3px; 
+    background: rgba(26,26,20,0.1);
+    border-radius: 2px; 
+    overflow: hidden;
+}
+
+#strength-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.2s, background-color 0.2s;                
+}
+
+#strength-bar-fill.weak { width: 20%; background-color: #C0392B; }
+
+#strength-bar-fill.fair { width: 40%; background-color: #E67E22; }
+
+#strength-bar-fill.good { width: 60%; background-color: #74C69D; }
+
+#strength-bar-fill.strong { width: 80%; background-color: #2D6A4F; }
+
+#strength-bar-fill.very-strong { width: 100%; background-color: #1B4332;}
+
+#strength-estimation {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; 
+    min-width: 40px;
+}
+
+#strength-estimation.weak { color: #C0392B; }
+
+#strength-estimation.fair { color: #E67E22; }
+
+#strength-estimation.good { color: #74C69D; }
+
+#strength-estimation.strong { color: #2D6A4F; }
+
+#strength-estimation.very-strong { color: #1B4332; }
+
+/* ---------- Account Settings Page > Save Button ---------- */
+
+.save-btn {
+    display: flex; 
+    align-items: center; 
+    gap: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px; 
+    font-weight: 600;
+    color: #FFFFFF; 
+    background-color: #1B4332;
+    border: none;
+    border-radius: 5px; 
+    padding: 9px 20px;
+    cursor: pointer; 
+    transition: background-color 0.2s;
+}
+
+.save-btn:hover { background-color: #2D6A4F; }
+
+.save-btn.saved { background-color: #40916C; }
+
+.save-btn.loading { cursor: not-allowed; }
+
+
+/* ---------- Account Settings Page > Delete Modal ---------- */
+
+#delete-modal {
+    position: fixed; 
+    inset: 0; 
+    z-index: 50; 
+    background-color: rgba(26,26,20,0.5); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+#delete-modal > div {
+    background-color: #FFFFFF; 
+    border-radius: 8px; 
+    padding: 28px; 
+    width: 420px; 
+    box-shadow: 0 24px 64px rgba(26,26,20,0.2);
+}
+
+#delete-modal-header {
+    display: flex;
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 14px;
+}
+
+#delete-modal-header > div {
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%;
+    background-color: #FEF2F2; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    flex-shrink: 0;
+}
+
+#delete-modal-header > h2 {
+    font-family: 'Playfair Display', Georgia, serif; 
+    font-size: 18px; 
+    font-weight: 600; 
+    color: #212529; 
+    margin: 0;
+}
+
+#delete-modal-paragraph {
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #6B6B5A; 
+    line-height: 1.65; 
+    margin-bottom: 20px;
+}
+
+#delete-modal-totals {
+    background-color: #FEF2F2; 
+    border: 1px solid rgba(192,57,43,0.18);
+    border-radius: 5px; 
+    padding: 12px 14px; 
+    margin-bottom: 20px;
+}
+
+#delete-modal-totals > p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; 
+    color: #C0392B; 
+    margin: 0; 
+    line-height: 1.5;
+}
+
+#delete-modal-confirm-text {
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
+    margin-bottom: 22px;
+}
+
+#delete-modal-confirm-text > label {
+    font-family: 'Inter', sans-serif; 
+    font-size: 12px; 
+    color: #6B6B5A;
+}
+
+#confirm-input {
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 13px; 
+    color: #212529; 
+    background-color: #FFFFFF; 
+    border: 1.5px solid rgba(26,26,20,0.16);
+    border-radius: 5px; 
+    padding: 9px 12px; 
+    outline: none; 
+    transition: border-color 0.15s;
+}
+
+#confirm-input.matches:focus { border: 1.5px solid #C0392B; }
+
+#confirm-input:focus { border: 1.5px solid #95D5B2; }
+
+#delete-modal-buttons {
+    display: flex; 
+    gap: 10px;
+}
+
+#delete-modal-buttons > .close {
+    flex: 1;
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    color: #6B6B5A; 
+    background-color: #F8F9FA; 
+    border: 1px solid rgba(26,26,20,0.14);
+    border-radius: 5px; 
+    padding: 10px; 
+    cursor: pointer;
+}
+
+#delete-modal-buttons > .delete {
+    flex: 1; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #FFFFFF; 
+    background: #D9A8A3; 
+    border: none; 
+    border-radius: 5px;
+    padding: 10px; 
+    cursor: not-allowed; 
+    transition: background-color 0.15s;
+}
+
+#delete-modal-buttons > .delete.matches {
+    background-color: #C0392B;
+    cursor: pointer;
+}
