@@ -9,7 +9,7 @@ vi.mock("../../../src/config/db.js", () => ({
 
 import pool from "../../../src/config/db.js";
 import { fetchUserByUsername, fetchUserByEmail, createUser, 
-        fetchUserById, updateUserById, deleteUserById } from "../../../src/repositories/userRepository.js";
+        fetchUserById, updateUserById, deleteUserById, upsertUserLoginTime } from "../../../src/repositories/userRepository.js";
 
 
 const mockResolvedUser = {
@@ -396,4 +396,41 @@ describe("deleteUserById", () => {
         expect(result).toBe(0);
     });
     
+});
+
+
+describe("upsertUserLoginTime", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Updates the user's last login time", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        const result = await upsertUserLoginTime(42);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("UPDATE users");
+        expect(query).toContain("SET last_login_at = CURRENT_TIMESTAMP");
+        expect(query).toContain("WHERE id = $1");
+
+        expect(params).toEqual([42]);
+        expect(pool.query).toHaveBeenCalledTimes(1);
+
+        expect(result).toBe(1);
+    });
+
+    it("Returns zero when no user login time was updated", async () => {
+        pool.query.mockResolvedValue({ rowCount: 0 });
+
+        const result = await upsertUserLoginTime(999);
+
+        expect(pool.query).toHaveBeenCalledWith(
+            expect.stringContaining("SET last_login_at = CURRENT_TIMESTAMP"),
+            [999]
+        );
+
+        expect(result).toBe(0);
+    });
 });
