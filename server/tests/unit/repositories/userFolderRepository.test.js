@@ -14,7 +14,11 @@ import { fetchProjectFoldersById,
 		 fetchPapersFromFolderById,
 		 fetchPaperInFolder,
 		 insertPapertoFolder,
-		 deletePaperFromFolder } from "../../../src/repositories/userFolderRepository.js";
+		 deletePaperFromFolder,
+		 fetchPaperIsSaved,
+    	 fetchPaperSavedFolders,
+		 incrementFolderPaperCount,
+    	 decrementFolderPaperCount } from "../../../src/repositories/userFolderRepository.js";
 
 
 const mockResolvedProjectFolders = [
@@ -653,5 +657,137 @@ describe("deletePaperFromFolder", () => {
 
 		expectDeletePaperFromFolderQuery(query);
 		expect(params).toEqual([1, 2, 204129]);
+	});
+});
+
+
+describe("fetchPaperIsSaved", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns true when the paper is saved in one of the user's folders", async () => {
+        pool.query.mockResolvedValue({ rows: [{ is_saved: true }] });
+
+        const result = await fetchPaperIsSaved(42, 386866);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT EXISTS");
+        expect(query).toContain("user_folder_papers");
+        expect(query).toContain("user_folders");
+        expect(params).toEqual([42, 386866]);
+
+        expect(result).toBe(true);
+    });
+
+    it("Returns false when the paper is not saved in any of the user's folders", async () => {
+        pool.query.mockResolvedValue({ rows: [{ is_saved: false }] });
+
+        const result = await fetchPaperIsSaved(42, 386866);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(params).toEqual([42, 386866]);
+        expect(result).toBe(false);
+    });
+});
+
+describe("fetchPaperSavedFolders", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns the user's folders containing the paper", async () => {
+        const savedFolders = [
+            {
+                id: 1,
+                name: "Generative AI",
+                summary: "Research on LLMs and RAG pipelines",
+                color: "blue",
+                paper_count: 12
+            },
+            {
+                id: 4,
+                name: "Reading List",
+                summary: null,
+                color: "gray",
+                paper_count: 5
+            }
+        ];
+
+        pool.query.mockResolvedValue({ rows: savedFolders });
+
+        const result = await fetchPaperSavedFolders(42, 386866);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT");
+        expect(query).toContain("user_folders");
+        expect(query).toContain("user_folder_papers");
+        expect(params).toEqual([42, 386866]);
+
+        expect(result).toEqual(savedFolders);
+    });
+
+    it("Returns an empty array when the paper is not saved in any folder", async () => {
+        pool.query.mockResolvedValue({ rows: [] });
+
+        const result = await fetchPaperSavedFolders(42, 386866);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(params).toEqual([42, 386866]);
+        expect(result).toEqual([]);
+    });
+});
+
+
+describe("incrementFolderPaperCount", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	it("Increments the paper count of the user's folder", async () => {
+		pool.query.mockResolvedValue({ rowCount: 1 });
+
+		const result = await incrementFolderPaperCount(1, 2);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expect(query).toContain("UPDATE user_folders");
+		expect(query).toContain(
+			"SET paper_count = paper_count + 1"
+		);
+		expect(query).toContain("WHERE user_id = $1");
+		expect(query).toContain("AND id = $2");
+
+		expect(params).toEqual([1, 2]);
+		expect(result).toBe(1);
+	});
+});
+
+
+describe("decrementFolderPaperCount", () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+	});
+
+	it("Decrements the paper count of the user's folder", async () => {
+		pool.query.mockResolvedValue({ rowCount: 1 });
+
+		const result = await decrementFolderPaperCount(1, 2);
+
+		const [query, params] = pool.query.mock.calls[0];
+
+		expect(query).toContain("UPDATE user_folders");
+		expect(query).toContain(
+			"SET paper_count = paper_count - 1"
+		);
+		expect(query).toContain("WHERE user_id = $1");
+		expect(query).toContain("AND id = $2");
+
+		expect(params).toEqual([1, 2]);
+		expect(result).toBe(1);
 	});
 });
