@@ -22,40 +22,45 @@ describe("fetchCandidatePapersFromSimilarUsers", () => {
 		vi.resetAllMocks();
 	});
 
-	it("Fetches unseen papers from similar users using the requested limit", async () => {
-		// Mocking 1/5000 retrieved candidate papers
+	it("Fetches unseen papers from similar users with folder-save counts", async () => {
 		const rows = [
-			{ user_id: 43, paper_id: 101, view_count: 4, is_saved: true,
-			  interest_score: 9, similarity_score: 0.85 }
+			{
+				user_id: 43,
+				paper_id: 101,
+				view_count: 4,
+				is_saved: true,
+				similarity_score: 0.85,
+				saved_folder_count: "2"
+			}
 		];
 
 		pool.query.mockResolvedValue({ rows });
 
-		const result = await fetchCandidatePapersFromSimilarUsers(42, 5000);
+		const result = await fetchCandidatePapersFromSimilarUsers(
+			42,
+			5000
+		);
 
 		const [query, params] = pool.query.mock.calls[0];
 
-		expect(query).toContain("SELECT");
-		expect(query).toContain("upi.user_id,");
-		expect(query).toContain("upi.paper_id,");
-		expect(query).toContain("upi.view_count,");
-		expect(query).toContain("upi.is_saved,");
-		expect(query).toContain("upi.interest_score,");
+		expect(query).toContain("upi.user_id");
+		expect(query).toContain("upi.paper_id");
+		expect(query).toContain("upi.view_count");
+		expect(query).toContain("upi.is_saved");
 		expect(query).toContain("usc.similarity_score");
+		expect(query).toContain("COALESCE(folder_data.saved_folder_count, 0) AS saved_folder_count");
 		expect(query).toContain("FROM user_similarity_cache usc");
 		expect(query).toContain("JOIN user_paper_interactions upi");
-		expect(query).toContain("ON upi.user_id = usc.similar_user_id");
-		expect(query).toContain("WHERE usc.user_id = $1");
-		expect(query).toContain("AND upi.paper_id NOT IN (");
-		expect(query).toContain("SELECT paper_id");
-		expect(query).toContain("FROM user_paper_interactions");
-		expect(query).toContain(")");
-		expect(query).toContain("WHERE user_id = $1");
-		expect(query).toContain("ORDER BY usc.similarity_score DESC, upi.interest_score DESC");
-		expect(query).toContain("LIMIT $2;");
+		expect(query).toContain("LEFT JOIN LATERAL");
+		expect(query).toContain("FROM user_folder_papers ufp");
+		expect(query).toContain("JOIN user_folders uf");
+		expect(query).toContain("uf.user_id = upi.user_id");
+		expect(query).toContain("ufp.paper_id = upi.paper_id");
+		expect(query).toContain("upi.paper_id NOT IN");
+		expect(query).toContain("ORDER BY usc.similarity_score DESC, upi.last_interaction_at DESC");
+		expect(query).toContain("LIMIT $2");
 
 		expect(params).toEqual([42, 5000]);
-
 		expect(result).toEqual(rows);
 	});
 });
@@ -66,33 +71,42 @@ describe("fetchCandidatePapersFromSavedPaper", () => {
 		vi.resetAllMocks();
 	});
 
-	it("fetches unseen papers similar to the user's saved papers", async () => {
+	it("Fetches unseen papers similar to saved papers using folder-count-weighted similarity", async () => {
 		const rows = [
-			{ paper_id: 201 },
-			{ paper_id: 202 }
+			{
+				paper_id: 201,
+				weighted_similarity_score: 1.17
+			},
+			{
+				paper_id: 202,
+				weighted_similarity_score: 0.94
+			}
 		];
 
 		pool.query.mockResolvedValue({ rows });
 
-		const result = await fetchCandidatePapersFromSavedPaper(42, 1000);
+		const result = await fetchCandidatePapersFromSavedPaper(
+			42,
+			1000
+		);
 
 		const [query, params] = pool.query.mock.calls[0];
 
-		expect(query).toContain("SELECT psc.similar_paper_id AS paper_id");
-		expect(query).toContain("FROM user_paper_interactions upi");
+		expect(query).toContain("psc.similar_paper_id AS paper_id");
+		expect(query).toContain("MAX(");
+		expect(query).toContain("psc.similarity_score");
+		expect(query).toContain("LN(1 + COALESCE(folder_data.saved_folder_count, 0))");
+		expect(query).toContain("AS weighted_similarity_score");
 		expect(query).toContain("JOIN paper_similarity_cache psc");
-		expect(query).toContain("ON psc.paper_id = upi.paper_id");
 		expect(query).toContain("JOIN paper_recommendation_features prf");
-		expect(query).toContain("ON prf.paper_id = psc.similar_paper_id");
-
-		expect(query).toContain("WHERE upi.user_id = $1");
-		expect(query).toContain("AND upi.is_saved = true");
-		expect(query).toContain("AND psc.similar_paper_id NOT IN (");
-		expect(query).toContain("SELECT paper_id");
-		expect(query).toContain("FROM user_paper_interactions");
-		expect(query).toContain(")");
-		expect(query).toContain("ORDER BY psc.similarity_score DESC");
-		expect(query).toContain("LIMIT $2;");
+		expect(query).toContain("LEFT JOIN LATERAL");
+		expect(query).toContain("FROM user_folder_papers ufp");
+		expect(query).toContain("JOIN user_folders uf");
+		expect(query).toContain("upi.is_saved = true");
+		expect(query).toContain("psc.similar_paper_id NOT IN");
+		expect(query).toContain("GROUP BY psc.similar_paper_id");
+		expect(query).toContain("ORDER BY weighted_similarity_score DESC");
+		expect(query).toContain("LIMIT $2");
 
 		expect(params).toEqual([42, 1000]);
 		expect(result).toEqual(rows);
