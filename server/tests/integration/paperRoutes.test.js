@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 
-// Mock the paper repository function that queries the PostgreSQL DB for a paper with a particular id
-vi.mock("./../../src/repositories/paperRepository.js", () => ({ 
+// Mock paper repository
+vi.mock("./../../src/repositories/paperRepository.js", () => ({
     fetchPaperById: vi.fn(),
     fetchPaperAuthorsById: vi.fn(),
     fetchPaperAuthorInstitutionsById: vi.fn(),
@@ -15,47 +15,57 @@ vi.mock("./../../src/repositories/paperRepository.js", () => ({
     fetchPaperCountsByYearById: vi.fn(),
 }));
 
-vi.mock("./../../src/repositories/recommendationEventRepository.js", () => ({
-    upsertPaperView: vi.fn(),
-    incrementPaperViewCount: vi.fn(),
-    incrementRecommendationClickCount: vi.fn()
+// Mock folder repository because paper retrieval now determines
+// whether the current authenticated user has saved the paper.
+vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
+    fetchPaperIsSaved: vi.fn()
 }));
 
-vi.mock("../../src/repositories/recommendationRefreshRepository.js", () => ({
-    markUserRecommendationsStale: vi.fn()
-}));
+// Middleware is mocked so tests can switch between
+// authenticated and unauthenticated requests.
+let mockAuthenticatedUser = { id: 1 };
 
-// Middleware has to be mocked to authenticate the only existing user in the current tests
-let mockAuthenticatedUser = {id: 1};
+vi.mock(
+    "./../../src/middlewares/authMiddleware.js",
+    async (importOriginal) => {
+        const actual = await importOriginal();
 
-vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
-    const actual = await importOriginal();
+        return {
+            ...actual,
 
-    return {
-        ...actual,
-        optionalAuthMiddleware: (req, res, next) => {
-            req.user = mockAuthenticatedUser;
-            next();
-        }
+            optionalAuthMiddleware: (req, res, next) => {
+                req.user = mockAuthenticatedUser;
+
+                // The current paper controller/service uses
+                // the session user id when checking isSaved.
+                req.session.userId =
+                    mockAuthenticatedUser?.id ?? null;
+
+                next();
+            }
+        };
     }
-});
+);
 
-// Import after to replace the real function with the mock function
-import { 
+// Imports must come after vi.mock()
+import {
     fetchPaperById,
-    fetchPaperAuthorAffiliationsById, 
-    fetchPaperAuthorInstitutionsById, 
-    fetchPaperAuthorsById,  
-    fetchPaperCountsByYearById, 
-    fetchPaperKeywordsById, 
-    fetchPaperLocationsById, 
-    fetchPaperReferencesById, 
-    fetchPaperRelatedById, 
-    fetchPaperTopicsById } from "../../src/repositories/paperRepository.js";
+    fetchPaperAuthorAffiliationsById,
+    fetchPaperAuthorInstitutionsById,
+    fetchPaperAuthorsById,
+    fetchPaperCountsByYearById,
+    fetchPaperKeywordsById,
+    fetchPaperLocationsById,
+    fetchPaperReferencesById,
+    fetchPaperRelatedById,
+    fetchPaperTopicsById
+} from "../../src/repositories/paperRepository.js";
+
+import {
+    fetchPaperIsSaved
+} from "../../src/repositories/userFolderRepository.js";
+
 import app from "./../../src/app.js";
-import { incrementPaperViewCount, incrementRecommendationClickCount, upsertPaperView } from "../../src/repositories/recommendationEventRepository.js";
-import { optionalAuthMiddleware } from "../../src/middlewares/authMiddleware.js";
-import { markUserRecommendationsStale } from "../../src/repositories/recommendationRefreshRepository.js";
 
 
 const mockResolvedPaper = {
@@ -102,14 +112,18 @@ const mockResolvedPaper = {
     has_fulltext: false,
     has_content_pdf: false,
     has_content_grobid_xml: false,
-    indexed_in: [ "crossref", "datacite", "doaj", "pubmed" ],
+    indexed_in: [
+        "crossref",
+        "datacite",
+        "doaj",
+        "pubmed"
+    ],
     is_retracted: false,
     is_paratext: false,
     openalex_created_at: new Date("2025-10-09T21:00:00.000Z"),
     openalex_updated_at: new Date("2026-04-26T05:31:28.666Z")
 };
 
-// Mocking 2/9 authors for the above paper for simplicity
 const mockResolvedPaperAuthors = [
     {
         id: "1961221",
@@ -117,6 +131,7 @@ const mockResolvedPaperAuthors = [
         author_orcid: "https://orcid.org/0000-0003-1613-5981",
         paper_id: "386866",
         author_id: null,
+        author_exists: true,
         author_display_name: "Heather Piwowar",
         raw_author_name: "Heather Piwowar",
         author_order: 1,
@@ -129,6 +144,7 @@ const mockResolvedPaperAuthors = [
         author_orcid: "https://orcid.org/0000-0001-6187-6610",
         paper_id: "386866",
         author_id: null,
+        author_exists: false,
         author_display_name: "Jason Priem",
         raw_author_name: "Jason Priem",
         author_order: 2,
@@ -137,7 +153,6 @@ const mockResolvedPaperAuthors = [
     },
 ];
 
-// Mocking institutions associated only with the 1st of 9 authors for simplicity
 const mockResolvedPaperInstitutions = [
     {
         id: "2195153",
@@ -147,50 +162,54 @@ const mockResolvedPaperInstitutions = [
         institution_display_name: "OpenAlex",
         country_code: "CA",
         institution_type: "nonprofit",
-        lineage: [ "I4200000001" ]
+        lineage: ["I4200000001"]
     },
     {
         id: "2195154",
         paper_author_id: "1961221",
         institution_openalex_id: "I4210166736",
         institution_ror: "https://ror.org/05ppvf150",
-        institution_display_name: "Impact Technology Development (United States)",
+        institution_display_name:
+            "Impact Technology Development (United States)",
         country_code: "US",
         institution_type: "company",
-        lineage: [ "I4210166736" ]
+        lineage: ["I4210166736"]
     }
 ];
 
-// Mocking institutions associated only with the 1st of 9 authors for simplicity
 const mockResolvedPaperAffiliations = [
     {
         id: "2375862",
         paper_author_id: "1961221",
-        raw_affiliation_string: "Impactstory, Sanford, NC, USA",
-        institution_ids: [ "I4210166736", "I4200000001" ]
+        raw_affiliation_string:
+            "Impactstory, Sanford, NC, USA",
+        institution_ids: [
+            "I4210166736",
+            "I4200000001"
+        ]
     },
 ];
 
-// Mocking 1/3 paper topics for simplicity 
 const mockResolvedTopics = [
     {
         id: "1108100",
         topic_openalex_id: "T10102",
         paper_id: "386866",
         topic_id: "8572",
-        topic_display_name: "scientometrics and bibliometrics research",
+        topic_display_name:
+            "scientometrics and bibliometrics research",
         score: 0.9969000220298767,
         domain_openalex_id: "2",
         domain_display_name: "Social Sciences",
         field_openalex_id: "18",
         field_display_name: "Decision Sciences",
         subfield_openalex_id: "1804",
-        subfield_display_name: "Statistics, Probability and Uncertainty",
+        subfield_display_name:
+            "Statistics, Probability and Uncertainty",
         is_primary_topic: true
     }
 ];
 
-// Mocking 4/16 keywords associated with the current paper for simplicity
 const mockResolvedKeywords = [
     {
         id: "3974382",
@@ -218,27 +237,33 @@ const mockResolvedKeywords = [
     }
 ];
 
-// Mocking 1/9 of locations
 const mockResolvedLocations = [
     {
         id: "850892",
         location_openalex_id: "doi:10.7717/peerj.4375",
         is_oa: true,
-        landing_page_url: "https://doi.org/10.7717/peerj.4375",
+        landing_page_url:
+            "https://doi.org/10.7717/peerj.4375",
         pdf_url: null,
+
         source_openalex_id: "S1983995261",
         source_display_name: "PeerJ",
         source_issn_l: "2167-8359",
-        source_issn: [ "2167-8359" ],
+        source_issn: ["2167-8359"],
         source_is_oa: true,
         source_is_in_doaj: true,
         source_is_core: true,
         source_host_organization: "P4310320104",
         source_host_organization_name: "PeerJ, Inc.",
-        source_host_organization_lineage: [ "P4310320104" ],
+        source_host_organization_lineage: [
+            "P4310320104"
+        ],
         source_type: "journal",
-        license_id: "https://openalex.org/licenses/cc-by",
+
+        license_id:
+            "https://openalex.org/licenses/cc-by",
         license: "cc-by",
+
         version: "publishedVersion",
         is_accepted: true,
         is_published: true,
@@ -249,7 +274,6 @@ const mockResolvedLocations = [
     }
 ];
 
-// Mocking 3/54 related papers
 const mockResolvedReferences = [
     {
         id: "13534450",
@@ -265,7 +289,6 @@ const mockResolvedReferences = [
     }
 ];
 
-// Mocking 3/10 related papers
 const mockResolvedRelated = [
     {
         id: "3136587",
@@ -281,7 +304,6 @@ const mockResolvedRelated = [
     }
 ];
 
-// Mocking 2/10 citation counts by year
 const mockResolvedCountByYear = [
     {
         id: "3316206",
@@ -295,7 +317,6 @@ const mockResolvedCountByYear = [
     }
 ];
 
-// The route's expected data output
 const expectedOutput = {
     id: mockResolvedPaper.openalex_id,
     internalId: mockResolvedPaper.id,
@@ -303,12 +324,14 @@ const expectedOutput = {
     title: mockResolvedPaper.title,
     displayName: mockResolvedPaper.display_name,
     abstract: mockResolvedPaper.abstract,
+
     publication: {
         year: mockResolvedPaper.publication_year,
         date: "2018-02-12",
         type: mockResolvedPaper.paper_type,
         language: mockResolvedPaper.language
     },
+
     source: {
         id: mockResolvedPaper.primary_source_openalex_id,
         name: mockResolvedPaper.primary_source_display_name,
@@ -317,42 +340,61 @@ const expectedOutput = {
         issue: mockResolvedPaper.biblio_issue,
         pages: mockResolvedPaper.biblio_first_page
     },
+
     topic: {
         id: mockResolvedPaper.primary_topic_openalex_id,
         name: mockResolvedPaper.primary_topic_display_name,
         domain: mockResolvedPaper.primary_domain_display_name,
         field: mockResolvedPaper.primary_field_display_name,
-        subfield: mockResolvedPaper.primary_subfield_display_name
+        subfield:
+            mockResolvedPaper.primary_subfield_display_name
     },
+
     metrics: {
         citedByCount: mockResolvedPaper.cited_by_count,
         fwci: 490.1635,
         citationPercentile: 1,
-        top1Percent: mockResolvedPaper.citation_top_1_percent,
-        top10Percent: mockResolvedPaper.citation_top_10_percent,
-        referencedWorksCount: mockResolvedPaper.referenced_works_count
+        top1Percent:
+            mockResolvedPaper.citation_top_1_percent,
+        top10Percent:
+            mockResolvedPaper.citation_top_10_percent,
+        referencedWorksCount:
+            mockResolvedPaper.referenced_works_count
     },
+
     access: {
         isOpenAccess: mockResolvedPaper.is_open_access,
         status: mockResolvedPaper.open_access_status,
         bestURL: mockResolvedPaper.open_access_best_url,
-        anyRepoHasFullText: mockResolvedPaper.open_access_any_repo_has_fulltext,
+        anyRepoHasFullText:
+            mockResolvedPaper.open_access_any_repo_has_fulltext,
         hasFullText: mockResolvedPaper.has_fulltext,
         hasPDF: mockResolvedPaper.has_content_pdf,
-        hasGrobIdXML: mockResolvedPaper.has_content_grobid_xml
+        hasGrobIdXML:
+            mockResolvedPaper.has_content_grobid_xml
     },
+
     indexedIn: mockResolvedPaper.indexed_in,
+
     flags: {
         isRetracted: mockResolvedPaper.is_retracted,
         isParatext: mockResolvedPaper.is_paratext
     },
-    metadata: {
-        openalexCreatedAt: new Date(mockResolvedPaper.openalex_created_at).toISOString(),
-        openalexUpdatedAt: new Date(mockResolvedPaper.openalex_updated_at).toISOString(),
-    },
 
-    authors: mockResolvedPaperAuthors.map(author => ({
+    metadata: {
+        openalexCreatedAt:
+            new Date(
+                mockResolvedPaper.openalex_created_at
+            ).toISOString(),
+
+        openalexUpdatedAt:
+            new Date(
+                mockResolvedPaper.openalex_updated_at
+            ).toISOString(),
+    },
+        authors: mockResolvedPaperAuthors.map(author => ({
         id: author.author_openalex_id,
+        authorExists: author.author_exists,
         orcid: author.author_orcid,
         displayName: author.author_display_name,
         rawAuthorName: author.raw_author_name,
@@ -361,51 +403,68 @@ const expectedOutput = {
         isCorresponding: author.is_corresponding,
 
         institutions: mockResolvedPaperInstitutions
-            .filter(inst => inst.paper_author_id === author.id)
+            .filter(
+                inst =>
+                    inst.paper_author_id === author.id
+            )
             .map(inst => ({
                 id: inst.institution_openalex_id,
                 ror: inst.institution_ror,
-                displayName: inst.institution_display_name,
+                displayName:
+                    inst.institution_display_name,
                 countryCode: inst.country_code,
                 type: inst.institution_type,
                 lineage: inst.lineage ?? []
             })),
 
         affiliations: mockResolvedPaperAffiliations
-            .filter(aff => aff.paper_author_id === author.id)
+            .filter(
+                aff =>
+                    aff.paper_author_id === author.id
+            )
             .map(aff => ({
                 internalId: aff.id,
                 rawString: aff.raw_affiliation_string,
-                institutionIds: aff.institution_ids ?? []
+                institutionIds:
+                    aff.institution_ids ?? []
             }))
     })),
 
     topics: mockResolvedTopics.map(topic => ({
         id: topic.topic_openalex_id,
         displayName: topic.topic_display_name,
-        score: topic.score === null ? null : Number(topic.score),
+        score:
+            topic.score === null
+                ? null
+                : Number(topic.score),
+
         domain: {
             id: topic.domain_openalex_id,
             name: topic.domain_display_name
         },
+
         field: {
             id: topic.field_openalex_id,
             name: topic.field_display_name
         },
+
         subfield: {
             id: topic.subfield_openalex_id,
             name: topic.subfield_display_name
         },
+
         isPrimary: topic.is_primary_topic
     })),
 
     keywords: mockResolvedKeywords.map(keyword => ({
         id: keyword.keyword_openalex_id,
         displayName: keyword.keyword_display_name,
-        score: keyword.score === null ? null : Number(keyword.score)
+        score:
+            keyword.score === null
+                ? null
+                : Number(keyword.score)
     })),
-
-    locations: mockResolvedLocations.map(location => ({
+        locations: mockResolvedLocations.map(location => ({
         id: location.location_openalex_id,
         isOpenAccess: location.is_oa,
         landingPageUrl: location.landing_page_url,
@@ -419,9 +478,12 @@ const expectedOutput = {
             isOpenAccess: location.source_is_oa,
             isInDOAJ: location.source_is_in_doaj,
             isCore: location.source_is_core,
-            hostOrganization: location.source_host_organization,
-            hostOrganizationName: location.source_host_organization_name,
-            hostOrganizationLineage: location.source_host_organization_lineage ?? [],
+            hostOrganization:
+                location.source_host_organization,
+            hostOrganizationName:
+                location.source_host_organization_name,
+            hostOrganizationLineage:
+                location.source_host_organization_lineage ?? [],
             type: location.source_type
         },
 
@@ -453,46 +515,42 @@ const expectedOutput = {
     }))
 };
 
-
-
-// Helper function to verify repository method calls and parameters
 function expectFetchPaperRepositoryFunctions(internalPaperId) {
     expect(fetchPaperAuthorsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperAuthorsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperAuthorsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperAuthorInstitutionsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperAuthorAffiliationsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperTopicsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperTopicsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperTopicsById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperTopicsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperKeywordsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperKeywordsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperKeywordsById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperKeywordsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperLocationsById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperLocationsById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperLocationsById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperLocationsById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperReferencesById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperReferencesById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperReferencesById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperReferencesById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperRelatedById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperRelatedById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperRelatedById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperRelatedById).toHaveBeenCalledTimes(1);
 
-        expect(fetchPaperCountsByYearById).toHaveBeenCalledWith(internalPaperId);
-        expect(fetchPaperCountsByYearById).toHaveBeenCalledTimes(1);
+    expect(fetchPaperCountsByYearById).toHaveBeenCalledWith(internalPaperId);
+    expect(fetchPaperCountsByYearById).toHaveBeenCalledTimes(1);
 }
 
 describe("GET /api/papers/:id", () => {
-    // Reseting the mock's call history before every test
     beforeEach(() => {
         vi.resetAllMocks();
         mockAuthenticatedUser = { id: 1 };
     });
 
-    it("Returns 200 and the paper when accessed by an authenticated user", async () => {
+    function mockSuccessfulPaperFetch() {
         fetchPaperById.mockResolvedValue(mockResolvedPaper);
         fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
         fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
@@ -503,89 +561,66 @@ describe("GET /api/papers/:id", () => {
         fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
         fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
         fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
+    }
+
+    it("Returns 200 and isSaved true for an authenticated user who saved the paper", async () => {
+            mockSuccessfulPaperFetch();
+            fetchPaperIsSaved.mockResolvedValue(true);
+
+            const response = await request(app).get("/api/papers/W2741809807").expect(200);
+
+            expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
+            expect(fetchPaperById).toHaveBeenCalledTimes(1);
+            
+            expectFetchPaperRepositoryFunctions("386866");
+
+            expect(fetchPaperIsSaved).toHaveBeenCalledWith(1, 386866);
+            expect(fetchPaperIsSaved).toHaveBeenCalledTimes(1);
+
+            expect(response.body.status).toBe("success");
+            expect(response.body.data).toEqual({
+                ...expectedOutput,
+                isSaved: true
+            });
+        }
+    );
+
+    it("Returns 200 and isSaved false for an authenticated user who has not saved the paper", async () => {
+        mockSuccessfulPaperFetch();
+
+        fetchPaperIsSaved.mockResolvedValue(false);
 
         const response = await request(app).get("/api/papers/W2741809807").expect(200);
 
-        expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
-        expect(fetchPaperById).toHaveBeenCalledTimes(1);
+        expect(fetchPaperIsSaved).toHaveBeenCalledWith(1, 386866);
+        expect(fetchPaperIsSaved).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
+        expect(response.body.data).toEqual({
+            ...expectedOutput,
+            isSaved: false
+        });
     });
 
-    it("Returns 200 and the paper when accessed by an authenticated user as a recommendation", async () => {
-        fetchPaperById.mockResolvedValue(mockResolvedPaper);
-        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
-        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
-        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
-        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
-        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
-        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
-        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
-        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
-        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
+    it("Returns 200 and isSaved false for an unauthenticated user", async () => {
+        mockAuthenticatedUser = { id: null };
 
-        const response = await request(app).get("/api/papers/W2741809807")
-        .query({isRecommendation: true}).expect(200);
+        mockSuccessfulPaperFetch();
+
+        const response = await request(app).get("/api/papers/W2741809807").expect(200);
 
         expectFetchPaperRepositoryFunctions("386866");
 
-        expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
-    });
-
-    it("Returns 200 and the paper when accessed by an un-authenticated user", async () => {
-        mockAuthenticatedUser = {id: null};
-
-        fetchPaperById.mockResolvedValue(mockResolvedPaper);
-        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
-        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
-        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
-        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
-        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
-        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
-        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
-        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
-        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
-
-        const response = await request(app).get("/api/papers/W2741809807")
-        .query({isRecommendation: true}).expect(200);
-
-        expectFetchPaperRepositoryFunctions("386866");
-
-        expect(upsertPaperView).not.toHaveBeenCalled();
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+        expect(fetchPaperIsSaved).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
+        expect(response.body.data).toEqual({
+            ...expectedOutput,
+            isSaved: false
+        });
     });
-
-    it("Returns 200 and the paper when accessed even if recording the paper view event fails", async () => {
-        fetchPaperById.mockResolvedValue(mockResolvedPaper);
-        fetchPaperAuthorsById.mockResolvedValue(mockResolvedPaperAuthors);
-        fetchPaperAuthorInstitutionsById.mockResolvedValue(mockResolvedPaperInstitutions);
-        fetchPaperAuthorAffiliationsById.mockResolvedValue(mockResolvedPaperAffiliations);
-        fetchPaperTopicsById.mockResolvedValue(mockResolvedTopics);
-        fetchPaperKeywordsById.mockResolvedValue(mockResolvedKeywords);
-        fetchPaperLocationsById.mockResolvedValue(mockResolvedLocations);
-        fetchPaperReferencesById.mockResolvedValue(mockResolvedReferences);
-        fetchPaperRelatedById.mockResolvedValue(mockResolvedRelated);
-        fetchPaperCountsByYearById.mockResolvedValue(mockResolvedCountByYear);
-
-        const response = await request(app).get("/api/papers/W2741809807")
-        .query({isRecommendation: true}).expect(200);
-
-        expectFetchPaperRepositoryFunctions("386866");
-
-        expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
-    });
-
-    // ------------- USER ERRORS ---------------
 
     it("Returns 400 when paper Id doesn't follow the correct format", async () => {
-        fetchPaperById.mockResolvedValue(null);
-
         const response = await request(app).get("/api/papers/123").expect(400);
 
         expect(fetchPaperById).not.toHaveBeenCalled();
@@ -598,14 +633,11 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperReferencesById).not.toHaveBeenCalled();
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
-
-        expect(upsertPaperView).not.toHaveBeenCalled();
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+        expect(fetchPaperIsSaved).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Invalid paper Id");
     });
-
 
     it("Returns 404 when the paper doesn't exist", async () => {
         fetchPaperById.mockResolvedValue(null);
@@ -624,15 +656,11 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperReferencesById).not.toHaveBeenCalled();
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
-
-        expect(upsertPaperView).not.toHaveBeenCalled();
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+        expect(fetchPaperIsSaved).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Paper not found");
     });
-
-    // -------------- DATABASE ERRORS --------------
 
     it("Returns 500 when the server fails", async () => {
         fetchPaperById.mockRejectedValue(new Error("Unexpected failure"));
@@ -651,9 +679,7 @@ describe("GET /api/papers/:id", () => {
         expect(fetchPaperReferencesById).not.toHaveBeenCalled();
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled();
-
-        expect(upsertPaperView).not.toHaveBeenCalled();
-        expect(incrementRecommendationClickCount).not.toHaveBeenCalled();
+        expect(fetchPaperIsSaved).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("error");
         expect(response.body.message).toBe("Unexpected failure");
