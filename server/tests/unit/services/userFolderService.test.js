@@ -8,11 +8,21 @@ vi.mock("../../../src/repositories/userFolderRepository.js", () => ({
 	fetchPapersFromFolderById: vi.fn(),
     fetchPaperInFolder: vi.fn(),
     insertPapertoFolder: vi.fn(),
-    deletePaperFromFolder: vi.fn()
+    deletePaperFromFolder: vi.fn(),
+    incrementFolderPaperCount: vi.fn(),
+    decrementFolderPaperCount: vi.fn()
+}));
+
+vi.mock("../../../src/repositories/profileRepository.js", () => ({
+    fetchFolderPapersPreview: vi.fn()
 }));
 
 vi.mock("../../../src/repositories/paperRepository.js", () => ({
     fetchPaperById: vi.fn()
+}));
+
+vi.mock("../../../src/repositories/recommendationRefreshRepository.js", () => ({
+    markUserRecommendationsStale: vi.fn()
 }));
 
 import { getProjectFoldersById,
@@ -29,23 +39,51 @@ import { fetchProjectFoldersById,
 		 fetchPapersFromFolderById, 
          insertPapertoFolder,
          fetchPaperInFolder,
-         deletePaperFromFolder } from "../../../src/repositories/userFolderRepository.js";
+         deletePaperFromFolder,
+         incrementFolderPaperCount,
+         decrementFolderPaperCount } from "../../../src/repositories/userFolderRepository.js";
+
+import { fetchFolderPapersPreview } from "../../../src/repositories/profileRepository.js";
 import { fetchPaperById } from "../../../src/repositories/paperRepository.js";
+import { markUserRecommendationsStale } from "../../../src/repositories/recommendationRefreshRepository.js";
 
 const mockProjectFolders = [
     {
         id: 1,
-        user_id: 1,
+        userId: 1,
         name: "Generative AI",
         summary: "Research on LLMs and RAG pipelines",
-        is_pinned: true,
-        visibility: "public",
+        paperCount: 0,
+        isPinned: true,
         color: "blue",
+        visibility: "public",
         icon: "no-icon",
-        paper_count: 0,
-        created_at: "2026-05-23 16:20:16.759277+03",
-        updated_at: "2026-05-23 16:20:16.759277+03"
-    }
+        createdAt: "23 May 2026, 16:20",
+        updatedAt: "23 May 2026, 16:20",
+        papersPreview: [
+            {
+                id: "W3108235655",
+                internalId: "830837",
+                title: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
+                primaryTopic: "Computational Physics and Python Applications",
+                authorCount: 1,
+                authorsPreview: [
+                    { id: "A5110726461", name: "Samuel Burns" }
+                ]
+            },
+            {
+                id: "W2909369566",
+                internalId: "830874",
+                title: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
+                primaryTopic: "Computational Physics and Python Applications",
+                authorCount: 2,
+                authorsPreview: [
+                    { id: "A5053156269", name: "Sebastian Raschka" },
+                    { id: "A5056930369", name: "Vahid Mirjalili" }
+                ]
+            }
+        ]
+    },
 ];
 
 describe("getProjectFoldersById", () => {
@@ -56,28 +94,59 @@ describe("getProjectFoldersById", () => {
     // ---------- SUCCESSFUL RETRIEVAL OF PROJECT FOLDERS -----------
 
     it("Returns the project folders by user id", async () => {
-        fetchProjectFoldersById.mockResolvedValue(mockProjectFolders);
+        const repositoryFolders = [
+            {
+                id: mockProjectFolders[0].id,
+                user_id: mockProjectFolders[0].userId,
+                name: mockProjectFolders[0].name,
+                summary: mockProjectFolders[0].summary,
+                paper_count: mockProjectFolders[0].paperCount,
+                is_pinned: mockProjectFolders[0].isPinned,
+                color: mockProjectFolders[0].color,
+                visibility: mockProjectFolders[0].visibility,
+                icon: mockProjectFolders[0].icon,
+                created_at: new Date("2026-05-23T13:20:00.000Z"),
+                updated_at: new Date("2026-05-23T13:20:00.000Z")
+            }
+        ];
 
-        const expectedOutput = mockProjectFolders.map((folder) => ({
-            id: folder.id,
-            userId: folder.user_id,
-            name: folder.name,
-            summary: folder.summary,
-            paperCount: folder.paper_count,
-            isPinned: folder.is_pinned,
-            color: folder.color,
-            visibility: folder.visibility,
-            icon: folder.icon,
-            createdAt: folder.created_at,
-            updatedAt: folder.updated_at
-        }));
+        const repositoryPreview = [
+            {
+                paper_id: "830837",
+                openalex_id: "W3108235655",
+                title: "Python Machine Learning: Machine Learning and Deep Learning with Python, scikit-learn, and TensorFlow",
+                primary_topic_display_name: "Computational Physics and Python Applications",
+                author_count: "1",
+                authors_preview: [
+                    { id: "A5110726461", name: "Samuel Burns" }
+                ]
+            },
+            {
+                paper_id: "830874",
+                openalex_id: "W2909369566",
+                title: "Python machine learning : machine learning and deep learning with Python, scikit-learn, and TensorFlow",
+                primary_topic_display_name: "Computational Physics and Python Applications",
+                author_count: "2",
+                authors_preview: [
+                    { id: "A5053156269", name: "Sebastian Raschka" },
+                    { id: "A5056930369", name: "Vahid Mirjalili" }
+                ]
+            }
+        ];
+
+        fetchProjectFoldersById.mockResolvedValue(repositoryFolders);
+        fetchFolderPapersPreview.mockResolvedValue(repositoryPreview);
 
         const result = await getProjectFoldersById(1);
 
         expect(fetchProjectFoldersById).toHaveBeenCalledWith(1);
         expect(fetchProjectFoldersById).toHaveBeenCalledTimes(1);
-        expect(result).toEqual(expectedOutput);
-    });
+
+        expect(fetchFolderPapersPreview).toHaveBeenCalledWith(1, 1);
+        expect(fetchFolderPapersPreview).toHaveBeenCalledTimes(1);
+
+        expect(result).toEqual(mockProjectFolders);
+});
 
     // ---------- SUCCESSFUL RETRIEVAL OF NO PROJECT FOLDERS IF THE USER DOESN'T HAVE ANY -----------
     
@@ -118,24 +187,22 @@ describe("createProjectFolderById", () => {
 
     // ----------- SUCCESSFUL CREATION OF PROJECT FOLDER ------------
     
-    it("Creates new project folder", async () => {
-        createProjectFolder.mockResolvedValue(1);
+    it("Adds paper to project folder", async () => {
+        fetchPaperById.mockResolvedValue({ id: 204129, openalex_id: "W7129423223" });
+        fetchPaperInFolder.mockResolvedValue(null);
+        insertPapertoFolder.mockResolvedValue(1);
+        incrementFolderPaperCount.mockResolvedValue(1);
+        markUserRecommendationsStale.mockResolvedValue(undefined);
 
-        // Using the previous mock folder as the new folder to created
-        const newProjectFolder = {
-            name: mockProjectFolders[0].name,
-            summary: mockProjectFolders[0].summary,
-            visibility: mockProjectFolders[0].visibility,
-            color: mockProjectFolders[0].color,
-            icon: mockProjectFolders[0].icon,
-            isPinned: mockProjectFolders[0].is_pinned
-        };
+        const result = await addPapertoFolderById(1, 2, "W7129423223");
 
-        await createProjectFolderById(1, newProjectFolder);
+        expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
+        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(incrementFolderPaperCount).toHaveBeenCalledWith(1, 2);
+        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_added_to_folder", 2);
 
-        expect(createProjectFolder).toHaveBeenCalledWith(1, newProjectFolder);
-        expect(createProjectFolder).toHaveBeenCalledTimes(1);
-    });
+        expect(result).toBe(204129);
+});
 
     it("Creates new project folder for default visibility and isPinned values", async () => {
         createProjectFolder.mockResolvedValue(1);
@@ -231,7 +298,7 @@ describe("createProjectFolderById", () => {
             visibility: mockProjectFolders[0].visibility,
             color: mockProjectFolders[0].color,
             icon: mockProjectFolders[0].icon,
-            isPinned: mockProjectFolders[0].is_pinned
+            isPinned: mockProjectFolders[0].isPinned
         };
 
         await expect(createProjectFolderById(1, newProjectFolder))
@@ -570,6 +637,21 @@ describe("addPapertoFolderById", () => {
         expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
         expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
     });
+
+    it("Throws 500 when folder paper count could not be incremented", async () => {
+        fetchPaperById.mockResolvedValue({ id: 204129, openalex_id: "W7129423223" });
+        fetchPaperInFolder.mockResolvedValue(null);
+        insertPapertoFolder.mockResolvedValue(1);
+        incrementFolderPaperCount.mockResolvedValue(0);
+
+        await expect(addPapertoFolderById(1, 2, "W7129423223"))
+            .rejects
+            .toThrow("Paper count could not be incremented for folder");
+
+        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(incrementFolderPaperCount).toHaveBeenCalledWith(1, 2);
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
+    });
 });
 
 
@@ -622,6 +704,20 @@ describe("deletePaperFromFolderById", () => {
         .toThrow("Invalid paper id");
 
         expect(deletePaperFromFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 500 when folder paper count could not be decremented", async () => {
+        fetchPaperById.mockResolvedValue({id: 204129, openalex_id: "W7129423223" });
+        deletePaperFromFolder.mockResolvedValue(1);
+        decrementFolderPaperCount.mockResolvedValue(0);
+
+        await expect(deletePaperFromFolderById(1, 2, "W7129423223"))
+            .rejects
+            .toThrow("Paper count could not be decremented for folder");
+
+        expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
+        expect(decrementFolderPaperCount).toHaveBeenCalledWith(1, 2);
+        expect(markUserRecommendationsStale).not.toHaveBeenCalled();
     });
 
 });
