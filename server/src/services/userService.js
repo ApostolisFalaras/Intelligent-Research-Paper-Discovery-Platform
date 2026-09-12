@@ -100,7 +100,7 @@ export async function getMyProfile(id) {
         totalFolders,
         previewFolders,
         authorsFollowed,
-        researchTopics
+        researchTopics,
     ] = await Promise.all([
         fetchUserTotalViewedPapers(parsedId),
         fetchUserRecentlyViewedPapers(parsedId),
@@ -109,7 +109,7 @@ export async function getMyProfile(id) {
         fetchUserTotalFolders(parsedId),
         fetchUserFoldersPreview(parsedId),
         fetchUserFollowedAuthors(parsedId),
-        fetchUserTopResearchTopics(parsedId)
+        fetchUserTopResearchTopics(parsedId),
     ]);
 
     // Aggregate profile info DTO (Data-Transfer Object)
@@ -120,7 +120,7 @@ export async function getMyProfile(id) {
             internalId: paper.paper_id,
             title: paper.title,
             primaryTopic: paper.primary_topic_display_name,
-            authorCount: paper.author_count,
+            authorCount: Number(paper.author_count),
             authorsPreview: paper.authors_preview,
         })),
 
@@ -130,7 +130,7 @@ export async function getMyProfile(id) {
             internalId: paper.paper_id,
             title: paper.title,
             primaryTopic: paper.primary_topic_display_name,
-            authorCount: paper.author_count,
+            authorCount: Number(paper.author_count),
             authorsPreview: paper.authors_preview,
         })),
 
@@ -138,13 +138,15 @@ export async function getMyProfile(id) {
         previewFolders: previewFolders.map((folder) => ({
             id: folder.id,
             name: folder.name,
-            paperCount: folder.paper_count,
+            paperCount: Number(folder.paper_count),
             color: folder.color
         })),
 
         authorsFollowed: authorsFollowed.map((author) => ({
-            id: author.author_id,
+            id: author.openalex_id,
+            internalId: author.author_id,
             authorName: author.author_name,
+            createdAt: author.created_at
         })),
 
         researchTopics

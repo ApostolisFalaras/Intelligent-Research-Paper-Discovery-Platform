@@ -203,7 +203,11 @@ export async function fetchFolderPapersPreview(userId, folderId) {
 // Fetches a preview of the followed author names, specifically the 3 most recent follows
 export async function fetchUserFollowedAuthors(id) {
 	const sqlQuery = `
-		SELECT DISTINCT ufa.author_id, a.display_name AS author_name, ufa.created_at
+		SELECT DISTINCT 
+            ufa.author_id, 
+            a.openalex_id,
+            a.display_name AS author_name, 
+            ufa.created_at
 		FROM user_follows_authors ufa
 		JOIN authors a 
 		  ON ufa.author_id = a.id 
