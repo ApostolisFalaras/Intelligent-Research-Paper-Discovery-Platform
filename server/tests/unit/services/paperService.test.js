@@ -14,6 +14,11 @@ vi.mock("../../../src/repositories/paperRepository.js", () => ({
     fetchPaperCountsByYearById: vi.fn()
 }));
 
+vi.mock("../../../src/repositories/userFolderRepository.js", () => ({
+    fetchPaperIsSaved: vi.fn(),
+    fetchPaperSavedFolders: vi.fn()
+}));
+
 // Import after to replace the real function with the mock function
 import { 
     fetchPaperById,
@@ -26,8 +31,17 @@ import {
     fetchPaperReferencesById,
     fetchPaperRelatedById,
     fetchPaperCountsByYearById } from "../../../src/repositories/paperRepository.js";
-import { getPaperById } from "../../../src/services/paperService.js";
 
+import {
+    getPaperById,
+    paperIsSaved,
+    getPaperSavedFolders
+} from "../../../src/services/paperService.js";
+
+import {
+    fetchPaperIsSaved,
+    fetchPaperSavedFolders
+} from "../../../src/repositories/userFolderRepository.js";
 
 const mockResolvedPaper = {
     id: "386866",
@@ -88,6 +102,7 @@ const mockResolvedPaperAuthors = [
         author_orcid: "https://orcid.org/0000-0003-1613-5981",
         paper_id: "386866",
         author_id: null,
+        author_exists: true,
         author_display_name: "Heather Piwowar",
         raw_author_name: "Heather Piwowar",
         author_order: 1,
@@ -100,6 +115,7 @@ const mockResolvedPaperAuthors = [
         author_orcid: "https://orcid.org/0000-0001-6187-6610",
         paper_id: "386866",
         author_id: null,
+        author_exists: false,
         author_display_name: "Jason Priem",
         raw_author_name: "Jason Priem",
         author_order: 2,
@@ -344,6 +360,7 @@ describe("getPaperById", () => {
 
             authors: mockResolvedPaperAuthors.map(author => ({
                 id: author.author_openalex_id,
+                authorExists: author.author_exists,
                 orcid: author.author_orcid,
                 displayName: author.author_display_name,
                 rawAuthorName: author.raw_author_name,
@@ -550,5 +567,124 @@ describe("getPaperById", () => {
         expect(fetchPaperRelatedById).not.toHaveBeenCalled();
         expect(fetchPaperCountsByYearById).not.toHaveBeenCalled(); 
 
+    });
+});
+
+
+describe("paperIsSaved", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns whether a paper is saved by the user", async () => {
+        fetchPaperIsSaved.mockResolvedValue(true);
+
+        const result = await paperIsSaved(42, 386866);
+
+        expect(fetchPaperIsSaved).toHaveBeenCalledWith(42, 386866);
+        expect(fetchPaperIsSaved).toHaveBeenCalledTimes(1);
+
+        expect(result).toBe(true);
+    });
+
+
+    it("Returns false when the paper is not saved", async () => {
+        fetchPaperIsSaved.mockResolvedValue(false);
+
+        const result = await paperIsSaved(42, 386866);
+
+        expect(fetchPaperIsSaved).toHaveBeenCalledWith(42, 386866);
+
+        expect(result).toBe(false);
+    });
+});
+
+
+describe("getPaperSavedFolders", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns the folders in which the paper is saved", async () => {
+        fetchPaperById.mockResolvedValue({
+            id: "386866",
+            openalex_id: "W2741809807"
+        });
+
+        const folders = [
+            {
+                id: 2,
+                name: "Open Access",
+                summary: "Papers about open research",
+                color: "blue",
+                paper_count: 12
+            },
+            {
+                id: 7,
+                name: "Bibliometrics",
+                summary: "Scientometrics papers",
+                color: "green",
+                paper_count: 8
+            }
+        ];
+
+        fetchPaperSavedFolders.mockResolvedValue(folders);
+
+        const result = await getPaperSavedFolders(42,"W2741809807");
+        
+        expect(fetchPaperById).toHaveBeenCalledWith("W2741809807");
+        expect(fetchPaperSavedFolders).toHaveBeenCalledWith(42, "386866");
+
+        expect(result).toEqual([
+            {
+                id: 2,
+                name: "Open Access",
+                summary: "Papers about open research",
+                color: "blue",
+                paperCount: 12
+            },
+            {
+                id: 7,
+                name: "Bibliometrics",
+                summary: "Scientometrics papers",
+                color: "green",
+                paperCount: 8
+            }
+        ]);
+    });
+
+    it("Returns an empty array when the paper is not saved in any folder", async () => {
+        fetchPaperById.mockResolvedValue({
+            id: "386866",
+            openalex_id: "W2741809807"
+        });
+
+        fetchPaperSavedFolders.mockResolvedValue([]);
+
+        const result = await getPaperSavedFolders(42, "W2741809807");
+
+        expect(result).toEqual([]);
+    });
+
+    // ---------- ERROR CASES ----------
+
+    it("Throws 400 when the paper id format is invalid", async () => {
+        await expect(getPaperSavedFolders(42, "2741809807"))
+            .rejects
+            .toThrow("Invalid paper id");
+
+        expect(fetchPaperById).not.toHaveBeenCalled();
+        expect(fetchPaperSavedFolders).not.toHaveBeenCalled();
+    });
+
+    it("Throws 404 when the paper does not exist", async () => {
+        fetchPaperById.mockResolvedValue(null);
+
+        await expect(getPaperSavedFolders(42, "W123"))
+            .rejects
+            .toThrow("Paper not found");
+
+        expect(fetchPaperById).toHaveBeenCalledWith("W123");
+        expect(fetchPaperSavedFolders).not.toHaveBeenCalled();
     });
 });
