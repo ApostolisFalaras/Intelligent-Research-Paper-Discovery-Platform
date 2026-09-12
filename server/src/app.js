@@ -6,6 +6,7 @@ import userRouter from "./routes/userRoutes.js";
 import authRouter from "./routes/authRoutes.js";
 import topicRouter from "./routes/topicRoutes.js";
 import recommendationRouter from "./routes/recommendationRoutes.js";
+import exploreRouter from "./routes/exploreRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { sessionMiddleware } from "./config/session.js";
 import { authMiddleware, optionalAuthMiddleware } from "./middlewares/authMiddleware.js";
@@ -24,16 +25,21 @@ app.use("/uploads", express.static(path.resolve("uploads")));
 // Redirect every request to the appropriate router based on the URL prefix
 app.use("/api/auth", authRouter);
 
+// Public routes, but user identity may affect behavior
 app.use("/api/search", optionalAuthMiddleware, searchRouter);
 app.use("/api/papers", optionalAuthMiddleware, paperRouter);
+app.use("/api/explore", optionalAuthMiddleware, exploreRouter);
+
+// Fully public, no user-specific behavior needed
 app.use("/api/authors", authorRouter);
 app.use("/api/topics", topicRouter);
 
 // To perform user-related operations, the user needs to be authenticated
 app.use("/api/users", authMiddleware, userRouter);
 
-
 app.use("/api/recommendations", recommendationRouter);
+
+
 
 
 app.get("/", (req, res) => {
