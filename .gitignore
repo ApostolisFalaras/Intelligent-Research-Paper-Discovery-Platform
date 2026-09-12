@@ -22,6 +22,7 @@ docker-compose.yml
 server/node_modules/
 server/dist/
 server/build/
+server/uploads/
 
 # Optional: uploads or temp files
 server/uploads/
