@@ -3,26 +3,28 @@ import request from "supertest";
 
 vi.mock("./../../src/repositories/userFolderRepository.js", () => ({
     fetchProjectFoldersById: vi.fn(),
-	createProjectFolder: vi.fn(),
-	updateProjectFolder: vi.fn(),
-	deleteProjectFolder: vi.fn(),
-	fetchPapersFromFolderById: vi.fn(),
-	fetchPaperInFolder: vi.fn(),
-	insertPapertoFolder: vi.fn(),
-	deletePaperFromFolder: vi.fn()
+    createProjectFolder: vi.fn(),
+    updateProjectFolder: vi.fn(),
+    deleteProjectFolder: vi.fn(),
+    fetchPapersFromFolderById: vi.fn(),
+    fetchPaperInFolder: vi.fn(),
+    insertPapertoFolder: vi.fn(),
+    deletePaperFromFolder: vi.fn(),
+    incrementFolderPaperCount: vi.fn(),
+    decrementFolderPaperCount: vi.fn()
+}));
+
+vi.mock("./../../src/repositories/profileRepository.js", () => ({
+    fetchFolderPapersPreview: vi.fn()
+}));
+
+vi.mock("./../../src/repositories/recommendationRefreshRepository.js", () => ({
+    markUserRecommendationsStale: vi.fn()
 }));
 
 vi.mock("./../../src/repositories/paperRepository.js", () => ({
-	fetchPaperById: vi.fn()
+    fetchPaperById: vi.fn()
 }));
-
-vi.mock("./../../src/repositories/recommendationEventRepository.js", () => ({
-	upsertPaperSave: vi.fn(),
-	upsertPaperUnsave: vi.fn(),
-	incrementPaperSaveCount: vi.fn(),
-	decrementPaperSaveCount: vi.fn()
-}));
-
 
 // Middleware has to be mocked to authenticate the only existing user in the current tests
 let mockAuthenticatedUser = {id: 1};
@@ -39,19 +41,30 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
     }
 });
 
-import { fetchProjectFoldersById,
-	     createProjectFolder,
-		 updateProjectFolder,
-		 deleteProjectFolder, 
-		 fetchPapersFromFolderById, 
-		 fetchPaperInFolder,
-		 insertPapertoFolder,
-		 deletePaperFromFolder } from "../../src/repositories/userFolderRepository.js"; 
-import { authMiddleware } from "../../src/middlewares/authMiddleware.js";
-import app from "../../src/app.js";
-import { fetchPaperById } from "../../src/repositories/paperRepository.js";
-import { decrementPaperSaveCount, incrementPaperSaveCount, upsertPaperSave, upsertPaperUnsave } from "../../src/repositories/recommendationEventRepository.js";
+import {
+    fetchProjectFoldersById,
+    createProjectFolder,
+    updateProjectFolder,
+    deleteProjectFolder,
+    fetchPapersFromFolderById,
+    fetchPaperInFolder,
+    insertPapertoFolder,
+    deletePaperFromFolder,
+    incrementFolderPaperCount,
+    decrementFolderPaperCount
+} from "../../src/repositories/userFolderRepository.js";
 
+import {
+    fetchFolderPapersPreview
+} from "../../src/repositories/profileRepository.js";
+
+import {
+    markUserRecommendationsStale
+} from "../../src/repositories/recommendationRefreshRepository.js";
+
+import { fetchPaperById } from "../../src/repositories/paperRepository.js";
+
+import app from "../../src/app.js";
 
 const mockResolvedProjectFolders = [
 	{
@@ -94,29 +107,71 @@ describe("GET /api/users/me/folders", () => {
 	it("Returns 200 and an array of project folders", async () => {
 		fetchProjectFoldersById.mockResolvedValue(mockResolvedProjectFolders);
 
+		fetchFolderPapersPreview.mockResolvedValueOnce([
+			{
+				paper_id: "830837",
+				openalex_id: "W3108235655",
+				title: "Python Machine Learning",
+				primary_topic_display_name: "Machine Learning",
+				author_count: "1",
+				authors_preview: [
+					{ id: "A1", name: "Author One" }
+				]
+			}
+		])
+		.mockResolvedValueOnce([]);
+
 		const response = await request(app).get("/api/users/me/folders").expect(200);
 
-		const expectedOutput = mockResolvedProjectFolders.map((folder) => ({
-			id: folder.id,
-			userId: folder.user_id,
-			name: folder.name,
-			summary: folder.summary,
-			paperCount: folder.paper_count,
-			isPinned: folder.is_pinned,
-			color: folder.color,
-			visibility: folder.visibility,
-			icon: folder.icon,
-			createdAt: folder.created_at.toISOString(),
-			updatedAt: folder.updated_at.toISOString()
-		}));
-
 		expect(fetchProjectFoldersById).toHaveBeenCalledWith(1);
-		expect(fetchProjectFoldersById).toHaveBeenCalledTimes(1);
+
+		expect(fetchFolderPapersPreview).toHaveBeenCalledTimes(2);
+		expect(fetchFolderPapersPreview).toHaveBeenNthCalledWith(1, 1, 1);
+		expect(fetchFolderPapersPreview).toHaveBeenNthCalledWith(2, 1, 2);
 
 		expect(response.body.status).toBe("success");
-		expect(response.body.data).toEqual({
-			folders: expectedOutput
-		});
+
+		expect(response.body.data.folders).toEqual([
+			{
+				id: 1,
+				userId: 1,
+				name: "Generative AI",
+				summary: "Research on LLMs and RAG pipelines",
+				paperCount: 0,
+				isPinned: true,
+				color: "blue",
+				visibility: "public",
+				icon: "no-icon",
+				createdAt: expect.any(String),
+				updatedAt: expect.any(String),
+				papersPreview: [
+					{
+						id: "W3108235655",
+						internalId: "830837",
+						title: "Python Machine Learning",
+						primaryTopic: "Machine Learning",
+						authorCount: 1,
+						authorsPreview: [
+							{ id: "A1", name: "Author One" }
+						]
+					}
+				]
+			},
+			{
+				id: 2,
+				userId: 1,
+				name: "CyberSecurity",
+				summary: "TOP SECRET",
+				paperCount: 0,
+				isPinned: false,
+				color: "red",
+				visibility: "private",
+				icon: "no-icon",
+				createdAt: expect.any(String),
+				updatedAt: expect.any(String),
+				papersPreview: []
+			}
+		]);
 	});
 
 	// ---------- SUCCESSFUL RETRIEVAL OF EMPTY ARRAY WHEN USER HAS NO PROJECT FOLDERS ---------
@@ -574,27 +629,32 @@ describe("POST /api/users/me/folders/:folderId/papers/:paperId", () => {
 	// ---------- SUCCESSFUL INSERTION OF PAPER IN PROJECT FOLDER ----------
 
 	it("Returns 201 and adds a paper to a project folder", async () => {
-		// Not mocking all paper fields for simplicity 
 		fetchPaperById.mockResolvedValue(mockResolvedPaperEntry);
-		
 		fetchPaperInFolder.mockResolvedValue(null);
 		insertPapertoFolder.mockResolvedValue(1);
 
+		incrementFolderPaperCount.mockResolvedValue(1);
+		markUserRecommendationsStale.mockResolvedValue(undefined);
+
 		const response = await request(app)
-		.post("/api/users/me/folders/2/papers/W7129423223")
-		.expect(201);
+			.post("/api/users/me/folders/2/papers/W7129423223")
+			.expect(201);
 
 		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
-		expect(fetchPaperById).toHaveBeenCalledTimes(1);
-
 		expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
-		expect(fetchPaperInFolder).toHaveBeenCalledTimes(1);
-
 		expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
-		expect(insertPapertoFolder).toHaveBeenCalledTimes(1);
+
+		expect(incrementFolderPaperCount).toHaveBeenCalledWith(1, 2);
+
+		expect(markUserRecommendationsStale).toHaveBeenCalledWith(
+			1,
+			"paper_added_to_folder",
+			2
+		);
 
 		expect(response.body.status).toBe("success");
-		expect(response.body.message).toBe("Paper added to project folder successfully");
+		expect(response.body.message)
+			.toBe("Paper added to project folder successfully");
 	});
 
 
@@ -772,20 +832,24 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		deletePaperFromFolder.mockResolvedValue(0);
 
-		const response = await request(app).delete("/api/users/me/folders/2/papers/W7129423223")
-		.expect(404);
+		const response = await request(app)
+			.delete("/api/users/me/folders/2/papers/W7129423223")
+			.expect(404);
 
 		expect(fetchPaperById).toHaveBeenCalledWith("W7129423223");
-		expect(fetchPaperById).toHaveBeenCalledTimes(1);
 
-		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
-		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
+		expect(deletePaperFromFolder).toHaveBeenCalledWith(
+			1,
+			2,
+			204129
+		);
 
-		expect(upsertPaperUnsave).not.toHaveBeenCalled();
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+		expect(decrementFolderPaperCount).not.toHaveBeenCalled();
+		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
-		expect(response.body.message).toBe("Paper wasn't stored in project folder");
+		expect(response.body.message)
+			.toBe("Paper wasn't stored in project folder");
 	});
 
 	// ---------- MISSING/INVALID FOLDER ID ----------
@@ -797,8 +861,8 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
 
-		expect(upsertPaperUnsave).not.toHaveBeenCalled();
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+		expect(decrementFolderPaperCount).not.toHaveBeenCalled();
+		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Project folder id is required");
@@ -813,8 +877,8 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(fetchPaperById).not.toHaveBeenCalled();
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
 
-		expect(upsertPaperUnsave).not.toHaveBeenCalled();
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+		expect(decrementFolderPaperCount).not.toHaveBeenCalled();
+		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Invalid paper id");
@@ -831,8 +895,8 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 
 		expect(deletePaperFromFolder).not.toHaveBeenCalled();
 
-		expect(upsertPaperUnsave).not.toHaveBeenCalled();
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+		expect(decrementFolderPaperCount).not.toHaveBeenCalled();
+		expect(markUserRecommendationsStale).not.toHaveBeenCalled();
 
 		expect(response.body.status).toBe("fail");
 		expect(response.body.message).toBe("Paper not found");
@@ -854,8 +918,8 @@ describe("DELETE /api/users/me/folders/:folderId/papers/:paperId", () => {
 		expect(deletePaperFromFolder).toHaveBeenCalledWith(1, 2, 204129);
 		expect(deletePaperFromFolder).toHaveBeenCalledTimes(1);
 
-		expect(upsertPaperUnsave).not.toHaveBeenCalled();
-		expect(decrementPaperSaveCount).not.toHaveBeenCalled();
+		expect(decrementFolderPaperCount).not.toHaveBeenCalled();
+		expect(markUserRecommendationsStale).not.toHaveBeenCalled();	
 
 		expect(response.body.status).toBe("error");
 		expect(response.body.message).toBe("Database error occurred");
