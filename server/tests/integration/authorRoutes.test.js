@@ -9,8 +9,38 @@ vi.mock("./../../src/repositories/authorRepository.js", () => ({
     fetchAuthorTopicsById: vi.fn(),
     fetchAuthorTopicSharesById: vi.fn(),
     fetchAuthorCountsByYearById: vi.fn(),
-    fetchAuthorPapers: vi.fn()
+    fetchAuthorPapers: vi.fn(),
+    fetchAuthorIsFollowed: vi.fn(),
+    followAuthor: vi.fn(),
+    unfollowAuthor: vi.fn()
 }));
+
+let mockAuthenticatedUser = null;
+
+vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
+    const actual = await importOriginal();
+
+    return {
+        ...actual,
+
+        optionalAuthMiddleware: (req, res, next) => {
+            req.user = mockAuthenticatedUser;
+            next();
+        },
+
+        authMiddleware: (req, res, next) => {
+            if (!mockAuthenticatedUser) {
+                return res.status(401).json({
+                    status: "fail",
+                    message: "Authentication required"
+                });
+            }
+
+            req.user = mockAuthenticatedUser;
+            next();
+        }
+    };
+});
 
 // Import after to replace the real function with the mock function
 import { 
@@ -20,7 +50,10 @@ import {
     fetchAuthorTopicsById,
     fetchAuthorTopicSharesById,
     fetchAuthorCountsByYearById,
-    fetchAuthorPapers } from "../../src/repositories/authorRepository.js";
+    fetchAuthorPapers, 
+    fetchAuthorIsFollowed,
+    followAuthor,
+    unfollowAuthor } from "../../src/repositories/authorRepository.js";
 import app from "../../src/app.js";
 
 const mockResolvedAuthor = {
@@ -333,6 +366,7 @@ const mockResolvedPapers2 = [
 describe("GET /api/authors/:id", () => {
     // Reseting the mock's call history before every test
     beforeEach(() => {
+        mockAuthenticatedUser = null;
         vi.resetAllMocks();
     });
 
@@ -434,7 +468,10 @@ describe("GET /api/authors/:id", () => {
                 openAccessStatus: paper.open_access_status,
                 authorCount: Number(paper.author_count),
                 authorsPreview: paper.authors_preview,
-            }))
+            })),
+
+            isFollowed: null
+
         };
 
         const response = await request(app).get("/api/authors/A5107860229").expect(200);
@@ -460,11 +497,45 @@ describe("GET /api/authors/:id", () => {
         expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 5, 0);
         expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
 
+        expect(fetchAuthorIsFollowed).not.toHaveBeenCalled();
+
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedOutput);
     });
 
+
+    it("Returns 200 and isFollowed for an authenticated user", async () => {
+        mockAuthenticatedUser = { id: 123 };
+
+        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
+        fetchAuthorAffiliationsById.mockResolvedValue([]);
+        fetchAuthorLastKnownInstitutionsById.mockResolvedValue([]);
+        fetchAuthorTopicsById.mockResolvedValue([]);
+        fetchAuthorTopicSharesById.mockResolvedValue([]);
+        fetchAuthorCountsByYearById.mockResolvedValue([]);
+        fetchAuthorPapers.mockResolvedValue([]);
+
+        fetchAuthorIsFollowed.mockResolvedValue(true);
+
+        const response = await request(app).get("/api/authors/A5107860229").expect(200);
+
+        expect(fetchAuthorIsFollowed).toHaveBeenCalledWith(123, 50703);
+
+        expect(response.body.status).toBe("success");
+        expect(response.body.data.isFollowed).toBe(true);
+    });
+
     // ------------- USER ERRORS ---------------
+    it("Rejects following an author when the user is unauthenticated", async () => {
+        mockAuthenticatedUser = null;
+
+        const response = await request(app).post("/api/authors/A5107860229/follow").expect(401);
+
+        expect(fetchAuthorById).not.toHaveBeenCalled();
+        expect(followAuthor).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+    });
 
     it("Returns 400 when author Id doesn't follow the correct format", async () => {
         fetchAuthorById.mockResolvedValue(null);
@@ -526,200 +597,124 @@ describe("GET /api/authors/:id", () => {
 });
 
 
-const defaultPaginationResults = [...mockResolvedPapers1, ...mockResolvedPapers2];
-
-describe("GET /api/authors/:id/papers", () => {
+describe("POST /api/authors/:id/follow", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        mockAuthenticatedUser = { id: 123 };
     });
 
-    // ---------- RETURNS PAPERS ASSOCIATED WITH THE AUTHOR USING DEFAULT PAGINATION ----------
-
-    it("Returns 200 and the papers associated with the author for default pagination", async () => {
+    it("Returns 200 when the user follows an author", async () => {
         fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
-        fetchAuthorPapers.mockResolvedValue(defaultPaginationResults);
+        followAuthor.mockResolvedValue(undefined);
 
-        const expectedOutput = defaultPaginationResults.map(paper => ({
-            id: paper.openalex_id,
-            internalId: paper.id,
-            title: paper.title,
-            displayName: paper.display_name,
-            abstract: paper.abstract,
-            publicationYear: paper.publication_year,
-            citedByCount: paper.cited_by_count,
-            fwci: Number(paper.fwci),
-            primarySource: paper.primary_source_display_name,
-            primaryTopic: paper.primary_topic_display_name,
-            isOpenAccess: paper.is_open_access,
-            openAccessStatus: paper.open_access_status,
-            authorCount: Number(paper.author_count),
-            authorsPreview: paper.authors_preview,
-        }));
-
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: null,
-            limit: null
-        })
-        .expect(200);
+        const response = await request(app).post("/api/authors/A5107860229/follow").expect(200);
 
         expect(fetchAuthorById).toHaveBeenCalledWith("A5107860229");
         expect(fetchAuthorById).toHaveBeenCalledTimes(1);
 
-        expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 10, 0);
-        expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
+        expect(followAuthor).toHaveBeenCalledWith(123,"50703");
+        expect(followAuthor).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
+        expect(response.body.message).toBe("User 123 followed author A5107860229 successfully.");
     });
 
-    // ---------- RETURNS PAPERS ASSOCIATED WITH THE AUTHOR USING CUSTOM PAGINATION ----------
-
-    it("Returns 200 and the papers associated with the author for custom pagination", async () => {
-        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
-        fetchAuthorPapers.mockResolvedValue(mockResolvedPapers2);
-
-        const expectedOutput = mockResolvedPapers2.map(paper => ({
-            id: paper.openalex_id,
-            internalId: paper.id,
-            title: paper.title,
-            displayName: paper.display_name,
-            abstract: paper.abstract,
-            publicationYear: paper.publication_year,
-            citedByCount: paper.cited_by_count,
-            fwci: Number(paper.fwci),
-            primarySource: paper.primary_source_display_name,
-            primaryTopic: paper.primary_topic_display_name,
-            isOpenAccess: paper.is_open_access,
-            openAccessStatus: paper.open_access_status,
-            authorCount: Number(paper.author_count),
-            authorsPreview: paper.authors_preview,
-        }));
-
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: 2,
-            limit: 5
-        })
-        .expect(200);
-
-        expect(fetchAuthorById).toHaveBeenCalledWith("A5107860229");
-        expect(fetchAuthorById).toHaveBeenCalledTimes(1);
-
-        expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 5, 5);
-        expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
-
-        expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual(expectedOutput);
-    });
-
-    it("Returns 200 and an empty array when the pagination filters exceed the amount of papers", async () => {
-        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
-        fetchAuthorPapers.mockResolvedValue([]);
-
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: 5,
-            limit: 10
-        })
-        .expect(200);
-
-        expect(fetchAuthorById).toHaveBeenCalledWith("A5107860229");
-        expect(fetchAuthorById).toHaveBeenCalledTimes(1);
-
-        expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 10, 40);
-        expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
-
-        expect(response.body.status).toBe("success");
-        expect(response.body.data).toEqual([]);
-    });
-
-    // ------------- USER ERRORS ---------------
-
-    it("Returns 400 when the author id doesn't follow the correct format", async () => {
-        const response = await request(app).get("/api/authors/5107860229/papers")
-        .query({
-            page: 5,
-            limit: 10
-        })
-        .expect(400);
-
-        expect(fetchAuthorById).not.toHaveBeenCalled();
-        expect(fetchAuthorPapers).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("Invalid author Id");
-    });
-
-    it("Returns 400 when the page is an invalid number", async () => {
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: 0,
-            limit: null
-        })
-        .expect(400);
-
-        expect(fetchAuthorById).not.toHaveBeenCalled();
-        expect(fetchAuthorPapers).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("'page' must be greater than or equal to 1");
-    });
-
-    it("Returns 400 when the limit is an invalid number", async () => {
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: null,
-            limit: 105
-        })
-        .expect(400);
-
-        expect(fetchAuthorById).not.toHaveBeenCalled();
-        expect(fetchAuthorPapers).not.toHaveBeenCalled();
-
-        expect(response.body.status).toBe("fail");
-        expect(response.body.message).toBe("'limit' must be between 1 and 100");
-    });
-
-    it("Returns 404 when the author doesn't exist", async () => {
+    it("Returns 404 when the author does not exist", async () => {
         fetchAuthorById.mockResolvedValue(null);
 
-        const response = await request(app).get("/api/authors/A5107/papers")
-        .query({
-            page: null,
-            limit: null
-        })
-        .expect(404);
+        const response = await request(app).post("/api/authors/A5107/follow").expect(404);
 
         expect(fetchAuthorById).toHaveBeenCalledWith("A5107");
         expect(fetchAuthorById).toHaveBeenCalledTimes(1);
 
-        expect(fetchAuthorPapers).not.toHaveBeenCalled();
+        expect(followAuthor).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Author not found");
     });
 
-    // -------------- DATABASE ERRORS --------------
+    it("Returns 400 when the author id format is invalid", async () => {
+        const response = await request(app).post("/api/authors/5107/follow").expect(400);
 
-    it("Returns 500 when the server fails", async () => {
+        expect(fetchAuthorById).not.toHaveBeenCalled();
+        expect(followAuthor).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("Invalid author Id");
+    });
+
+    it("Returns 500 when following the author fails", async () => {
         fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
-        fetchAuthorPapers.mockRejectedValue(new Error("Unexpected failure"));
 
-        const response = await request(app).get("/api/authors/A5107860229/papers")
-        .query({
-            page: null,
-            limit: null
-        })
-        .expect(500);
+        followAuthor.mockRejectedValue(new Error("Database query failed"));
+
+        const response = await request(app).post("/api/authors/A5107860229/follow").expect(500);
+
+        expect(followAuthor).toHaveBeenCalledWith(123,"50703");
+
+        expect(response.body.status).toBe("error");
+        expect(response.body.message).toBe("Database query failed");
+    });
+});
+
+
+describe("POST /api/authors/:id/unfollow", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        mockAuthenticatedUser = { id: 123 };
+    });
+
+    it("Returns 200 when the user unfollows an author", async () => {
+        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
+        unfollowAuthor.mockResolvedValue(undefined);
+
+        const response = await request(app).post("/api/authors/A5107860229/unfollow").expect(200);
 
         expect(fetchAuthorById).toHaveBeenCalledWith("A5107860229");
         expect(fetchAuthorById).toHaveBeenCalledTimes(1);
 
-        expect(fetchAuthorPapers).toHaveBeenCalledWith("50703", 10, 0);
-        expect(fetchAuthorPapers).toHaveBeenCalledTimes(1);
+        expect(unfollowAuthor).toHaveBeenCalledWith(123,"50703");
+        expect(unfollowAuthor).toHaveBeenCalledTimes(1);
+
+        expect(response.body.status).toBe("success");
+        expect(response.body.message).toBe("User 123 unfollowed author A5107860229 successfully.");
+    });
+
+    it("Returns 404 when the author does not exist", async () => {
+        fetchAuthorById.mockResolvedValue(null);
+
+        const response = await request(app).post("/api/authors/A5107/unfollow").expect(404);
+
+        expect(fetchAuthorById).toHaveBeenCalledWith("A5107");
+        expect(fetchAuthorById).toHaveBeenCalledTimes(1);
+
+        expect(unfollowAuthor).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("Author not found");
+    });
+
+    it("Returns 400 when the author id format is invalid", async () => {
+        const response = await request(app).post("/api/authors/5107/unfollow").expect(400);
+
+        expect(fetchAuthorById).not.toHaveBeenCalled();
+        expect(unfollowAuthor).not.toHaveBeenCalled();
+
+        expect(response.body.status).toBe("fail");
+        expect(response.body.message).toBe("Invalid author Id");
+    });
+
+    it("Returns 500 when unfollowing the author fails", async () => {
+        fetchAuthorById.mockResolvedValue(mockResolvedAuthor);
+
+        unfollowAuthor.mockRejectedValue(new Error("Database query failed"));
+
+        const response = await request(app).post("/api/authors/A5107860229/unfollow").expect(500);
+
+        expect(unfollowAuthor).toHaveBeenCalledWith(123,"50703");
+        expect(unfollowAuthor).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("error");
-        expect(response.body.message).toBe("Unexpected failure");
+        expect(response.body.message).toBe("Database query failed");
     });
 });
