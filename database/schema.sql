@@ -426,16 +426,6 @@ CREATE TABLE user_folder_papers (
     FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE
 );
 
--- Implementation of user search history records
-CREATE TABLE user_search_history (
-    id BIGSERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    query TEXT NOT NULL,
-    filters JSONB,
-    result_count INTEGER,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
 
 -- Authors each user follows
 CREATE TABLE user_follows_authors (
@@ -566,22 +556,21 @@ CREATE TABLE recommendation_refresh_queue (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Similar papers cache
-CREATE TABLE paper_similarity_cache (
-    paper_id BIGINT NOT NULL,
-    similar_paper_id BIGINT NOT NULL,
 
-    similarity_score NUMERIC(10, 6) NOT NULL,
-    
-    reason TEXT,
-    
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (paper_id, similar_paper_id),
-    FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    FOREIGN KEY (similar_paper_id) REFERENCES papers(id) ON DELETE CASCADE,
-    CHECK (paper_id <> similar_paper_id)
+-- Dirty/stale marker for popularity cache
+CREATE TABLE popularity_refresh_state (
+    id SMALLINT PRIMARY KEY CHECK (id = 1),
+    pending_event_count INTEGER NOT NULL DEFAULT 0,
+    last_event_at TIMESTAMPTZ,
+    last_refresh_at TIMESTAMPTZ
 );
+
+-- Since it's a singleton table, insert its only row initially
+-- and the service functions will update the pending event count
+INSERT INTO popularity_refresh_state (id, pending_event_count)
+VALUES (1,0)
+ON CONFLICT (id) DO NOTHING;
+
 
 -- INDEXES (for potential filtering fields)
 
