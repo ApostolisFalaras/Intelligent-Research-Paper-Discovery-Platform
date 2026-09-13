@@ -4,10 +4,11 @@ import request from "supertest";
 vi.mock("./../../src/repositories/userRepository.js", () => ({
     fetchUserByUsername: vi.fn(),
     fetchUserByEmail: vi.fn(),
-    createUser: vi.fn()
+    createUser: vi.fn(),
+    upsertUserLoginTime: vi.fn()
 }));
 
-import { fetchUserByUsername, fetchUserByEmail, createUser } from "./../../src/repositories/userRepository.js";
+import { fetchUserByUsername, fetchUserByEmail, createUser, upsertUserLoginTime } from "./../../src/repositories/userRepository.js";
 import app from "./../../src/app.js";
 
 
@@ -49,6 +50,7 @@ describe("POST /api/auth/login", () => {
 
     it("Returns 200 when the user is authenticated", async () => {
         fetchUserByUsername.mockResolvedValue(mockResolvedUser);
+        upsertUserLoginTime.mockResolvedValue(1);
 
         const credentials = { username: "apostolisCoder", password: "postgresUSER" }
 
@@ -56,6 +58,9 @@ describe("POST /api/auth/login", () => {
 
         expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
+
+        expect(upsertUserLoginTime).toHaveBeenCalledWith(mockResolvedUser.id);
+        expect(upsertUserLoginTime).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
@@ -80,6 +85,7 @@ describe("POST /api/auth/login", () => {
         const response = await request(app).post("/api/auth/login").send(credentials).expect(400);
 
         expect(fetchUserByUsername).not.toHaveBeenCalled();
+        expect(upsertUserLoginTime).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("'username', and 'password' are required");
@@ -95,15 +101,35 @@ describe("POST /api/auth/login", () => {
         const credentials = { 
             ...registrationCredentials,
             password: "POSTGREsUSER"
-        }; // real password: postgresUser
+        };
 
         const response = await request(app).post("/api/auth/login").send(credentials).expect(401);
 
         expect(fetchUserByUsername).toHaveBeenCalledWith(credentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
 
+        expect(upsertUserLoginTime).not.toHaveBeenCalled();
+
         expect(response.body.status).toBe("fail");
         expect(response.body.message).toBe("Invalid credentials");
+    });
+
+    // ------------ LAST LOGIN TIME NOT UPDATED -> 500 --------------
+
+    it("Returns 500 when the user's login time cannot be updated", async () => {
+        fetchUserByUsername.mockResolvedValue(mockResolvedUser);
+        upsertUserLoginTime.mockResolvedValue(0);
+
+        const response = await request(app).post("/api/auth/login").send(registrationCredentials).expect(500);
+        
+        expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
+        expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
+
+        expect(upsertUserLoginTime).toHaveBeenCalledWith(mockResolvedUser.id);
+        expect(upsertUserLoginTime).toHaveBeenCalledTimes(1);
+
+        expect(response.body.status).toBe("error");
+        expect(response.body.message).toBe("User login time was not updated.");
     });
 
     // ------------ DB ERROR -> 500 INTERNAL SERVER ERROR ------------
@@ -115,6 +141,8 @@ describe("POST /api/auth/login", () => {
 
         expect(fetchUserByUsername).toHaveBeenCalledWith(registrationCredentials.username);
         expect(fetchUserByUsername).toHaveBeenCalledTimes(1);
+
+        expect(upsertUserLoginTime).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("error");
         expect(response.body.message).toBe("Database query failed");

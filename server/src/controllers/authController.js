@@ -8,7 +8,7 @@ export async function loginController(req, res, next) {
 
         req.session.userId = user.id;
 
-        updateUserLoginTime(req.session.userId);
+        await updateUserLoginTime(req.session.userId);
 
         // Successful retrieval of user credentials
         return res.status(200).json({
