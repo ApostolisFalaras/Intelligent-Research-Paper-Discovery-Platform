@@ -16,7 +16,10 @@ import {
     fetchAuthorTopicsById,
     fetchAuthorTopicSharesById,
     fetchAuthorCountsByYearById,
-    fetchAuthorPapers } from "../../../src/repositories/authorRepository.js";
+    fetchAuthorPapers,
+    fetchAuthorIsFollowed,
+    followAuthor,
+    unfollowAuthor } from "../../../src/repositories/authorRepository.js";
 
 
 const mockResolvedAuthor = {
@@ -440,7 +443,7 @@ describe("fetchAuthorAffiliationsById", () => {
 });
 
 
-describe("fetchPaperAuthorInstitutions", () => {
+describe("fetchAuthorLastKnownInstitutionsById", () => {
     beforeEach(() => {
         vi.resetAllMocks();
     });
@@ -491,7 +494,7 @@ describe("fetchAuthorTopicsById", () => {
 });
 
 	
-describe("fetchPaperTopicSharesById", () => {
+describe("fetchAuthorTopicSharesById", () => {
     beforeEach(() => {
         vi.resetAllMocks();
     });
@@ -516,7 +519,7 @@ describe("fetchPaperTopicSharesById", () => {
 });
 
 
-describe("fetchAuthorCountsByYear", () => {
+describe("fetchAuthorCountsByYearById", () => {
     beforeEach(() => {
         vi.resetAllMocks();
     });
@@ -612,5 +615,90 @@ describe("fetchAuthorPapers", () => {
         expect(params).toEqual(["50703", 5, 5]);
 
         expect(results).toEqual(mockResolvedPapers2);
+    });
+});
+
+
+describe("fetchAuthorIsFollowed", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Returns true when the user follows the author", async () => {
+        pool.query.mockResolvedValue({ rows: [{ is_followed: true }] });
+
+        const result = await fetchAuthorIsFollowed(123, 50703);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("SELECT EXISTS");
+        expect(query).toContain("FROM user_follows_authors");
+        expect(query).toContain("WHERE user_id = $1");
+        expect(query).toContain("AND author_id = $2");
+
+        expect(params).toEqual([123, 50703]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+        expect(result).toBe(true);
+    });
+
+    it("Returns false when the user does not follow the author", async () => {
+        pool.query.mockResolvedValue({ rows: [{ is_followed: false }] });
+
+        const result = await fetchAuthorIsFollowed(123, 50703);
+
+        expect(pool.query).toHaveBeenCalledWith(
+            expect.stringContaining("FROM user_follows_authors"),
+            [123, 50703]
+        );
+
+        expect(result).toBe(false);
+    });
+});
+
+
+describe("followAuthor", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Adds an author follow for a user", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        await followAuthor(123, 50703);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("INSERT INTO user_follows_authors");
+        expect(query).toContain("(user_id, author_id)");
+        expect(query).toContain("VALUES ($1, $2)");
+        expect(query).toContain("ON CONFLICT (user_id, author_id) DO NOTHING");
+
+        expect(params).toEqual([123, 50703]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
+    });
+});
+
+
+describe("unfollowAuthor", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("Removes an author follow for a user", async () => {
+        pool.query.mockResolvedValue({ rowCount: 1 });
+
+        await unfollowAuthor(123, 50703);
+
+        const [query, params] = pool.query.mock.calls[0];
+
+        expect(query).toContain("DELETE FROM user_follows_authors");
+        expect(query).toContain("WHERE user_id = $1");
+        expect(query).toContain("AND author_id = $2");
+
+        expect(params).toEqual([123, 50703]);
+
+        expect(pool.query).toHaveBeenCalledTimes(1);
     });
 });
