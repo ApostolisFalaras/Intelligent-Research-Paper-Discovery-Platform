@@ -5,24 +5,28 @@ import {
 	fetchAuthorTopicsById,
 	fetchAuthorTopicSharesById,
 	fetchAuthorCountsByYearById,
-	fetchAuthorPapers } from "./../repositories/authorRepository.js";
+	fetchAuthorPapers,
+	followAuthor,
+	unfollowAuthor,
+	fetchAuthorIsFollowed } from "./../repositories/authorRepository.js";
 import { AppError } from "./../utils/AppError.js";
 import { 
 	parseString,
-	parseInteger } from "./../utils/parseData.js";
+	parseUserId} from "./../utils/parseData.js";
 
 
 // Fetch author with a particular id from the DB
-export async function getAuthorById(id) {
-	// Validate author id
-	const parsedId = parseString(id, "author id");
+export async function getAuthorById(userId, authorId) {
+	// Validate author id and optional user id
+	const parsedUserId = userId == null ? null : parseUserId(userId);
+	const parsedAuthorId = parseString(authorId, "author id");
 
 	// Validate author id format: "A" followed by digits
-	if (!parsedId || !/^A\d+$/.test(parsedId)) {
+	if (!parsedAuthorId || !/^A\d+$/.test(parsedAuthorId)) {
 		throw new AppError("Invalid author Id", 400);
 	}
-	
-	const author = await fetchAuthorById(parsedId);
+
+	const author = await fetchAuthorById(parsedAuthorId);
 
 	// Validate if author exists
 	if (!author)
@@ -37,6 +41,12 @@ export async function getAuthorById(id) {
 			fetchAuthorCountsByYearById(author.id),
 			fetchAuthorPapers(author.id, 5, 0)
 		]);
+	
+	let isFollowed;
+	if (parsedUserId) {
+		console.log(parsedUserId, Number(author.id))
+		isFollowed = await fetchAuthorIsFollowed(parsedUserId, Number(author.id));
+	}	
 
 	// Author Data Transfer Object (DTO)
     // Grouping author fields into logical units so that the client can display them appropriately
@@ -126,55 +136,42 @@ export async function getAuthorById(id) {
 			openAccessStatus: paper.open_access_status,
 			authorCount: Number(paper.author_count),
 			authorsPreview: paper.authors_preview,
-		}))
+		})),
+
+		isFollowed: isFollowed ?? null
 	};
 }
 
-// Fetch papers associated with the current author
-export async function getAuthorPapers(id, pagination) {
-	// Validate author id
-	const parsedId = parseString(id, "author id");
+// An authenticated user follows an author
+export async function followAuthorService(userId, authorId) {
+	const parsedUserId = parseUserId(userId);
+	const parsedAuthorId = parseString(authorId, "author id");
 
-	// Validate author id format: "A" followed by digits
-	if (!parsedId || !/^A\d+$/.test(parsedId)) {
-		throw new AppError("Invalid author Id", 400);
+	if (!parsedAuthorId || !/^A\d+$/.test(parsedAuthorId)) {
+    	throw new AppError("Invalid author Id", 400);
 	}
 
-	// Pagination filters validation
-	const page = parseInteger(pagination.page, "page") ?? 1;
-	const limit = parseInteger(pagination.limit, "limit") ?? 10;
-
-	if (page < 1)
-		throw new AppError("'page' must be greater than or equal to 1", 400);
-
-	if (limit < 1 || limit > 100)
-		throw new AppError("'limit' must be between 1 and 100", 400);
-
-	const offset = (page - 1) * limit;
-
-	// Fetching author data to extract author.id
-	const author = await fetchAuthorById(parsedId);
-
-	// Validate if author exists
-	if (!author)
+	const author = await fetchAuthorById(parsedAuthorId);
+	if (!author) {
 		throw new AppError("Author not found", 404);
+	}
 
-	const papers = await fetchAuthorPapers(author.id, limit, offset);
+	await followAuthor(parsedUserId, author.id);
+}
 
-	return papers.map(paper => ({
-		id: paper.openalex_id,
-		internalId: paper.id,
-		title: paper.title,
-		displayName: paper.display_name,
-		abstract: paper.abstract,
-		publicationYear: paper.publication_year,
-		citedByCount: paper.cited_by_count,
-		fwci: Number(paper.fwci),
-		primarySource: paper.primary_source_display_name,
-		primaryTopic: paper.primary_topic_display_name,
-		isOpenAccess: paper.is_open_access,
-		openAccessStatus: paper.open_access_status,
-		authorCount: Number(paper.author_count),
-		authorsPreview: paper.authors_preview,
-	}));
+// An authenticated user unfollows an author
+export async function unfollowAuthorService(userId, authorId) {
+	const parsedUserId = parseUserId(userId);
+	const parsedAuthorId = parseString(authorId, "author id");
+
+	if (!parsedAuthorId || !/^A\d+$/.test(parsedAuthorId)) {
+    	throw new AppError("Invalid author Id", 400);
+	}
+	
+	const author = await fetchAuthorById(parsedAuthorId);
+	if (!author) {
+		throw new AppError("Author not found", 404);
+	}
+
+	await unfollowAuthor(parsedUserId, author.id);
 }

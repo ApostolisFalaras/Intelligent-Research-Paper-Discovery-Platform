@@ -132,3 +132,40 @@ export async function fetchAuthorPapers(id, limit, offset) {
 	const results = await pool.query(sqlQuery, [id, limit, offset]);
 	return results.rows;
 } 
+
+// Checks if an author is saved by a user
+export async function fetchAuthorIsFollowed(userId, authorId) {
+	const sqlQuery = `
+        SELECT EXISTS (
+            SELECT 1
+            FROM user_follows_authors
+            WHERE user_id = $1
+              AND author_id = $2
+        ) AS is_followed;
+    `;
+
+	const result = await pool.query(sqlQuery, [userId, authorId]);
+    return result.rows[0].is_followed;
+}
+
+// An authenticated user follows an author
+export async function followAuthor(userId, authorId) {
+	const sqlQuery = `
+		INSERT INTO user_follows_authors (user_id, author_id)
+		VALUES ($1, $2)
+		ON CONFLICT (user_id, author_id) DO NOTHING;
+	`;
+
+	await pool.query(sqlQuery, [userId, authorId]);
+}
+
+// An authenticated user unfollows an author
+export async function unfollowAuthor(userId, authorId) {
+	const sqlQuery = `
+		DELETE FROM user_follows_authors
+		WHERE user_id = $1 
+		  AND author_id = $2;
+	`;
+
+	await pool.query(sqlQuery, [userId, authorId]);
+}
