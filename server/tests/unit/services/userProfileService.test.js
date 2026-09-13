@@ -210,6 +210,34 @@ describe("patchMyProfile", () => {
         });
     });
 
+    it("Updates the user's avatar URL", async () => {
+        const updates = { avatarURL: "/uploads/avatars/42-avatar.png" };
+
+        updateUserById.mockResolvedValue(1);
+
+        await patchMyProfile(42, updates);
+
+        expect(updateUserById).toHaveBeenCalledWith(42, { avatarURL: "/uploads/avatars/42-avatar.png" });
+
+        expect(updateUserById).toHaveBeenCalledTimes(1);
+
+        expect(bcryptjs.hash).not.toHaveBeenCalled();
+    });
+
+    it("Allows the user's avatar URL to be cleared with null", async () => {
+        const updates = { avatarURL: null };
+
+        updateUserById.mockResolvedValue(1);
+
+        await patchMyProfile(42, updates);
+
+        expect(updateUserById).toHaveBeenCalledWith(42, { avatarURL: null });
+
+        expect(updateUserById).toHaveBeenCalledTimes(1);
+
+        expect(bcryptjs.hash).not.toHaveBeenCalled();
+    });
+
     // ---------- ERROR CASES ----------
 
     it("Throws 400 when no modified fields are provided", async () => {
