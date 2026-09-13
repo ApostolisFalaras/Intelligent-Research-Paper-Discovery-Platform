@@ -6,16 +6,10 @@ vi.mock("./../../src/repositories/searchRepository.js", () => ({
     searchPapersByTextQuery: vi.fn()
 }));
 
-vi.mock("./../../src/repositories/userHistoryRepository.js", () => ({
-    addToSearchHistory: vi.fn()
-}));
-
 
 // Import after to replace the real function with the mock function
 import { searchPapersByTextQuery } from "../../src/repositories/searchRepository.js";
 import app from "../../src/app.js";
-import { addToSearchHistory } from "../../src/repositories/userHistoryRepository.js";
-import { optionalAuthMiddleware } from "../../src/middlewares/authMiddleware.js";
 
 
 const mockResultsRows_1 = [
@@ -164,7 +158,6 @@ describe("GET /api/search/?q=<search-query>", () => {
             query: "Machine Learning"
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);
@@ -184,7 +177,6 @@ describe("GET /api/search/?q=<search-query>", () => {
             query: "Unknown query"
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).not.toHaveBeenCalled();
         
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
@@ -246,7 +238,6 @@ describe("GET /api/search/?q=<search-query>", () => {
         });
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).not.toHaveBeenCalled();
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);

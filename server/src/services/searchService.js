@@ -1,5 +1,4 @@
 import { searchPapersByTextQuery } from "./../repositories/searchRepository.js";
-import { addToSearchHistory } from "../repositories/userHistoryRepository.js";
 import { AppError } from "./../utils/AppError.js";
 import { parseString, parseInteger, parseBoolean } from "../utils/parseData.js";
 import { ALLOWED_SORT_TYPES, ALLOWED_LANGUAGES, ALLOWED_PAPER_TYPES } from "./../utils/searchConstants.js";
@@ -14,19 +13,6 @@ export async function searchPapers(user_id, queryParams) {
     // Add query to the user search history, only if the user is logged in
     const { query, page, limit, offset, includeCount, ...searchHistoryFilters } = filters;
 
-    // If the user is logged in, add search query as a record to user search history
-    if (user_id && filters.includeCount) {
-            try {
-                await addToSearchHistory(
-                    user_id,
-                    query,
-                    searchHistoryFilters,
-                    searchResults.totalResults
-                );
-            } catch (error) {
-                console.error("Failed to save search history", error);
-            }
-}
     
     // Papers filed Data Transfer Object (DTO)
     const papers = searchResults.papers.map((paper) => ({

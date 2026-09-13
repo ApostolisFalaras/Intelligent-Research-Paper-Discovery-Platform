@@ -5,14 +5,9 @@ vi.mock("../../../src/repositories/searchRepository.js", () => ({
     searchPapersByTextQuery: vi.fn(),
 }));
 
-vi.mock("../../../src/repositories/userHistoryRepository.js", () => ({
-    addToSearchHistory: vi.fn(),
-}));
-
 
 // Import after to replace the real function with the mock function
 import { searchPapersByTextQuery } from "../../../src/repositories/searchRepository.js";
-import { addToSearchHistory } from "../../../src/repositories/userHistoryRepository.js"; 
 import { searchPapers } from "../../../src/services/searchService.js";
 
 
@@ -121,7 +116,6 @@ describe("searchPapers", () => {
             query:"Machine Learning",
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).not.toHaveBeenCalled();
         expect(results).toEqual(expectedOutput);
     });
 
@@ -131,8 +125,6 @@ describe("searchPapers", () => {
             totalResults: 2,
             papers: mockResultsRows
         });
-
-        addToSearchHistory.mockResolvedValue({id: 1, user_id: 1});
 
         // Assuming no provided filters, since the effect would be the same with any of them
         // The focus of this test is the DTO formatting of the retrieved papers
@@ -165,10 +157,6 @@ describe("searchPapers", () => {
             query:"Machine Learning"
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "Machine Learning", searchHistoryFilters, 2);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(results).toEqual(expectedOutput);
     });
 
@@ -189,7 +177,7 @@ describe("searchPapers", () => {
             query: "unknown query", 
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).not.toHaveBeenCalled();
+
         expect(results).toEqual({
             totalResults: 0,
             papers: []
@@ -201,7 +189,7 @@ describe("searchPapers", () => {
             totalResults: 0,
             papers: []
         });
-        addToSearchHistory.mockResolvedValue({id: 1, user_id: 1});
+
 
         const results = await searchPapers(1, {query: "unknown query"});
 
@@ -211,11 +199,9 @@ describe("searchPapers", () => {
             ...defaultFilters,
             query: "unknown query", 
         });
+
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
         
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(results).toEqual({
             totalResults: 0,
             papers: []
@@ -231,8 +217,6 @@ describe("searchPapers", () => {
             papers: []
         });
 
-        addToSearchHistory.mockRejectedValue(new Error("Insertion of search history record failed"));
-
         const result = await searchPapers(1, {query: "unknown query"});
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
@@ -241,9 +225,6 @@ describe("searchPapers", () => {
         });
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "unknown query", searchHistoryFilters, 0);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
         expect(result).toEqual({
             totalResults: 0,
             papers: []

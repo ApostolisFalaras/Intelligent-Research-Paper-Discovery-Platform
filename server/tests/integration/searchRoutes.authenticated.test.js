@@ -6,10 +6,6 @@ vi.mock("./../../src/repositories/searchRepository.js", () => ({
     searchPapersByTextQuery: vi.fn()
 }));
 
-vi.mock("./../../src/repositories/userHistoryRepository.js", () => ({
-    addToSearchHistory: vi.fn()
-}));
-
 // Middleware has to be mocked to authenticate the only existing user in the current tests
 let mockAuthenticatedUser = {id: 1};
 
@@ -27,8 +23,6 @@ vi.mock("./../../src/middlewares/authMiddleware.js", async (importOriginal) => {
 
 // Import after to replace the real function with the mock function
 import { searchPapersByTextQuery } from "../../src/repositories/searchRepository.js";
-import { addToSearchHistory } from "../../src/repositories/userHistoryRepository.js";
-import { optionalAuthMiddleware } from "../../src/middlewares/authMiddleware.js";
 import app from "../../src/app.js";
 
 
@@ -184,10 +178,6 @@ describe("GET /api/search/?q=<search-query>", () => {
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "Machine Learning", searchHistoryFilters, 2);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
-
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);
     });
@@ -205,12 +195,9 @@ describe("GET /api/search/?q=<search-query>", () => {
             ...defaultFilters,
             query: "Unknown query"
         });
+        
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "Unknown query", searchHistoryFilters, 0);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
-        
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual({
             totalResults: 0,
@@ -273,16 +260,6 @@ describe("GET /api/search/?q=<search-query>", () => {
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
 
-        const { page, limit, offset, includeCount, ...searchHistoryFilters } = defaultFilters;
-        const searchFilters = {
-            ...searchHistoryFilters, 
-            fromYear: 2015,
-            toYear: 2025,
-            paperType: "article"
-        };
-        expect(addToSearchHistory).toHaveBeenCalledWith(1, "Machine Learning", searchFilters, 2);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
-
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);
     });
@@ -293,7 +270,6 @@ describe("GET /api/search/?q=<search-query>", () => {
             totalResults: 2,
             papers: mockResultsRows_1
         });
-        addToSearchHistory.mockRejectedValue(new Error("Failed to save history"));
 
         const expectedResponseData = {
             totalResults: 2,
@@ -339,7 +315,6 @@ describe("GET /api/search/?q=<search-query>", () => {
         });
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(addToSearchHistory).toHaveBeenCalledTimes(1);
 
         expect(response.body.status).toBe("success");
         expect(response.body.data).toEqual(expectedResponseData);
