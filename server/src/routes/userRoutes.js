@@ -6,8 +6,6 @@ import { getMe,
          deleteMyProfileController,
          postMyAvatarController,
          deleteMyAvatarController,
-         getSearchHistoryController, 
-         deleteSearchHistoryController, 
          getFoldersController,
          createFolderController,
          patchFolderController,
@@ -35,12 +33,6 @@ router.post("/me/profile/avatar", avatarUpload.single("avatar"), postMyAvatarCon
 
 // User deletes their avatar image
 router.delete("/me/profile/avatar", deleteMyAvatarController);
-
-// User views their search history
-router.get("/me/search-history", getSearchHistoryController);
-
-// User deletes a single search history record
-router.delete("/me/search-history/:id", deleteSearchHistoryController);
 
 // User views their project folders
 router.get("/me/folders", getFoldersController);

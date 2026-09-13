@@ -1,6 +1,5 @@
 import { fetchUserById, updateUserById, deleteUserById } from "./../repositories/userRepository.js";
 import { upsertUserLoginTime } from "./../repositories/userRepository.js";
-import { fetchUserSearchHistory, deleteFromSearchHistory } from "./../repositories/userHistoryRepository.js";
 import { fetchProjectFoldersById, 
          createProjectFolder, 
          updateProjectFolder,
@@ -244,63 +243,6 @@ export async function deleteMyProfile(userId) {
     }
 }
 
-// User fetches their search history
-export async function getUserSearchHistory(userId, filters) {
-    // Validate user id
-    const parsedId = parseUserId(userId);
-
-    // Validate pagination filters
-    const pagination = validatePagination(filters);
-
-    const searchHistory = await fetchUserSearchHistory(parsedId, pagination);
-
-    // Converting search history records to a DTO
-    return searchHistory.map((record) => ({
-        id: record.id,
-        userId: record.user_id,
-        query: record.query,
-        filters: record.filters,
-        resultCount: record.result_count,
-        createdAt: record.created_at
-    }));
-
-}
-
-// Helper function
-function validatePagination(paginationFilters) {
-    const page = parseInteger(paginationFilters?.page, "page") ?? 1;
-    const limit = parseInteger(paginationFilters?.limit, "limit") ?? 25;
-
-    if (page < 1)
-        throw new AppError("'page' must be greater than or equal to 1", 400);
-
-    if (limit < 1 || limit > 100)
-        throw new AppError("'limit' must be between 1 and 100", 400);
-
-    return {
-        page,
-        limit,
-        offset: (page - 1) * limit
-    };
-}
-
-// User deletes a single search history record by id
-export async function deleteUserSearchHistoryById(user_id, id) {
-    // Validate user id
-    const parsedUserId = parseUserId(user_id);
-
-    const parsedRecordId = parseInteger(id, 'history record id');
-
-    if (!parsedRecordId || parsedRecordId < 1) {
-        throw new AppError("Search history record id is required", 400);
-    }
-
-    const deletedRows = await deleteFromSearchHistory(parsedUserId, parsedRecordId);
-
-    if (deletedRows === 0)
-        throw new AppError("Search history record not found", 404);
-
-}
 
 // User fetches their folders
 export async function getProjectFoldersById(userId) {
