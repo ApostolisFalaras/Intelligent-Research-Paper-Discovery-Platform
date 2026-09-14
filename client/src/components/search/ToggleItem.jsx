@@ -1,7 +1,6 @@
-import { useState } from "react";
 import "../../styles/search.css";
 
-function CheckItem({ label, sublabel, checked, onChange }) {
+function ToggleItem({ label, sublabel, checked, onChange }) {
 
 	return (
 		<label className="toggle-div">
@@ -21,4 +20,4 @@ function CheckItem({ label, sublabel, checked, onChange }) {
 	);
 }
 
-export default CheckItem;
+export default ToggleItem;

@@ -61,8 +61,8 @@ function TopicSelect({ value, onChange }) {
 		}
 
 		return topics.filter((topic) => {
-			const name = topic.topicName?.toLowerCase() ?? null;
-			const field = topic.fieldName?.toLowerCase() ?? null;
+			const name = topic.topicName?.toLowerCase() ?? "";
+			const field = topic.fieldName?.toLowerCase() ?? "";
 
 			return (
 				name.includes(query) || field.includes(query)

@@ -812,7 +812,7 @@
     gap: 12px;
 }
 
-@keyframes scholaris-pulse{
+@keyframes pulse {
     0%,
     100% {
         opacity: 1

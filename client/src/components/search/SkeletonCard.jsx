@@ -3,10 +3,10 @@ import "../../styles/search.css";
 function SkeletonCard() {
 
 	/* Declaring this set of styles inline to avoid congesting the search.css file */
-	/* Only the 'scholaris-pulse' animation is declared there */
+	/* Only the 'pulse' animation is declared there */
 	return (
 		<article style={{ width: "85%", marginTop: "8px", marginLeft: "72px", background: "#FFFFFF", border: "1px solid rgba(26,26,20,0.09)", borderRadius: "6px", padding: "22px 24px" }}>
-			<div style={{ animation: "scholaris-pulse 1.6s ease-in-out infinite" }}>
+			<div style={{ animation: "pulse 1.6s ease-in-out infinite" }}>
 				<div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
 					<div style={{ width: "48px", height: "18px", background: "#E8E6DE", borderRadius: "3px"}} />
 					<div style={{ width: "32px", height: "18px", background: "#E8E6DE", borderRadius: "3px"}} />
