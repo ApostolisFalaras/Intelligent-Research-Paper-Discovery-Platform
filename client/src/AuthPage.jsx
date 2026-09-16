@@ -31,7 +31,7 @@ function AuthPage() {
 							"Reading history & saved collections",
 							"citation alerts & author follows"
 						].map((feature) => (
-							<div className="brand-features">
+							<div key={feature} className="brand-features">
 								<div>
 									<Check size={10} color="#95D5B2" />
 								</div>
