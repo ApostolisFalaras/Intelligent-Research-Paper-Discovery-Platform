@@ -14,7 +14,7 @@ function FetchError({ fetchError, retrySearchQuery }) {
 
 			<p id="fetch-error-title">Something went wrong</p>
 			<p id="fetch-error-msg">
-				{fetchError ??  "Could not load results. Check your connection and try again."}
+				{fetchError ||  "Could not load results. Check your connection and try again."}
 			</p>
 
 			<button 

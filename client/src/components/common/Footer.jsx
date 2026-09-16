@@ -1,4 +1,3 @@
-import { BookOpen } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import AppLabel from "./AppLabel.jsx";
 import "./../../styles/common.css";
@@ -6,7 +5,6 @@ import "./../../styles/common.css";
 function Footer() {
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
-	const isExplorePage = location.pathname === "/explore";
 
 	return (
 		(isHomePage) && (
