@@ -92,10 +92,10 @@ function SignupForm() {
 		const e = {};
 
 		if (!form.firstName.trim()) 
-			e.first_name = "First name is required.";
+			e.firstName = "First name is required.";
 
 		if (!form.lastName.trim()) 
-			e.last_name = "Last name is required.";
+			e.lastName = "Last name is required.";
 
 		if (!validateUsername(form.username))
 			e.username = "3–20 characters, letters, numbers, and underscores only.";
@@ -107,7 +107,7 @@ function SignupForm() {
 			e.password = "At least 8 characters required.";
 
 		if (form.password !== form.confirmPassword)
-			e.confirm_password = "Passwords do not match.";
+			e.confirmPassword = "Passwords do not match.";
     
 		setErrors(e);
 		return Object.keys(e).length === 0;
@@ -137,6 +137,7 @@ function SignupForm() {
 					email: form.email,
 					password: form.password,
 					affiliation: form.affiliation || null,
+					location: form.location || null,
 					role: form.role || null
 				})
 			});
@@ -188,7 +189,7 @@ function SignupForm() {
 						type="text"
 						value={form.firstName}
 						placeholder="John"
-						autocomplete="first-name"
+						autoComplete="given-name"
 						onChange={(firstName) => 
 							setForm((prev) => ({
 								...prev,
@@ -204,7 +205,7 @@ function SignupForm() {
 						type="text"
 						value={form.lastName}
 						placeholder="Doe"
-						autocomplete="last-name"
+						autoComplete="family-name"
 						onChange={(lastName) => 
 							setForm((prev) => ({
 								...prev,
@@ -364,7 +365,7 @@ function SignupForm() {
 				type="submit" 
 				disabled={loading} 
 				id="login-btn"
-				className={loading && "loading"}
+				className={loading ? "loading" : ""}
 			>
 				{loading ? "Creating account..." : "Create account"}
 			</button>

@@ -34,7 +34,7 @@ function LoginForm() {
 			e.username = "Username is required.";
 		}
 		if (!form.password.trim()) {
-			e.password = "Password is required";
+			e.password = "Password is required.";
 		}
 
 		setErrors(e);
