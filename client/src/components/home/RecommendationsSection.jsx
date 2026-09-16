@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth.jsx";
 import { Star, Users, TrendingUp, Compass, History } from "lucide-react";
 import RecommendationsRow from "./RecommendationsRow.jsx";

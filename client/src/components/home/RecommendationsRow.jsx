@@ -4,7 +4,7 @@ import PaperCard from "../papers/PaperCard.jsx";
 import "./../../styles/home.css";
 
 
-function RecommendationsRow({ type, label, sublabel, icon, papers }) {
+function RecommendationsRow({ type, label, icon, papers }) {
 	return (
 		<section className="recom-section">
 
@@ -12,7 +12,7 @@ function RecommendationsRow({ type, label, sublabel, icon, papers }) {
 				<div className="section-type">
 					<span className="section-icon">{icon}</span>
 					<h2 className="section-label">{label}</h2>
-					<span className="section-sublabel">{sublabel}</span>
+					{/*<span className="section-sublabel">{sublabel}</span>*/}
 				</div>
 
 				<Link to={`/recommendations?type=${type}`} className="see-all-btn">
