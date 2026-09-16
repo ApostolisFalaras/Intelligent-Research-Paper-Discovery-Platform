@@ -16,6 +16,10 @@ function HomePage() {
 				credentials: "include"
 			});
 
+			if (!res.ok) {
+            	throw new Error(`Request failed with status ${res.status}`);
+        	}
+			
 			let result = await res.json();
 			
 			setRecomSections(result.data);
