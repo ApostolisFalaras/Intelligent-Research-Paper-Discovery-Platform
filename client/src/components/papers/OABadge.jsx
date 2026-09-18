@@ -15,7 +15,7 @@ function OABadge({ status }) {
 
 	return (
 		<span className={`oa-status ${selected.type}`}>
-			{status === "closed" ? <Lock size={10}/> : <Unlock size={10}/> }
+			{selected.type === "closed" ? <Lock size={10}/> : <Unlock size={10}/> }
 			{selected.label}
 		</span>
 	);
