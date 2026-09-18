@@ -238,7 +238,7 @@ function PaperPage() {
 						{[
 							{level: "Domain", value: paper?.topic?.domain},
 							{level: "Field", value: paper?.topic?.field},
-							{level: "Subfield", value: paper?.topic?.subfied},
+							{level: "Subfield", value: paper?.topic?.subfield},
 							{level: "Topic", value: paper?.topic?.name}
 						].map(({level, value}, index, arr) => (
 							
