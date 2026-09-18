@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router";
+import { useSearchParams, Link } from "react-router-dom";
 import { Star, Users, Compass, TrendingUp, ArrowLeft, ArrowRight } from "lucide-react";
 import PaperCard from "./components/papers/PaperCard.jsx";
 import "./styles/recommendations.css";
