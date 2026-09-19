@@ -264,12 +264,13 @@ function AccountSettingsPage() {
                 throw new Error(`Request failed with status ${response.status}`);
             }
 
+            setProfileSaved(true);
+
         } catch (error) {
             console.error("Failed to update profile info:", error);
+        } finally {
+            setProfileLoading(false);
         }
-
-        setProfileLoading(false);
-        setProfileSaved(true);
     }
 
     // Save updated account information
@@ -308,13 +309,13 @@ function AccountSettingsPage() {
                 throw new Error(`Request failed with status ${response.status}`);
             }
 
+            setAccountSaved(true);
 
         } catch (error) {
             console.error("Failed to update profile info:", error);
-        }
-
-        setAccountLoading(false);
-        setAccountSaved(true);
+        } finally {
+            setAccountLoading(false);
+        }        
     }
 
     // Save updated password information
@@ -329,11 +330,14 @@ function AccountSettingsPage() {
         if (passwords.next !== passwords.confirm)
             errors.confirm = "Passwords do not match.";
 
-        setPasswordErrors(e);
+        setPasswordErrors(errors);
 
         if (Object.keys(errors).length > 0) {
             return;
         }
+
+        setPasswordLoading(true);
+        setPasswordSaved(false);
 
         try {
             const response = await fetch("/api/users/me/profile", {
@@ -350,13 +354,14 @@ function AccountSettingsPage() {
             if (!response.ok) {
                 throw new Error(`Request failed with status ${response.status}`);
             }
+
+            setPasswordSaved(true);
     
         } catch (error) {
             console.error("Failed to update profile info:", error);
+        } finally {
+            setPasswordLoading(false);
         }
-
-        setPasswordLoading(false);
-        setPasswordSaved(true);
     }
 
     // Deletes user account after user confirms it in the pop-up modal
