@@ -18,7 +18,7 @@ function FolderDetails({ folder, onClose }) {
 			}
 
 			const result = await response.json();
-			console.log(result?.data);
+			
 			setFolderPapers(result?.data);
 
 		} catch (error) {
@@ -29,7 +29,7 @@ function FolderDetails({ folder, onClose }) {
 
 	useEffect(() => {
 		loadFolder();
-	}, []);
+	}, [folder.id]);
 
 	return (
 		<div 

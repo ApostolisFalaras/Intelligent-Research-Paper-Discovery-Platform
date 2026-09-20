@@ -25,7 +25,10 @@ function NewFolderModal({ onClose, onCreate }) {
 				{/* Modal Header */}
 				<div id="modal-header">
 					<h2>New Collection</h2>
-					<button onClick={onClose}>
+					<button 
+						onClick={onClose}
+						aria-label="Close new collection"
+					>
 						<X size={16} />
 					</button>
 				</div>
@@ -64,6 +67,7 @@ function NewFolderModal({ onClose, onCreate }) {
 							{COLOR_PALETTE.map((paletteColor) => (
 								<button 
 									key={paletteColor}
+									aria-label={`Select ${paletteColor}`}
 									onClick={() => setColor(paletteColor)}
 									className="folder-color-option"
 									style={{ 

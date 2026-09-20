@@ -47,7 +47,8 @@ function FolderCard({ folder, onClick }) {
 					</div>
 
 					<button
-						onClick={() => e.stopPropagation()} 
+						aria-label={`More options for ${folder?.name}`}
+						onClick={(event) => event.stopPropagation()} 
 						className="folder-card-more"
 					>
 						<MoreHorizontal size={14} />
