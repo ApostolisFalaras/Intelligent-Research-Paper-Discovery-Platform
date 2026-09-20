@@ -16,7 +16,8 @@ export async function fetchProjectFoldersById(id) {
 export async function createProjectFolder(userId, folderData) {
     const sqlQuery = `
         INSERT INTO user_folders (user_id, name, summary, is_pinned, visibility, color, icon)
-        VALUES ($1, $2, $3, $4, $5, $6, $7);
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *;
     `;
 
     const values = [
@@ -30,7 +31,7 @@ export async function createProjectFolder(userId, folderData) {
     ];
 
     const result = await pool.query(sqlQuery, values);
-    return result.rowCount;
+    return result.rows[0];
 }
 
 // Update a project folder

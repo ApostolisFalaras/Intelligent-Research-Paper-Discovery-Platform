@@ -128,12 +128,14 @@ export async function createFolderController(req, res, next) {
     try {
         // req.user.id exists because the user is authenticated
         // req.body contains the project folder metadata
-        await createProjectFolderById(req.user.id, req.body);
+        const folder = await createProjectFolderById(req.user.id, req.body);
 
         res.status(201).json({
             status: "success",
-            message: "Project folder created successfully"
+            message: "Project folder created successfully",
+            data: folder
         });
+        
     } catch (error) {
         next(error);
     }

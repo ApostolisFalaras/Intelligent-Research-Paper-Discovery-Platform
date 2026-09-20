@@ -237,19 +237,32 @@ describe("POST /api/users/me/folders", () => {
 
 	// ---------- SUCCESSFUL CREATION OF NEW PROJECT FOLDER ----------
 	
-	it("Returns 201 when a new project folder is successfully created", async () => {
-		createProjectFolder.mockResolvedValue(1);
+	it("Returns 201 and the newly created project folder", async () => {
+		createProjectFolder.mockResolvedValue(mockResolvedProjectFolders[0]);
 
-		const response = await request(app)
-		.post("/api/users/me/folders")
-		.send(newProjectFolder)
-		.expect(201);
+		const response = await request(app).post("/api/users/me/folders").send(newProjectFolder)
+			.expect(201);
 
 		expect(createProjectFolder).toHaveBeenCalledWith(1, newProjectFolder);
 		expect(createProjectFolder).toHaveBeenCalledTimes(1);
 
 		expect(response.body.status).toBe("success");
 		expect(response.body.message).toBe("Project folder created successfully");
+
+		expect(response.body.data).toEqual({
+			id: 1,
+			userId: 1,
+			name: "Generative AI",
+			summary: "Research on LLMs and RAG pipelines",
+			paperCount: 0,
+			isPinned: true,
+			color: "blue",
+			visibility: "public",
+			icon: "no-icon",
+			createdAt: expect.any(String),
+			updatedAt: expect.any(String),
+			papersPreview: []
+		});
 	});
 
 	// ---------- UNSUCCESSFUL CREATION OF NEW PROJECT FOLDER ----------

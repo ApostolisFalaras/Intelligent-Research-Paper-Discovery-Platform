@@ -309,10 +309,41 @@ export async function createProjectFolderById(userId, folderData) {
     // Validate project folder metadata
     const parsedFolderData = validateProjectFolderData(folderData);
 
-    const insertedFolders = await createProjectFolder(parsedId, parsedFolderData);
+    const insertedFolder = await createProjectFolder(parsedId, parsedFolderData);
 
-    if (insertedFolders === 0)
+    if (!insertedFolder)
         throw new AppError("Project folder was not inserted", 500);
+
+    return {
+        id: insertedFolder.id,
+        userId: insertedFolder.user_id,
+        name: insertedFolder.name,
+        summary: insertedFolder.summary,
+        paperCount: Number(insertedFolder.paper_count),
+        isPinned: insertedFolder.is_pinned,
+        color: insertedFolder.color,
+        visibility: insertedFolder.visibility,
+        icon: insertedFolder.icon,
+
+        createdAt: new Intl.DateTimeFormat("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }).format(new Date(insertedFolder.created_at)),
+
+
+        updatedAt: new Intl.DateTimeFormat("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }).format(new Date(insertedFolder.updated_at)),
+
+        papersPreview: []
+    };
 }
 
 // Helper function that validates the new project folder's metadata

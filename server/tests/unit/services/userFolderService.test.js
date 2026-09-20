@@ -187,111 +187,106 @@ describe("createProjectFolderById", () => {
 
     // ----------- SUCCESSFUL CREATION OF PROJECT FOLDER ------------
     
-    it("Adds paper to project folder", async () => {
-        fetchPaperById.mockResolvedValue({ id: 204129, openalex_id: "W7129423223" });
-        fetchPaperInFolder.mockResolvedValue(null);
-        insertPapertoFolder.mockResolvedValue(1);
-        incrementFolderPaperCount.mockResolvedValue(1);
-        markUserRecommendationsStale.mockResolvedValue(undefined);
-
-        const result = await addPapertoFolderById(1, 2, "W7129423223");
-
-        expect(fetchPaperInFolder).toHaveBeenCalledWith(2, 204129);
-        expect(insertPapertoFolder).toHaveBeenCalledWith(1, 2, 204129);
-        expect(incrementFolderPaperCount).toHaveBeenCalledWith(1, 2);
-        expect(markUserRecommendationsStale).toHaveBeenCalledWith(1, "paper_added_to_folder", 2);
-
-        expect(result).toBe(204129);
-});
-
-    it("Creates new project folder for default visibility and isPinned values", async () => {
-        createProjectFolder.mockResolvedValue(1);
-
-        // Using the previous mock folder as the new folder to created
+    it("Creates and returns a new project folder with default visibility and isPinned values", async () => {
         const newProjectFolder = {
             name: mockProjectFolders[0].name,
             summary: mockProjectFolders[0].summary,
             color: mockProjectFolders[0].color,
-            icon: mockProjectFolders[0].icon,
+            icon: mockProjectFolders[0].icon
         };
 
-        await createProjectFolderById(1, newProjectFolder);
+        const insertedFolder = {
+            id: 1,
+            user_id: 1,
+            name: newProjectFolder.name,
+            summary: newProjectFolder.summary,
+            paper_count: 0,
+            is_pinned: false,
+            visibility: "private",
+            color: newProjectFolder.color,
+            icon: newProjectFolder.icon,
+            created_at: new Date("2026-05-23T13:20:00.000Z"),
+            updated_at: new Date("2026-05-23T13:20:00.000Z")
+        };
+
+        createProjectFolder.mockResolvedValue(insertedFolder);
+
+        const result = await createProjectFolderById(1, newProjectFolder);
 
         expect(createProjectFolder).toHaveBeenCalledWith(1, {
             ...newProjectFolder,
             visibility: "private",
-            isPinned: false 
+            isPinned: false
         });
+
         expect(createProjectFolder).toHaveBeenCalledTimes(1);
+
+        expect(result).toEqual({
+            id: 1,
+            userId: 1,
+            name: newProjectFolder.name,
+            summary: newProjectFolder.summary,
+            paperCount: 0,
+            isPinned: false,
+            color: newProjectFolder.color,
+            visibility: "private",
+            icon: newProjectFolder.icon,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+            papersPreview: []
+        });
     });
 
+    it("Creates and returns a new project folder with explicitly provided values", async () => {
+        const newProjectFolder = {
+            name: mockProjectFolders[0].name,
+            summary: mockProjectFolders[0].summary,
+            visibility: "public",
+            color: mockProjectFolders[0].color,
+            icon: mockProjectFolders[0].icon,
+            isPinned: true
+        };
+
+        const insertedFolder = {
+            id: 1,
+            user_id: 1,
+            name: newProjectFolder.name,
+            summary: newProjectFolder.summary,
+            paper_count: 0,
+            is_pinned: true,
+            visibility: "public",
+            color: newProjectFolder.color,
+            icon: newProjectFolder.icon,
+            created_at: new Date("2026-05-23T13:20:00.000Z"),
+            updated_at: new Date("2026-05-23T13:20:00.000Z")
+        };
+
+        createProjectFolder.mockResolvedValue(insertedFolder);
+
+        const result = await createProjectFolderById(1, newProjectFolder);
+
+        expect(createProjectFolder).toHaveBeenCalledWith(1, newProjectFolder);
+        expect(createProjectFolder).toHaveBeenCalledTimes(1);
+
+        expect(result).toEqual({
+            id: 1,
+            userId: 1,
+            name: newProjectFolder.name,
+            summary: newProjectFolder.summary,
+            paperCount: 0,
+            isPinned: true,
+            color: newProjectFolder.color,
+            visibility: "public",
+            icon: newProjectFolder.icon,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
+            papersPreview: []
+        });
+    });
 
     // -------------- ERROR CASES -------------
 
     it("Throws 400 because user id is missing/invalid", async () => {
-        createProjectFolder.mockResolvedValue(1);
-
-        // Using the previous mock folder as the new folder to created
-        const newProjectFolder = {
-            name: mockProjectFolders[0].name,
-            summary: mockProjectFolders[0].summary,
-            visibility: mockProjectFolders[0].visibility,
-            color: mockProjectFolders[0].color,
-            icon: mockProjectFolders[0].icon,
-            isPinned: mockProjectFolders[0].is_pinned
-        };
-
-        await expect(createProjectFolderById(null, newProjectFolder))
-        .rejects
-        .toThrow("Missing/Invalid user_id");
-
-        expect(createProjectFolder).not.toHaveBeenCalled();
-    });
-
-    it("Throws 400 because project folder name is missing", async () => {
-        createProjectFolder.mockResolvedValue(1);
-
-        // Using the previous mock folder as the new folder to created
-        const newProjectFolder = {
-            name: null,
-            summary: mockProjectFolders[0].summary,
-            visibility: mockProjectFolders[0].visibility,
-            color: mockProjectFolders[0].color,
-            icon: mockProjectFolders[0].icon,
-            isPinned: mockProjectFolders[0].is_pinned
-        };
-
-        await expect(createProjectFolderById(1, newProjectFolder))
-        .rejects
-        .toThrow("'name' is required");
-        
-        expect(createProjectFolder).not.toHaveBeenCalled();
-    });
-
-    it("Throws 400 because project folder name is invalid", async () => {
-        createProjectFolder.mockResolvedValue(1);
-
-        // Using the previous mock folder as the new folder to created
-        const newProjectFolder = {
-            name: "    ",
-            summary: mockProjectFolders[0].summary,
-            visibility: mockProjectFolders[0].visibility,
-            color: mockProjectFolders[0].color,
-            icon: mockProjectFolders[0].icon,
-            isPinned: mockProjectFolders[0].is_pinned
-        };
-
-        await expect(createProjectFolderById(1, newProjectFolder))
-        .rejects
-        .toThrow("'name' is required");
-        
-        expect(createProjectFolder).not.toHaveBeenCalled();
-    });
-
-    it("Throws 500 because project folder couldn't be created", async () => {
-        createProjectFolder.mockResolvedValue(0);
-
-        // Using the previous mock folder as the new folder to created
         const newProjectFolder = {
             name: mockProjectFolders[0].name,
             summary: mockProjectFolders[0].summary,
@@ -301,10 +296,59 @@ describe("createProjectFolderById", () => {
             isPinned: mockProjectFolders[0].isPinned
         };
 
-        await expect(createProjectFolderById(1, newProjectFolder))
-        .rejects
-        .toThrow("Project folder was not inserted");
-        
+        await expect(createProjectFolderById(null, newProjectFolder)).rejects
+            .toThrow("Missing/Invalid user_id");
+
+        expect(createProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 because project folder name is missing", async () => {
+        const newProjectFolder = {
+            name: null,
+            summary: mockProjectFolders[0].summary,
+            visibility: mockProjectFolders[0].visibility,
+            color: mockProjectFolders[0].color,
+            icon: mockProjectFolders[0].icon,
+            isPinned: mockProjectFolders[0].isPinned
+        };
+
+        await expect(createProjectFolderById(1, newProjectFolder)).rejects
+            .toThrow("'name' is required");
+
+        expect(createProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 400 because project folder name is invalid", async () => {
+        const newProjectFolder = {
+            name: "    ",
+            summary: mockProjectFolders[0].summary,
+            visibility: mockProjectFolders[0].visibility,
+            color: mockProjectFolders[0].color,
+            icon: mockProjectFolders[0].icon,
+            isPinned: mockProjectFolders[0].isPinned
+        };
+
+        await expect(createProjectFolderById(1, newProjectFolder)).rejects
+            .toThrow("'name' is required");
+
+        expect(createProjectFolder).not.toHaveBeenCalled();
+    });
+
+    it("Throws 500 because project folder couldn't be created", async () => {
+        createProjectFolder.mockResolvedValue(undefined);
+
+        const newProjectFolder = {
+            name: mockProjectFolders[0].name,
+            summary: mockProjectFolders[0].summary,
+            visibility: mockProjectFolders[0].visibility,
+            color: mockProjectFolders[0].color,
+            icon: mockProjectFolders[0].icon,
+            isPinned: mockProjectFolders[0].isPinned
+        };
+
+        await expect(createProjectFolderById(1, newProjectFolder)).rejects
+            .toThrow("Project folder was not inserted");
+
         expect(createProjectFolder).toHaveBeenCalledWith(1, newProjectFolder);
         expect(createProjectFolder).toHaveBeenCalledTimes(1);
     });

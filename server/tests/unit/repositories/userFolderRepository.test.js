@@ -125,7 +125,8 @@ const newProjectFolder = {
 // Helper function for query structure validation
 function expectCreateFolderQuery(query) {
 	expect(query).toContain("INSERT INTO user_folders (user_id, name, summary, is_pinned, visibility, color, icon)");
-	expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7);");
+	expect(query).toContain("VALUES ($1, $2, $3, $4, $5, $6, $7)");
+	expect(query).toContain("RETURNING *;");
 }
 
 describe("createProjectFolder", () => {
@@ -135,10 +136,10 @@ describe("createProjectFolder", () => {
 
 	// ----------- SUCCESSFUL CREATION OF PROJECT FOLDER ------------
 
-	it("Creates a new project folder", async () => {
-		pool.query.mockResolvedValue({
-			rowCount: 1
-		});
+	it("Creates and returns the newly inserted project folder", async () => {
+		const insertedFolder = mockResolvedProjectFolders[0];
+
+		pool.query.mockResolvedValue({ rows: [insertedFolder], rowCount: 1 });
 
 		const result = await createProjectFolder(1, newProjectFolder);
 
@@ -156,13 +157,11 @@ describe("createProjectFolder", () => {
 
         expectCreateFolderQuery(query);
         expect(params).toEqual(values);
-		expect(result).toBe(1);
+		expect(result).toEqual(insertedFolder);
 	});
 
-	it("Returns 0 when the new project folder couldn't be created", async () => {
-		pool.query.mockResolvedValue({
-			rowCount: 0
-		});
+	it("Returns undefined when no newly inserted project folder is returned", async () => {
+		pool.query.mockResolvedValue({ rows: [], rowCount: 0 });
 
 		const result = await createProjectFolder(1, newProjectFolder);
 
@@ -180,7 +179,7 @@ describe("createProjectFolder", () => {
 
         expectCreateFolderQuery(query);
         expect(params).toEqual(values);
-		expect(result).toBe(0);
+		expect(result).toBeUndefined();
 	});
 
 
@@ -189,9 +188,7 @@ describe("createProjectFolder", () => {
     it("An unexpected database error occurs", async () => {
         pool.query.mockRejectedValue(new Error("Unexpected DB error"));
 
-        await expect(createProjectFolder(1, newProjectFolder))
-        .rejects.
-        toThrow("Unexpected DB error");
+        await expect(createProjectFolder(1, newProjectFolder)).rejects.toThrow("Unexpected DB error");
 
         // Although not neccesary, when pool.query fails
         // Validating the query structure and the query parameter
