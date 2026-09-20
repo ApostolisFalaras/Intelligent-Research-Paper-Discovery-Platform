@@ -3,16 +3,13 @@ import { AppError } from "./../utils/AppError.js";
 import { parseString, parseInteger, parseBoolean } from "../utils/parseData.js";
 import { ALLOWED_SORT_TYPES, ALLOWED_LANGUAGES, ALLOWED_PAPER_TYPES } from "./../utils/searchConstants.js";
 
-export async function searchPapers(user_id, queryParams) {
+export async function searchPapers(queryParams) {
 
     // Validate search bar's input query & filters
     const filters = validateSearchFilters(queryParams)
     
     const searchResults = await searchPapersByTextQuery(filters);
     
-    // Add query to the user search history, only if the user is logged in
-    const { query, page, limit, offset, includeCount, ...searchHistoryFilters } = filters;
-
     
     // Papers filed Data Transfer Object (DTO)
     const papers = searchResults.papers.map((paper) => ({

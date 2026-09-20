@@ -79,7 +79,7 @@ describe("searchPapers", () => {
   
     // ----------- SUCCESSFUL PAPER RETRIEVAL ------------
 
-    it("Maps fetched array of papers to array of formatted DTOs, with no filters, unauthenticated user", async () => {
+    it("Maps fetched array of papers to array of formatted DTOs, with no filters", async () => {
         searchPapersByTextQuery.mockResolvedValue({
             totalResults: 2,
             papers: mockResultsRows
@@ -87,7 +87,7 @@ describe("searchPapers", () => {
 
         // Assuming no provided filters, since the effect would be the same with any of them
         // The focus of this test is the DTO formatting of the retrieved papers
-        const results = await searchPapers(null, {query: "Machine Learning"});
+        const results = await searchPapers({query: "Machine Learning"});
 
         const expectedOutput = {
             totalResults: 2,
@@ -119,79 +119,15 @@ describe("searchPapers", () => {
         expect(results).toEqual(expectedOutput);
     });
 
-
-    it("Maps fetched array of papers to array of formatted DTOs, with no filters, authenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue({
-            totalResults: 2,
-            papers: mockResultsRows
-        });
-
-        // Assuming no provided filters, since the effect would be the same with any of them
-        // The focus of this test is the DTO formatting of the retrieved papers
-        const results = await searchPapers(1, {query: "Machine Learning"});
-
-        const expectedOutput = {
-            totalResults: 2,
-            
-            papers: mockResultsRows.map((row) => ({
-                id: row.openalex_id,
-                internalId: row.id,
-                title: row.title,
-                displayName: row.display_name,
-                abstract: row.abstract,
-                publicationYear: row.publication_year,
-                citedByCount: row.cited_by_count,
-                fwci: Number(row.fwci),
-                primarySource: row.primary_source_display_name,
-                primaryTopic: row.primary_topic_display_name,
-                isOpenAccess: row.is_open_access,
-                openAccessStatus: row.open_access_status,
-                rank: Number(row.rank),
-                authorCount: Number(row.author_count),
-                authorsPreview: row.authors_preview
-            }))
-        };
-
-        expect(searchPapersByTextQuery).toHaveBeenCalledWith({
-            ...defaultFilters,
-            query:"Machine Learning"
-        });
-        expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        expect(results).toEqual(expectedOutput);
-    });
-
     // ----------- SUCCESSFUL RETRIEVAL OF EMPTY LIST WHEN NO PAPER MATCHES -----------
 
-    it("Returns an empty array when query doesn't retrieve any papers, with no filters, unauthenticated user", async () => {
+    it("Returns an empty array when query doesn't retrieve any papers, with no filters", async () => {
         searchPapersByTextQuery.mockResolvedValue({
             totalResults: 0,
             papers: []
         });
 
-        const results = await searchPapers(null, {query: "unknown query"});
-
-        // If the query doesn't match with any paper, the filters don't have an effect,
-        // That's why no filters were used for simplicity
-        expect(searchPapersByTextQuery).toHaveBeenCalledWith({
-            ...defaultFilters,
-            query: "unknown query", 
-        });
-        expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-
-        expect(results).toEqual({
-            totalResults: 0,
-            papers: []
-        });
-    });
-
-    it("Returns an empty array when query doesn't retrieve any papers, with no filters, authenticated user", async () => {
-        searchPapersByTextQuery.mockResolvedValue({
-            totalResults: 0,
-            papers: []
-        });
-
-
-        const results = await searchPapers(1, {query: "unknown query"});
+        const results = await searchPapers({query: "unknown query"});
 
         // If the query doesn't match with any paper, the filters don't have an effect,
         // That's why no filters were used for simplicity
@@ -201,36 +137,12 @@ describe("searchPapers", () => {
         });
 
         expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-        
+
         expect(results).toEqual({
             totalResults: 0,
             papers: []
         });
     });
-
-
-    // ------------ DOESN'T FAIL WHEN INSERTION OF SEARCH HISTORY RECORD FAILS ------------
-    it("Search doesn't fail when insertion of search history record fails", async () => {
-        // Assuming no matching papers for simplicity
-        searchPapersByTextQuery.mockResolvedValue({
-            totalResults: 0,
-            papers: []
-        });
-
-        const result = await searchPapers(1, {query: "unknown query"});
-
-        expect(searchPapersByTextQuery).toHaveBeenCalledWith({
-            ...defaultFilters,
-            query: "unknown query"
-        });
-        expect(searchPapersByTextQuery).toHaveBeenCalledTimes(1);
-
-        expect(result).toEqual({
-            totalResults: 0,
-            papers: []
-        });
-    });
-
 
     // ------------ FILTER VALIDATION AND NORMALIZATION -------------
 
@@ -260,7 +172,7 @@ describe("searchPapers", () => {
             includeCount: "true",
         };
 
-        const results = await searchPapers(null, searchFilters);
+        const results = await searchPapers(searchFilters);
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
             query: "Unknown query",
@@ -298,7 +210,7 @@ describe("searchPapers", () => {
             papers: []
         });
 
-        const results = await searchPapers(null, {query: "  unknown query   "});
+        const results = await searchPapers({query: "  unknown query   "});
 
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
             query:"unknown query", 
@@ -330,7 +242,7 @@ describe("searchPapers", () => {
 
     it("Throws a 400 AppError when input q is missing", async () => {
         // When the query is missing, we don't care about the rest of the filters
-        await expect(searchPapers(null, {query: ""})).rejects.toThrow("Search query is required");
+        await expect(searchPapers({query: ""})).rejects.toThrow("Search query is required");
 
         expect(searchPapersByTextQuery).not.toHaveBeenCalled();
     });
@@ -338,7 +250,7 @@ describe("searchPapers", () => {
 
     it("Throws a 400 AppError when input q is whitespaces", async () => {
         // When the query is missing, we don't care about the rest of the filters
-        await expect(searchPapers(null, {query: "    "})).rejects.toThrow("Search query is required");
+        await expect(searchPapers( {query: "    "})).rejects.toThrow("Search query is required");
 
         expect(searchPapersByTextQuery).not.toHaveBeenCalled();
     });
@@ -347,7 +259,7 @@ describe("searchPapers", () => {
 
     it("Throws a 400 AppError when the 'page' filter is non-positive", async () => {
         // Request contains invalid page number
-        await expect(searchPapers(null, {query: "Machine Learning", page: "0"}))
+        await expect(searchPapers({query: "Machine Learning", page: "0"}))
         .rejects
         .toThrow("'page' must be greater than or equal to 1");
 
@@ -356,7 +268,7 @@ describe("searchPapers", () => {
 
     it("Throws a 400 AppError when the 'limit' filter is non-positive", async () => {
         // Request contains invalid limit number
-        await expect(searchPapers(null, {query: "Machine Learning", limit: "0"}))
+        await expect(searchPapers({query: "Machine Learning", limit: "0"}))
         .rejects
         .toThrow("'limit' must be between 1 and 100");
 
@@ -370,7 +282,7 @@ describe("searchPapers", () => {
     // 2) sort not having an available sorting type
     // 3) paperType not having one of the available paper types in the database
     it("Throws a 400 AppError when fromYear is greater than toYear", async () => {
-        await expect(searchPapers(null, {query: "Machine Learning", fromYear: "2015", toYear: "2010"}))
+        await expect(searchPapers({query: "Machine Learning", fromYear: "2015", toYear: "2010"}))
         .rejects
         .toThrow("'fromYear' cannot be greater than 'toYear'");
 
@@ -378,7 +290,7 @@ describe("searchPapers", () => {
     });
 
     it("Throws a 400 AppError when a string filter is invalid", async () => {
-        await expect(searchPapers(null, {query: "Machine Learning", topicId: 10102 }))
+        await expect(searchPapers({query: "Machine Learning", topicId: 10102 }))
         .rejects
         .toThrow("'topicId' must be a string");
         
@@ -386,7 +298,7 @@ describe("searchPapers", () => {
     });
 
     it("Throws a 400 AppError when an integer filter is invalid", async () => {
-        await expect(searchPapers(null, {query: "Machine Learning", minCitations: "One Hundred"}))
+        await expect(searchPapers({query: "Machine Learning", minCitations: "One Hundred"}))
         .rejects
         .toThrow("'minCitations' must be an integer");
         
@@ -394,7 +306,7 @@ describe("searchPapers", () => {
     });
 
     it("Throws a 400 AppError when a boolean filter is invalid", async () => {
-        await expect(searchPapers(null, {query: "Machine Learning", isOpenAccess: "yes"}))
+        await expect(searchPapers({query: "Machine Learning", isOpenAccess: "yes"}))
         .rejects
         .toThrow("'isOpenAccess' must be either true or false");
         
@@ -407,7 +319,7 @@ describe("searchPapers", () => {
     it("Propagates repository error", async () => {
         searchPapersByTextQuery.mockRejectedValue(new Error("Database query failed."));
 
-        await expect(searchPapers(null, {query: "Machine Learning"})).rejects.toThrow("Database query failed.");
+        await expect(searchPapers({query: "Machine Learning"})).rejects.toThrow("Database query failed.");
     
         // A database error produces the same output, regardless of any filters being applied
         expect(searchPapersByTextQuery).toHaveBeenCalledWith({
