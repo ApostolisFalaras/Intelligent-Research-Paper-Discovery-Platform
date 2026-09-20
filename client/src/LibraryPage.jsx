@@ -25,6 +25,35 @@ function LibraryPage() {
         folder.summary.toLowerCase().includes(filterQuery.toLowerCase())
     ));
 
+    async function createFolder(name, description, color) {
+        try {
+            const response = await fetch("/api/users/me/folders", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    name,
+                    description,
+                    color
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Append the newly created folder in the state variable
+            setFolders((prevFolders) => [ ...prevFolders, result.data]);
+
+        } catch (error) {
+            console.error("Failed to create new folder:", error);
+        }
+    }
+
     async function loadFolders() {
         try {
             const response = await fetch("/api/users/me/folders", {
@@ -38,18 +67,22 @@ function LibraryPage() {
             const results = await response.json();
             
             setFolders(results?.data.folders ?? []);
-            console.log(results.data);
+            
 
         } catch (error) {
-            console.error("Failed to fetch profile info:", error);
+            console.error("Failed to fetch user folders:", error);
             setFolders([]);
         }
     }
 
 
     useEffect(() => {
+        if (authLoading || !user) {
+            return;
+        }
+
         loadFolders();
-    }, []);
+    }, [authLoading, user?.userId]);
 
     
     if (authLoading) {
@@ -117,8 +150,19 @@ function LibraryPage() {
             </main>    
 
             {/* Modals */}
-            {showModal && <NewFolderModal onClose={() => setShowModal(false)} />}
-            {selectedFolder && <FolderDetails folder={selectedFolder} onClose={() => setSelectedFolder(null)}/>}
+            {showModal && 
+                <NewFolderModal 
+                    onClose={() => setShowModal(false)} 
+                    onCreate={createFolder}
+                />
+            }
+            
+            {selectedFolder && 
+                <FolderDetails 
+                    folder={selectedFolder} 
+                    onClose={() => setSelectedFolder(null)}
+                />
+            }
 
         </div>
     );
