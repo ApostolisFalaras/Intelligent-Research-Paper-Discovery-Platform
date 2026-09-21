@@ -6,7 +6,27 @@ import { MemoryRouter } from "react-router-dom";
 import ExplorePage from "../../src/ExplorePage.jsx";
 
 
-// Mock child components
+// Mock modules, and inner components
+const mockSetCachedTopics = vi.fn();
+const mockUseExplore = vi.fn();
+const mockNavigationType = vi.fn();
+
+
+vi.mock("../../src/hooks/useExplore.jsx", () => ({
+	useExplore: () => mockUseExplore()
+}));
+
+
+vi.mock("react-router-dom", async () => {
+	const actual = await vi.importActual("react-router-dom");
+
+	return {
+		...actual,
+		useNavigationType: () => mockNavigationType()
+	};
+});
+
+
 vi.mock("../../src/components/explore/TopicRow.jsx", () => ({
 	default: ({ topicPreview }) => (
 		<div data-testid={`topic-row-${topicPreview.topic.id}`}>
@@ -58,6 +78,14 @@ describe("ExplorePage", () => {
 		vi.clearAllMocks();
 
 		global.fetch = vi.fn();
+
+		// Simulate a fresh navigation to the Explore page
+		mockNavigationType.mockReturnValue("PUSH");
+
+		mockUseExplore.mockReturnValue({
+			cachedTopics: null,
+			setCachedTopics: mockSetCachedTopics
+		});
 	});
 
 
@@ -66,7 +94,11 @@ describe("ExplorePage", () => {
 	it("Displays the loading state while topics are being fetched", () => {
 		global.fetch.mockResolvedValue(new Promise(() => {}));
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(screen.getByTestId("explore-loading")).toBeInTheDocument();
 	});
@@ -81,7 +113,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await waitFor(() => {
 			expect(global.fetch).toHaveBeenCalledWith(
@@ -107,7 +143,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(await screen.findByText("Machine Learning")).toBeInTheDocument();
 		expect(screen.getByText("Database Systems")).toBeInTheDocument();
@@ -126,7 +166,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -143,7 +187,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(await screen.findByText("Discovery feed • 3 topics")).toBeInTheDocument();
 	});
@@ -158,7 +206,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("explore-loading")).not.toBeInTheDocument();
@@ -181,7 +233,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(screen.getByRole("heading", { name: "Explore" })).toBeInTheDocument();
 
@@ -201,7 +257,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(screen.getByRole("button", { name: /Shuffle topics/i })).toBeInTheDocument();
 
@@ -219,7 +279,11 @@ describe("ExplorePage", () => {
 			status: 500
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(await screen.findByText("Could not load topics")).toBeInTheDocument();
 
@@ -238,7 +302,11 @@ describe("ExplorePage", () => {
 
 		global.fetch.mockRejectedValueOnce(new Error("Network error"));
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		expect(await screen.findByText("Could not load topics")).toBeInTheDocument();
 
@@ -269,7 +337,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -308,7 +380,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -343,7 +419,11 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Discovery feed • 3 topics");
 
@@ -370,7 +450,11 @@ describe("ExplorePage", () => {
 
 		global.fetch.mockReturnValueOnce(pendingShuffle);
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -414,7 +498,11 @@ describe("ExplorePage", () => {
 
 		global.fetch.mockReturnValueOnce(pendingShuffle);
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -456,7 +544,11 @@ describe("ExplorePage", () => {
 			status: 500
 		});
 
-		render(<ExplorePage />);
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
 
 		await screen.findByText("Machine Learning");
 
@@ -470,5 +562,108 @@ describe("ExplorePage", () => {
 		expect(shuffleButton).not.toHaveClass("shuffling");
 
 		consoleSpy.mockRestore();
+	});
+
+
+	// ---------- EXPLORE CONTEXT TESTS ----------
+
+	it("Restores cached topics without fetching when returning through browser history", async () => {
+		mockNavigationType.mockReturnValue("POP");
+
+		mockUseExplore.mockReturnValue({
+			cachedTopics: mockTopics,
+			setCachedTopics: mockSetCachedTopics
+		});
+
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("Machine Learning")).toBeInTheDocument();
+		expect(screen.getByText("Database Systems")).toBeInTheDocument();
+		expect(screen.getByText("Quantum Computing")).toBeInTheDocument();
+		expect(screen.getByText("Discovery feed • 3 topics")).toBeInTheDocument();
+
+		expect(global.fetch).not.toHaveBeenCalled();
+
+		expect(mockSetCachedTopics).not.toHaveBeenCalled();
+	});
+
+
+	it("Fetches new topics on browser history navigation when no cached topics exist", async () => {
+		mockNavigationType.mockReturnValue("POP");
+
+		mockUseExplore.mockReturnValue({
+			cachedTopics: null,
+			setCachedTopics: mockSetCachedTopics
+		});
+
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: vi.fn().mockResolvedValue({
+				data: mockTopics
+			})
+		});
+
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("Machine Learning")).toBeInTheDocument();
+
+		expect(global.fetch).toHaveBeenCalledTimes(1);
+
+		expect(global.fetch).toHaveBeenCalledWith(
+			"/api/explore",
+			{
+				credentials: "include"
+			}
+		);
+
+		expect(mockSetCachedTopics).toHaveBeenCalledWith(mockTopics);
+	});
+
+
+	it("Updates the cached topics after shuffling", async () => {
+		const user = userEvent.setup();
+
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: vi.fn().mockResolvedValue({
+				data: mockTopics
+			})
+		});
+
+		global.fetch.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: vi.fn().mockResolvedValue({
+				data: shuffledTopics
+			})
+		});
+
+		render(
+			<MemoryRouter>
+				<ExplorePage />
+			</MemoryRouter>
+		);
+
+		await screen.findByText("Machine Learning");
+
+		expect(mockSetCachedTopics).toHaveBeenCalledWith(mockTopics);
+
+		await user.click(screen.getByRole("button", { name: /Shuffle topics/i }));
+
+		await screen.findByText("Computer Vision");
+
+		expect(mockSetCachedTopics).toHaveBeenCalledTimes(2);
+		expect(mockSetCachedTopics).toHaveBeenNthCalledWith(1, mockTopics);
+		expect(mockSetCachedTopics).toHaveBeenNthCalledWith(2, shuffledTopics);
 	});
 });
