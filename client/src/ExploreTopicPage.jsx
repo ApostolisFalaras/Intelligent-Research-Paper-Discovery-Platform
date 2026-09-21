@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import PaperCard from "./components/papers/PaperCard.jsx";
 import "./styles/explore.css";
@@ -27,18 +27,23 @@ function getTopicColor(topic = "") {
 }
 
 
+const SORT_OPTIONS = [
+	{ label: "Most cited", value: "citations" },
+	{ label: "Recent", value: "recent" },
+	{ label: "Popular", value: "popular" }
+];
+
 function ExploreTopicPage() {
 	const { id: topicId } = useParams();
 
-	const [topicInfo, setTopicInfo] = useState([]);
-	const [sort, setSort] = useState("Default");
+	const [topicInfo, setTopicInfo] = useState({});
+	const [sort, setSort] = useState("citations");
 	const [page, setPage] = useState(1);
 
 
 	async function loadExploreTopic() {
 		try {
-			console.log(topicId);
-			const response = await fetch(`/api/explore/${topicId}?page=${page}&limit=15`, {
+			const response = await fetch(`/api/explore/${topicId}?page=${page}&limit=15&sort=${sort}`, {
 				credentials: "include"
 			});
 
@@ -49,7 +54,6 @@ function ExploreTopicPage() {
 			const result = await response.json();
 			setTopicInfo(result?.data ?? {});
 			
-			console.log(result?.data);
 
 		} catch (error) {
 			console.error("Failed to fetch topic info:", error);
@@ -64,30 +68,11 @@ function ExploreTopicPage() {
 	
 	useEffect(() => {
 		loadExploreTopic();
-	}, [page]);
+	}, [topicId, page, sort]);
 
 
-	// Memoized (Cached) computation that calculates ordering of papers
-	// based on one of the sorting options
-	const sortedPapers = useMemo(() => {
-		if (!topicInfo?.topic) {
-			return [];
-		}
-		const papers = [...topicInfo?.papers];
-		
-		if (sort === "Recent") {
-			return papers.sort((a, b) => b.publicationYear - a.publicationYear);
-		}
-
-		if (sort === "Most cited") {
-			return papers.sort((a,b) => b.citedByCount - a.citedByCount);
-		}
-		return papers;
-	}, [topicInfo, sort]);
-
-	const totalPapers = topicInfo?.totalResults;
+	const totalPapers = topicInfo?.totalResults ?? 0;
 	const totalPages = Math.max(1, Math.ceil(totalPapers / 15));
-	console.log(totalPages);
 
 	return (
 		<div id="explore-topic-page">
@@ -98,22 +83,22 @@ function ExploreTopicPage() {
 					<span id="explore-topic-field">{topicInfo?.topic?.fieldDisplayName}</span>
 				</div>
 				<h1>{topicInfo?.topic?.displayName ?? "Topic Name"}</h1>
-				<p id="explore-topic-total">{topicInfo?.totalResults} papers</p>
+				<p id="explore-topic-total">{topicInfo?.totalResults ?? 0} papers</p>
 			</div>
 
 			{/* Sort Controls */}
 			<div id="explore-topic-sorting">
 				<div>
-					{["Default", "Recent", "Most cited"].map((option) => (
+					{SORT_OPTIONS.map((option) => (
 						<button
-							key={option}
-							className={`explore-sorting-btn ${sort === option ? "active" : ""}`}
+							key={option.value}
+							className={`explore-sorting-btn ${sort === option.value ? "active" : ""}`}
 							onClick={() => {
-								setSort(option);
+								setSort(option.value);
 								setPage(1);
 							}}
 						>
-							{option}
+							{option.label}
 						</button>
 					))}
 				</div>
@@ -121,7 +106,7 @@ function ExploreTopicPage() {
 
 			{/* Grid of Papers */}
 			<div id="explore-paper-grid">
-				{sortedPapers.map((paper) => (
+				{topicInfo?.papers?.map((paper) => (
 					<PaperCard 
 						key={paper.id} 
 						paper={paper}
@@ -136,6 +121,8 @@ function ExploreTopicPage() {
 					<button 
 						id="explore-prev-btn"
 						className={page === 1 ? "page-1" : ""}
+						disabled={page === 1}
+						onClick={() => setPage((prev) => prev - 1)}
 					>
 						<ArrowLeft size={12} /> Prev
 					</button>
@@ -177,6 +164,8 @@ function ExploreTopicPage() {
 					<button 
 						id="explore-next-btn"
 						className={page === totalPages ? "page-N" : ""}
+						disabled={page === totalPages}
+						onClick={() => setPage((prev) => prev + 1)}
 					>
 						Next <ArrowRight size={12} />
 					</button>
