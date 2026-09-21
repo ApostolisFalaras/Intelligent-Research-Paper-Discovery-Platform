@@ -68,11 +68,11 @@ function TopicRow({ topicPreview }) {
 					className="scroll-container"
 				>
 					{topicPreview?.papers?.map((paper) => (
-						<div style={{maxWidth: "300px" }}>
-							<PaperCard 
-								key={paper.id} 
-								paper={paper} 
-							/>
+						<div 
+							key={paper.id}
+							style={{maxWidth: "300px" }}
+						>
+							<PaperCard paper={paper} />
 						</div>
 					))}
 
@@ -100,6 +100,7 @@ function TopicRow({ topicPreview }) {
 				{["left", "right"].map(((dir) => (
 					<button
 						key={dir}
+						aria-label={`Scroll ${dir}`}
 						className={`dir-btn ${dir}`}
 						onClick={() => scroll(dir)}
 					>
