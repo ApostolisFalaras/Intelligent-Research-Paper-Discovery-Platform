@@ -23,6 +23,8 @@
     transform: translateY(-3px);
 }
 
+.card:hover .paper-title { color: #2D6A4F; }
+
 .card-header {
     display: flex;
     align-items: center;
@@ -72,7 +74,7 @@
 
 .paper-title {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     line-height: 1.45;
     color: #212529;
@@ -230,6 +232,7 @@
     flex-direction: row;
     align-items: center;
     padding: 8px 4px; 
+    min-height: 75px;
 }
 
 .paper-topic.profile { font-size: 11px; }
@@ -614,58 +617,72 @@
 .author-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background-color: #FFFFFF;
-    border: 1px solid rgba(26,26,20,0.10);
+    gap: 14px;
+    min-width: 0;
+    min-height: 78px;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    background-color: #FFFFFF !important;
+    border: 1px solid rgba(26, 26, 20, 0.10) !important;
     border-radius: 7px;
     text-decoration: none;
+}
+
+.author-link.available {
+    cursor: pointer;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.author-link:hover {
-    border: 1px solid #2D6A4F; 
-    box-shadow: 0 2px 8px rgba(26,26,20,0.07);
+.author-link.available:hover {
+    border-color: #95D5B2 !important;
+    box-shadow: 0 2px 8px rgba(45, 106, 79, 0.07);
 }
 
 .author-link .author-avatar {
-    width: 34px; 
-    height: 34px; 
-    border-radius: 50%; 
-    background-color: #EAE8E0;
-    display: flex; 
+    width: 44px;
+    height: 44px;
+    display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background-color: #EAE8E0;
+    border-radius: 50%;
 }
 
 .author-link .author-initials {
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     color: #212529;
 }
 
+.author-link .author-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .author-link .author-name {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: #212529;
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    text-decoration: none;
     white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #212529;
+    text-decoration: none;
 }
 
 .author-link .author-affiliation {
-    font-family: 'Inter', sans-serif;
-    font-size: 11px;
-    color: #6B6B5A;
-    margin: 2px 0 0;
+    margin: 3px 0 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.3;
+    color: #6B6B5A;
 }
 
 /* ---------- Paper Page > Databases Paper appears in ---------- */

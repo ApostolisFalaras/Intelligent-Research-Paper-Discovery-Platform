@@ -266,27 +266,42 @@ function PaperPage() {
 						</h2>
 
 						<div>
-							{paper?.authors.map((author) => (
-								<Link 
-									key={author?.id}
-									to={`/authors/${author.id}`}
-									className="author-link"
-								>
-									<div className="author-avatar">
-										<span className="author-initials">
-											{author?.displayName.split(" ").map((n) => n[0]).slice(0,2).join("")}
-										</span>
+							{paper?.authors.map((author) => {
+								const authorContent = (
+									<>
+										<div className="author-avatar">
+											<span className="author-initials">
+												{author?.displayName.split(" ").map((n) => n[0]).slice(0,2).join("")}
+											</span>
+										</div>
+										<div className="author-info">
+											<p className="author-name">
+												{author?.displayName}
+											</p>
+											<p className="author-affiliation">
+												{author?.affiliations[0]?.rawString}
+											</p>
+										</div>
+									</>
+								);
+
+								return author?.authorExists ? (
+									<Link
+										key={author?.id}
+										to={`/authors/${author.id}`}
+										className="author-link available"
+									>
+										{authorContent}
+									</Link>
+								) : (
+									<div
+										key={author?.id}
+										className="author-link"
+									>
+										{authorContent}
 									</div>
-									<div style={{minWidth: 0}}>
-										<p className="author-name">
-											{author?.displayName}
-										</p>
-										<p className="author-affiliation">
-											{author?.affiliations[0]?.rawString}
-										</p>
-									</div>
-								</Link>
-							))}
+								);
+							})}
 						</div>
 				</section>
 
