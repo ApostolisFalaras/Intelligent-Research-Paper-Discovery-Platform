@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigationType } from "react-router-dom";
+import { useExplore } from "./hooks/useExplore.jsx";
 import TopicRow from "./components/explore/TopicRow.jsx";
 import { Shuffle } from "lucide-react";
 import "./styles/explore.css";
@@ -9,6 +11,11 @@ function ExplorePage() {
     const [shuffling, setShuffling] = useState(false);
     const [topics, setTopics] = useState([]);
     const [topicsStatus, setTopicsStatus] = useState("loading");
+
+    // Access cached information about a potential explore topics
+    // that might need to be restored according to the navigation type
+    const navigationType = useNavigationType();
+    const { cachedTopics, setCachedTopics } = useExplore();
 
     // Fetch random topics
     async function loadRandomTopics() {
@@ -24,21 +31,32 @@ function ExplorePage() {
             }
 
             const result = await response.json();
+
             setTopics(result?.data ?? []);
+            setCachedTopics(result?.data ?? []);
             
             setTopicsStatus("success");
 
         } catch (error) {
             console.error("Failed to fetch random topics:", error);
+            
             setTopics([]);
             setTopicsStatus("error");
 
         }
     }
 
+    // Decide whether to use the cached topics or load a new random set of topics
     useEffect(() => {
+        if (navigationType === "POP" && cachedTopics !== null) {
+            setTopics(cachedTopics);
+            setTopicsStatus("success");
+            return;
+        }
+
         loadRandomTopics();
     }, []);
+
 
     // Shuffle topics
     async function handleShuffle() {
