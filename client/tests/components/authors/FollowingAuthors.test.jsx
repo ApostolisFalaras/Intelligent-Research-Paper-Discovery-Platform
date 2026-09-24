@@ -280,23 +280,28 @@ describe("FollowingAuthors", () => {
 	});
 
 
-	it("Logs the author id when the unfollow button is clicked", async () => {
+	it("Calls onUnfollow with the author id when the unfollow button is clicked", async () => {
 		const user = userEvent.setup();
-
-		const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+		const mockOnUnfollow = vi.fn();
 
 		render(
 			<MemoryRouter>
-				<FollowingAuthors authors={mockAuthors} />
+				<FollowingAuthors
+					authors={mockAuthors}
+					onUnfollow={mockOnUnfollow}
+				/>
 			</MemoryRouter>
 		);
 
 		await user.click(screen.getByRole("button", { name: /See all/i }));
 
-		await user.click(screen.getByRole("button", { name: "Unfollow Geoffrey Hinton" }));
+		await user.click(
+			screen.getByRole("button", {
+				name: "Unfollow Geoffrey Hinton"
+			})
+		);
 
-		expect(consoleSpy).toHaveBeenCalledWith("Unfollow author:", "A1");
-
-		consoleSpy.mockRestore();
+		expect(mockOnUnfollow).toHaveBeenCalledTimes(1);
+		expect(mockOnUnfollow).toHaveBeenCalledWith("A1");
 	});
 });
