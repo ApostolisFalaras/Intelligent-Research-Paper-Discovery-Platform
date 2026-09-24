@@ -377,7 +377,7 @@ function AccountSettingsPage() {
             }
 
         } catch (error) {
-            console.log("Failed to delete user profile:", error);
+            console.error("Failed to delete user profile:", error);
         }
     }
 

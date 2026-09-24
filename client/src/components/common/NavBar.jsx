@@ -23,7 +23,7 @@ function NavBar() {
 	const location = useLocation();
 	const isHomePage = location.pathname === "/";
 	const isAuthPage = location.pathname === "/auth";
-	const isSearchPage = location.pathname === "/search"; 
+	
 
 	return (
 		<div className={`navbar ${isHomePage ? "home": ""}`}>

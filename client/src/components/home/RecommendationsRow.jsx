@@ -12,7 +12,6 @@ function RecommendationsRow({ type, label, icon, papers }) {
 				<div className="section-type">
 					<span className="section-icon">{icon}</span>
 					<h2 className="section-label">{label}</h2>
-					{/*<span className="section-sublabel">{sublabel}</span>*/}
 				</div>
 
 				<Link to={`/recommendations?type=${type}`} className="see-all-btn">

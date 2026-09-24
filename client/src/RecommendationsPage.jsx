@@ -21,7 +21,6 @@ function RecommendationsPage() {
 	const typeMetadata = TYPE_META[type]; 
 	const Icon = typeMetadata?.icon;
 
-	console.log(typeMetadata);
 	const [page, setPage] = useState(1);
 	const [recommendationInfo, setRecommendationInfo] = useState(null);
 
@@ -41,7 +40,7 @@ function RecommendationsPage() {
 			setRecommendationInfo(result?.data ?? null);
 
 		} catch (error) {
-			console.log("Failed to fetch recommendations with error:", error);
+			console.error("Failed to fetch recommendations with error:", error);
 			setRecommendationInfo(null);
 		}
 	}

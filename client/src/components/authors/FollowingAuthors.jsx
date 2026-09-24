@@ -7,7 +7,7 @@ function getInitials(name = "") {
     return name.trim().split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 }
 
-function FollowingAuthors({ authors = [] }) {
+function FollowingAuthors({ authors = [], onUnfollow }) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
 
@@ -26,11 +26,6 @@ function FollowingAuthors({ authors = [] }) {
     function toggleOpen() {
         setIsOpen((current) => !current);
         setSearch("");
-    }
-
-	// Temporary message
-    function unfollowAuthor(authorId) {
-        console.log("Unfollow author:", authorId);
     }
 
     return (
@@ -138,7 +133,7 @@ function FollowingAuthors({ authors = [] }) {
                                         className="unfollow-author"
                                         title="Unfollow"
                                         aria-label={`Unfollow ${author.authorName}`}
-                                        onClick={() => unfollowAuthor(author.id)}
+                                        onClick={() => onUnfollow(author.id)}
                                     >
                                         <X size={11} />
                                     </button>

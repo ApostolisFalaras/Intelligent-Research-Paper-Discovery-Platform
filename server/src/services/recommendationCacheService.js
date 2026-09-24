@@ -1,5 +1,4 @@
 import { fetchUserProfilePreferences } from "./../repositories/recommendationProfileRepository.js";
-import { fetchTopSimilarUsers } from "../repositories/recommendationSimilarityRepository.js";
 import {
 	fetchCandidatePapersByTopics,
 	fetchCandidatePapersBySubfields,

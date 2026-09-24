@@ -94,7 +94,7 @@ function PaperModal({ paperId, paperInternalId, paperTitle, onClose, onSaved }) 
 	}
 
 	// Save paper into selected folder
-	    async function handleSave() {
+	async function handleSave() {
         if (!paperId || !paperInternalId) {
             return;
         }

@@ -26,7 +26,7 @@ function HomePage() {
 			setStatus("success");
 
 		} catch (error) {
-			console.log("Failed to fetch recommendations:", error);
+			console.error("Failed to fetch recommendations:", error);
 
 			setRecomSections(null);
 			setStatus("error");

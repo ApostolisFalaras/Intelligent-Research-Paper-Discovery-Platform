@@ -24,9 +24,6 @@ export function AuthProvider({ children }) {
 
 			const result = await response.json();
 
-			console.log("GET /api/users/me status:", response.status);
-			console.log("GET /api/users/me response:", result);
-
 			const authenticatedUser = result.data ?? null;
 
 			setUser(authenticatedUser);

@@ -44,7 +44,6 @@ export async function getAuthorById(userId, authorId) {
 	
 	let isFollowed;
 	if (parsedUserId) {
-		console.log(parsedUserId, Number(author.id))
 		isFollowed = await fetchAuthorIsFollowed(parsedUserId, Number(author.id));
 	}	
 

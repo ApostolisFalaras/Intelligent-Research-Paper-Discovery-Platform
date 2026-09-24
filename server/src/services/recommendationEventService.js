@@ -9,7 +9,6 @@ import {
 import { markUserRecommendationsStale } from "./../repositories/recommendationRefreshRepository.js";
 import { markPopularityDirty } from "./../repositories/popularityRefreshRepository.js";
 import { parseUserId, parseInteger } from "./../utils/parseData.js";
-import { AppError } from "./../utils/AppError.js";
 
 
 // Helper method to reduce repetitive code

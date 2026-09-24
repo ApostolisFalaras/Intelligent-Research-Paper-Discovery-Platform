@@ -15,6 +15,30 @@ function ProfilePage() {
     const [activeTab, setActiveTab] = useState("recent activity");
     const [profileInfo, setProfileInfo] = useState(null);
 
+
+    // Unfollow author handler when the user clicks the "x" icon in the followed authors dropdown
+    async function handleUnfollowAuthor(authorId) {
+        try {
+            const response = await fetch(`/api/authors/${authorId}/unfollow`, {
+                method: "POST",
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            setProfileInfo((current) => ({
+                ...current,
+                authorsFollowed: (current?.authorsFollowed ?? []).filter(
+                    (author) => author.id !== authorId
+                )
+            }));
+        } catch(error) {
+            console.error("Failed to unfollow author:", error);
+        }
+    }
+
     // Don't load user profile statistics until user is authenticated
     useEffect(() => {
         if (authLoading || !user) {
@@ -225,7 +249,10 @@ function ProfilePage() {
                         ))}
                     </div>
 
-                    <FollowingAuthors authors={profileInfo?.authorsFollowed}/>
+                    <FollowingAuthors 
+                        authors={profileInfo?.authorsFollowed}
+                        onUnfollow={handleUnfollowAuthor}
+                    />
                 </aside>
             </div>
         </div>

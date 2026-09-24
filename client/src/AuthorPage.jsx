@@ -39,7 +39,6 @@ function AuthorPage() {
 	const [author, setAuthor] = useState(null);
 	const [authorLoading, setAuthorLoading] = useState(true);
 	const [following, setFollowing] = useState(false);
-	console.log("following:", following, author?.isFollowed);
 
 	// Loads author data
 	async function loadAuthor() {
