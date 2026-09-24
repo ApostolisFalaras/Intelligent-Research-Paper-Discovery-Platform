@@ -149,6 +149,10 @@
     gap: 52px;
 }
 
+#main-section-header {
+    padding-top: 24px;
+}
+
 #main-section-header > p {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
