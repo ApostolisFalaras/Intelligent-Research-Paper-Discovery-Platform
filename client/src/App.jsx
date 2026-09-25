@@ -12,7 +12,7 @@ import ProfilePage from "./ProfilePage.jsx";
 import AccountSettingsPage from "./AccountSettingsPage.jsx";
 import RecommendationsPage from "./RecommendationsPage.jsx";
 import AuthorPage from "./AuthorPage.jsx";
-import { ExploreProvider } from "./context/ExploreContext.jsx";
+import { ExploreProvider } from "./context/ExploreProvider.jsx";
 
 function App() {
   
