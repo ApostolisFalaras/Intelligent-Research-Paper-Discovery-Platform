@@ -35,14 +35,14 @@ describe("FolderDetails", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 
 	// ---------- RENDERING TESTS ----------
 
 	it("Displays the folder information", () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -67,7 +67,7 @@ describe("FolderDetails", () => {
 
 
 	it("Fetches the papers belonging to the folder", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -85,7 +85,7 @@ describe("FolderDetails", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/users/me/folders/10/papers",
 				{
 					credentials: "include"
@@ -93,12 +93,12 @@ describe("FolderDetails", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 
 	it("Displays the papers returned by the API", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -124,7 +124,7 @@ describe("FolderDetails", () => {
 
 
 	it("Renders folder papers using the folder PaperCard variant", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -150,7 +150,7 @@ describe("FolderDetails", () => {
 
 
 	it("Displays the empty state when the folder contains no papers", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -183,7 +183,7 @@ describe("FolderDetails", () => {
 	it("Handles failure to fetch folder papers", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -221,7 +221,7 @@ describe("FolderDetails", () => {
 		const user = userEvent.setup();
 		const onClose = vi.fn();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -248,7 +248,7 @@ describe("FolderDetails", () => {
 		const user = userEvent.setup();
 		const onClose = vi.fn();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -275,7 +275,7 @@ describe("FolderDetails", () => {
 		const user = userEvent.setup();
 		const onClose = vi.fn();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -300,7 +300,7 @@ describe("FolderDetails", () => {
 
 
 	it("Links the Add Papers button to the search page", () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({

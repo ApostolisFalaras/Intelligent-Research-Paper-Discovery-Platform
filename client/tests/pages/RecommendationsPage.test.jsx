@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
@@ -32,7 +32,7 @@ describe("RecommendationsPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		Object.defineProperty(window, "scrollTo", {
 			value: vi.fn(),
@@ -44,7 +44,7 @@ describe("RecommendationsPage", () => {
 	// ---------- INITIAL RENDERING TESTS ----------
 
 	it("Fetches activity recommendations from page 1 by default", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 200,
             json: vi.fn().mockResolvedValue({ data: mockRecommendationData })
@@ -57,7 +57,7 @@ describe("RecommendationsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations?type=activity&page=1&limit=15",
                 {
                     credentials: "include"
@@ -68,7 +68,7 @@ describe("RecommendationsPage", () => {
 
 
 	it("Uses activity recommendations when no type query parameter exists", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -82,7 +82,7 @@ describe("RecommendationsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations?type=activity&page=1&limit=15",
                 {
                     credentials: "include"
@@ -95,7 +95,7 @@ describe("RecommendationsPage", () => {
 
 
 	it("Fetches the recommendation type provided in the URL", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -109,7 +109,7 @@ describe("RecommendationsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations?type=popular&page=1&limit=15",
                 {
                     credentials: "include"
@@ -124,7 +124,7 @@ describe("RecommendationsPage", () => {
 	// ---------- PAPER RENDERING TEST ----------
 
 	it("Renders the returned recommendation papers", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -148,7 +148,7 @@ describe("RecommendationsPage", () => {
 	// ---------- RECOMMENDATION TYPES TESTS ----------
 
 	it("Renders all available recommendation type buttons", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -175,7 +175,7 @@ describe("RecommendationsPage", () => {
 
 
 	it("Marks the current recommendation type as active", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -199,7 +199,7 @@ describe("RecommendationsPage", () => {
 	it("Fetches the new recommendation type after switching types", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -216,7 +216,7 @@ describe("RecommendationsPage", () => {
         await user.click(popularLink);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations?type=popular&page=1&limit=15",
                 {
                     credentials: "include"
@@ -229,7 +229,7 @@ describe("RecommendationsPage", () => {
 	// ---------- PAGINATION TESTS ----------
 
 	it("Does not display pagination when there is only one page", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: {
@@ -254,7 +254,7 @@ describe("RecommendationsPage", () => {
 
 
     it("Displays pagination when there is more than one page", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: {
@@ -281,7 +281,7 @@ describe("RecommendationsPage", () => {
 
 
     it("Marks the first page as active initially", async () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -303,7 +303,7 @@ describe("RecommendationsPage", () => {
     it("Fetches another page when a page number is clicked", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData
@@ -320,7 +320,7 @@ describe("RecommendationsPage", () => {
         await user.click(pageTwo);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations?type=activity&page=2&limit=15",
                 {
                     credentials: "include"
@@ -340,7 +340,7 @@ describe("RecommendationsPage", () => {
             .spyOn(console, "log")
             .mockImplementation(() => {});
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: false,
             status: 500
         });
@@ -352,7 +352,7 @@ describe("RecommendationsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
         await waitFor(() => {
@@ -368,7 +368,7 @@ describe("RecommendationsPage", () => {
             .spyOn(console, "log")
             .mockImplementation(() => {});
 
-        global.fetch.mockRejectedValue(new Error("Network error"));
+        globalThis.fetch.mockRejectedValue(new Error("Network error"));
 
         render(
 			<MemoryRouter initialEntries={["/recommendations?type=activity"]}>
@@ -377,7 +377,7 @@ describe("RecommendationsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
         expect(screen.queryByTestId("paper-card")).not.toBeInTheDocument();
@@ -389,7 +389,7 @@ describe("RecommendationsPage", () => {
     // ---------- PAGE BEHAVIOR TEST ----------
 
     it("Scrolls to the top when the page mounts", () => {
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 data: mockRecommendationData

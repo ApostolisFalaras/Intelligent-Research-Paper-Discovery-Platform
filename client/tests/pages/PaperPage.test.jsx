@@ -146,7 +146,7 @@ describe("PaperPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockUseAuth.mockReturnValue({
 			user: {
@@ -160,7 +160,7 @@ describe("PaperPage", () => {
 	// ---------- PAPER FETCHING TESTS ----------
 
 	it("Fetches the paper using the route parameter", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -181,7 +181,7 @@ describe("PaperPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/papers/W123456",
                 {
                     credentials: "include"
@@ -192,7 +192,7 @@ describe("PaperPage", () => {
 
 
 	it("Records a paper view after successfully loading the paper", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -213,7 +213,7 @@ describe("PaperPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/papers/42/view",
                 {
                     method: "POST",
@@ -222,14 +222,14 @@ describe("PaperPage", () => {
             );
         });
 
-        expect(global.fetch).toHaveBeenCalledTimes(2);
+        expect(globalThis.fetch).toHaveBeenCalledTimes(2);
     });
 
 
 	it("Does not record a paper view when loading the paper fails", async () => {
         const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: false,
             status: 404
         });
@@ -243,10 +243,10 @@ describe("PaperPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
-        expect(global.fetch).not.toHaveBeenCalledWith(
+        expect(globalThis.fetch).not.toHaveBeenCalledWith(
             expect.stringContaining("/view"),
             expect.anything()
         );
@@ -258,7 +258,7 @@ describe("PaperPage", () => {
 	// ---------- PAPER INFORMATION RENDERING TESTS ----------
 
 	it("Displays the main paper information", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -293,7 +293,7 @@ describe("PaperPage", () => {
 
 
 	it("Displays the Top 1% badge when applicable", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -317,7 +317,7 @@ describe("PaperPage", () => {
 
 
 	it("Displays the retracted warning for a retracted paper", async () => {
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -352,7 +352,7 @@ describe("PaperPage", () => {
 	// ---------- AUTHOR INFORMATION RENDERING TESTS ----------
 
 	it("Displays the paper authors", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -382,7 +382,7 @@ describe("PaperPage", () => {
 
 
 	it("Links existing authors to their author pages", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -412,7 +412,7 @@ describe("PaperPage", () => {
 	// ---------- EXTERNAL PAPER LINKS TESTS ----------
 
 	it("Displays the Read Paper link for an open-access paper", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -440,7 +440,7 @@ describe("PaperPage", () => {
 
 
     it("Does not display Read Paper when the paper is not open access", async () => {
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -474,7 +474,7 @@ describe("PaperPage", () => {
 
 
     it("Displays the DOI link when a DOI exists", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -502,7 +502,7 @@ describe("PaperPage", () => {
 	// ---------- ABSTRACT TESTS ----------
 
 	it("Displays a short abstract without an expansion button", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -531,7 +531,7 @@ describe("PaperPage", () => {
         const user = userEvent.setup();
         const longAbstract = "A".repeat(400);
 
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -575,7 +575,7 @@ describe("PaperPage", () => {
 	// ---------- CLASSIFICATION TEST ----------
     
     it("Displays the research classification", async () => {
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -606,7 +606,7 @@ describe("PaperPage", () => {
     // ---------- PAPER REACH TEST ----------
 
     it("Calculates unique countries and institutions", async () => {
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -637,7 +637,7 @@ describe("PaperPage", () => {
     it("Disables saving for unauthenticated users", async () => {
         mockUseAuth.mockReturnValue({ user: null });
 
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -664,7 +664,7 @@ describe("PaperPage", () => {
     it("Opens the save modal when an authenticated user clicks Save", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -693,7 +693,7 @@ describe("PaperPage", () => {
     it("Closes the save modal", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -723,7 +723,7 @@ describe("PaperPage", () => {
     it("Updates the paper to Saved after saving it in collections", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,
@@ -760,7 +760,7 @@ describe("PaperPage", () => {
     it("Updates the paper to Save after removing it from all collections", async () => {
         const user = userEvent.setup();
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce({
 				ok: true,
 				status: 200,

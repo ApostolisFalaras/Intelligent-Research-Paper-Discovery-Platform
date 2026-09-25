@@ -37,7 +37,7 @@ function InitialsAvatar({ initials, avatarURL, variant }) {
 			
 			toast.success("You have successfully logged out.");
 			navigate("/");
-		} catch (error) {
+		} catch {
 			toast.error("Failed to log out.");
 		}
 	}

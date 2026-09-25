@@ -15,11 +15,16 @@ function TopicSelect({ value, onChange }) {
 	const ref = useRef(null);
 	const searchRef = useRef(null);
 
+	function closeDropdown() {
+		setIsOpen(false);
+		setSearch("");
+	}
+
 	// clicks outside of the <TopicSelect> element close the open topics dropdown
 	useEffect(() => {
 		function handleClickOutside(event) {
 			if (ref.current && !ref.current.contains(event.target)) {
-				setIsOpen(false);
+				closeDropdown();
 			}
 		}
 
@@ -31,16 +36,17 @@ function TopicSelect({ value, onChange }) {
 	}, []);
 
 	useEffect(() => {
-		if (isOpen) {
-			const timeoutId = setTimeout(() => {
-				searchRef.current?.focus();
-			}, 50);
-
-			return () => clearTimeout(timeoutId);
+		if (!isOpen) {
+			return;
 		}
 
-		setSearch("");
+		const timeoutId = setTimeout(() => {
+			searchRef.current?.focus();
+		}, 50);
+
+		return () => clearTimeout(timeoutId);
 	}, [isOpen]);
+
 
 	// Memoize the selected topic computation
 	const selected = useMemo(() => {
@@ -96,8 +102,14 @@ function TopicSelect({ value, onChange }) {
 			<button
 				type="button"
 				onClick={() => {
-					if (!loading) {
-						setIsOpen((prev) => !prev);
+					if (loading) {
+						return;
+					}
+
+					if (isOpen) {
+						closeDropdown();
+					} else {
+						setIsOpen(true);
 					}
 				}}
 				id="topic-dropdown-btn"
@@ -189,7 +201,7 @@ function TopicSelect({ value, onChange }) {
 												className={`topic-option ${active ? "active" : ""}`}
 												onClick={() => {
 													onChange(topic.topicId);
-													setIsOpen(false);
+													closeDropdown();
 												}}
 											>
 												<span className={`topic-option-name ${active ? "active": ""}`}>

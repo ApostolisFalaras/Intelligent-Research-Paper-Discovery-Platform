@@ -54,35 +54,42 @@ function LibraryPage() {
         }
     }
 
-    async function loadFolders() {
-        try {
-            const response = await fetch("/api/users/me/folders", {
-                credentials: "include"
-            });
-
-            if (!response.ok) {
-                throw new Error(`Request failed with status ${response.status}`);
-            }
-            
-            const results = await response.json();
-            
-            setFolders(results?.data.folders ?? []);
-            
-
-        } catch (error) {
-            console.error("Failed to fetch user folders:", error);
-            setFolders([]);
-        }
-    }
-
+    const userId = user?.userId;
 
     useEffect(() => {
-        if (authLoading || !user) {
+        if (authLoading || !userId) {
             return;
         }
 
+        async function loadFolders() {
+            try {
+                const response = await fetch("/api/users/me/folders", {
+                    credentials: "include"
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Request failed with status ${response.status}`
+                    );
+                }
+
+                const results = await response.json();
+
+                setFolders(results?.data.folders ?? []);
+
+            } catch (error) {
+                console.error(
+                    "Failed to fetch user folders:",
+                    error
+                );
+
+                setFolders([]);
+            }
+        }
+
         loadFolders();
-    }, [authLoading, user?.userId]);
+
+    }, [authLoading, userId]);
 
     
     if (authLoading) {

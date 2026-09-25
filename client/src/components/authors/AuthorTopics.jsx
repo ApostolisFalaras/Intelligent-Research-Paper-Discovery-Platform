@@ -19,7 +19,6 @@ function AuthorTopics({ topics = [] }) {
 
 	const entries = Array.from(topicsBySubfield.entries());
 	const visible = expanded ? entries : entries.slice(0,2);
-	const totalTopics = topics?.length;
 
 	return (
 		<div id="author-topics">

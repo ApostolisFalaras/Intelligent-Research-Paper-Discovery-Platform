@@ -41,35 +41,39 @@ function AuthorPage() {
 	const [following, setFollowing] = useState(false);
 
 	// Loads author data
-	async function loadAuthor() {
-		setAuthorLoading(true);
+	useEffect(() => {
+		async function loadAuthor() {
+			setAuthorLoading(true);
 
-		try {
-			const response = await fetch(`/api/authors/${authorId}`, {
-				credentials: "include"
-			});
+			try {
+				const response = await fetch(`/api/authors/${authorId}`, {
+					credentials: "include"
+				});
 
-			if (!response.ok) {
-				throw new Error(`Request failed with status ${response.status}`);
+				if (!response.ok) {
+					throw new Error(
+						`Request failed with status ${response.status}`
+					);
+				}
+
+				const result = await response.json();
+
+				setAuthor(result?.data ?? {});
+				setFollowing(result?.data?.isFollowed ?? false);
+
+			} catch (error) {
+				console.error("Failed to fetch author info:", error);
+				setAuthor(null);
+				setFollowing(false);
+
+			} finally {
+				setAuthorLoading(false);
 			}
-
-			const result = await response.json();
-
-			setAuthor(result?.data ?? {});
-			setFollowing(result?.data?.isFollowed ?? false);
-
-		} catch (error) {
-			console.error("Failed to fetch author info:", error);
-			setAuthor(null);
-			setFollowing(false);
 		}
 
-		setAuthorLoading(false);
-	}
-
-	useEffect(() => {
 		loadAuthor();
-	}, []);
+
+	}, [authorId]);
 
 	// Handler when a user clicks the button to follow an author
 	async function followAuthorHandler() {
@@ -239,10 +243,7 @@ function AuthorPage() {
 						{/* Affiliations Information */}
 						<div>
 							{sortedAffiliations?.map((aff, i) => {
-								const minYear = Math.min(...aff.years);
-								const maxYear = Math.max(...aff.years);
 
-								const yearRange = minYear === maxYear ? `${minYear}` : `${minYear} - ${maxYear}`;
 								const isFirst = i === 0;
 								const isLast = i === sortedAffiliations?.length - 1;
 								

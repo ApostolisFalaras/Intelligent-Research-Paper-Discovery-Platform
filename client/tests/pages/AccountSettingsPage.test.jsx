@@ -108,7 +108,7 @@ describe("AccountSettingsPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockUseAuth.mockReturnValue({
 			user: mockUser,
@@ -137,7 +137,7 @@ describe("AccountSettingsPage", () => {
             screen.getByText("Loading profile...")
         ).toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -155,14 +155,14 @@ describe("AccountSettingsPage", () => {
 		);
 
         expect(container).toBeEmptyDOMElement();
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
 	// ---------- INITIAL PROFILE RENDERING TESTS ----------
 
 	it("Displays the public profile section by default", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -189,7 +189,7 @@ describe("AccountSettingsPage", () => {
 
 
 	 it("Fetches profile statistics after authentication", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -204,7 +204,7 @@ describe("AccountSettingsPage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 {
                     credentials: "include",
@@ -216,7 +216,7 @@ describe("AccountSettingsPage", () => {
 
 
 	it("Displays user initials when no avatar exists", () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -246,7 +246,7 @@ describe("AccountSettingsPage", () => {
             updateUser: mockUpdateUser
         });
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -273,7 +273,7 @@ describe("AccountSettingsPage", () => {
 	it("Switches to the Account section", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -300,7 +300,7 @@ describe("AccountSettingsPage", () => {
     it("Switches to the Password section", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -323,7 +323,7 @@ describe("AccountSettingsPage", () => {
     it("Switches to the Danger zone section", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -350,7 +350,7 @@ describe("AccountSettingsPage", () => {
 	it("Sends the updated public profile information", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -358,7 +358,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200
         });
@@ -377,7 +377,7 @@ describe("AccountSettingsPage", () => {
         await user.click(screen.getByRole("button", { name: "Save changes" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 expect.objectContaining({
                     method: "PATCH",
@@ -404,7 +404,7 @@ describe("AccountSettingsPage", () => {
 	it("Uploads a valid avatar and updates the authenticated user", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -412,7 +412,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200,
             json: vi.fn().mockResolvedValue({
@@ -439,7 +439,7 @@ describe("AccountSettingsPage", () => {
         await user.upload(input, file);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile/avatar",
                 expect.objectContaining({
                     method: "POST",
@@ -460,7 +460,7 @@ describe("AccountSettingsPage", () => {
 
         const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200,
             json: vi.fn().mockResolvedValue({
@@ -489,7 +489,7 @@ describe("AccountSettingsPage", () => {
         expect(consoleSpy).toHaveBeenCalledWith("Only JPG and PNG files are accepted.");
 
         // Only the initial profile-info request should exist.
-        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 
         consoleSpy.mockRestore();
     });
@@ -507,7 +507,7 @@ describe("AccountSettingsPage", () => {
             updateUser: mockUpdateUser
         });
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -515,7 +515,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200
         });
@@ -529,7 +529,7 @@ describe("AccountSettingsPage", () => {
         await user.click(screen.getByRole("button", { name: "Remove photo" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile/avatar",
                 {
                     method: "DELETE",
@@ -547,7 +547,7 @@ describe("AccountSettingsPage", () => {
 	it("Sends updated email and username", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -555,7 +555,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200
         });
@@ -580,7 +580,7 @@ describe("AccountSettingsPage", () => {
         await user.click(screen.getByRole("button", { name: "Save changes" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 expect.objectContaining({
                     method: "PATCH",
@@ -597,7 +597,7 @@ describe("AccountSettingsPage", () => {
 	  it("Displays validation errors for an invalid email and username", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -636,7 +636,7 @@ describe("AccountSettingsPage", () => {
 	it("Displays password strength after entering a new password", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -661,7 +661,7 @@ describe("AccountSettingsPage", () => {
     it("Displays when the new passwords match", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -688,7 +688,7 @@ describe("AccountSettingsPage", () => {
     it("Displays when the new passwords do not match", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -715,7 +715,7 @@ describe("AccountSettingsPage", () => {
 	it("Sends the new password when password validation succeeds", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -723,7 +723,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200
         });
@@ -745,7 +745,7 @@ describe("AccountSettingsPage", () => {
         await user.click(screen.getByRole("button", { name: "Save changes" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 expect.objectContaining({
                     method: "PATCH",
@@ -763,7 +763,7 @@ describe("AccountSettingsPage", () => {
 	it("Opens and closes the delete-account modal", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -792,7 +792,7 @@ describe("AccountSettingsPage", () => {
 	it("Deletes the authenticated user's account", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -800,7 +800,7 @@ describe("AccountSettingsPage", () => {
 			})
 		});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             status: 200
         });
@@ -818,7 +818,7 @@ describe("AccountSettingsPage", () => {
         await user.click(screen.getByRole("button", { name: "Confirm delete" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 {
                     method: "DELETE",

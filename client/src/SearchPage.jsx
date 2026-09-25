@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, X, Minus, Plus } from "lucide-react";
@@ -450,7 +450,7 @@ function SearchPage() {
     }, [filters.author]);
 
     // Main search query function
-    async function searchQuery() {
+    const searchQuery = useCallback(async () => {
         if (!query.trim()) {
             setSearchResults({
                 totalResults: 0,
@@ -505,7 +505,7 @@ function SearchPage() {
                 "Could not reach the server. Check your connection and try again."
             );
         }
-    }
+    }, [query, filters, debouncedAuthor, page, limit]);
 
     // Reset to the first page when the query changes
     useEffect(() => {
@@ -515,22 +515,7 @@ function SearchPage() {
     // Perform search query when either the query or a filter changes 
     useEffect(() => {
         searchQuery();
-    }, [
-        query,
-        filters.openAccessOnly,
-        filters.hasPDFAvailable,
-        filters.years.fromYear,
-        filters.years.toYear,
-        filters.paperType,
-        filters.language,
-        debouncedAuthor,
-        filters.minCitations,
-        filters.topic,
-        filters.hasRetracted,
-        filters.sort,
-        page,
-        limit,
-    ]);
+    }, [searchQuery]);
 
     // Validation values used by the rendered inputs
     const {yearFromError, yearToError} = validateYearsFilter(filters.years);

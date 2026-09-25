@@ -25,34 +25,44 @@ function RecommendationsPage() {
 	const [recommendationInfo, setRecommendationInfo] = useState(null);
 
 
-	async function loadRecommendations() {
-		try {
-			const response = await fetch(`/api/recommendations?type=${type}&page=${page}&limit=15`, {
-				credentials: "include"
-			});
+	useEffect(() => {
+		async function loadRecommendations() {
+			try {
+				const response = await fetch(
+					`/api/recommendations?type=${type}&page=${page}&limit=15`,
+					{
+						credentials: "include"
+					}
+				);
 
-			if (!response.ok) {
-				throw new Error(`Request failed with status ${response.status}`);
+				if (!response.ok) {
+					throw new Error(
+						`Request failed with status ${response.status}`
+					);
+				}
+
+				const result = await response.json();
+
+				setRecommendationInfo(result?.data ?? null);
+
+			} catch (error) {
+				console.error(
+					"Failed to fetch recommendations with error:",
+					error
+				);
+
+				setRecommendationInfo(null);
 			}
-
-    		const result = await response.json();
-			
-			setRecommendationInfo(result?.data ?? null);
-
-		} catch (error) {
-			console.error("Failed to fetch recommendations with error:", error);
-			setRecommendationInfo(null);
 		}
-	}
+
+		loadRecommendations();
+	}, [type, page]);
 
 	// Scroll to the top of the page
 	useEffect(() => {
 		window.scrollTo({ top: 0, left: 0, behavior: "instant"});
 	}, []);
 
-	useEffect(() => {
-		loadRecommendations();
-	}, [type, page]);
 
 	const totalPages = Math.ceil(recommendationInfo?.totalPapers / 15);
 

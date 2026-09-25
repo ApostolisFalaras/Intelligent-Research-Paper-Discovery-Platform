@@ -56,7 +56,7 @@ describe("ExplorePage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		Object.defineProperty(window, "scrollTo", {
 			value: vi.fn(),
@@ -68,7 +68,7 @@ describe("ExplorePage", () => {
 	// ---------- INITIAL FETCHING TESTS ----------
 
 	it("Fetches the topic using the route parameter", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -85,7 +85,7 @@ describe("ExplorePage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/explore/T100?page=1&limit=15&sort=citations",
 				{
 					credentials: "include"
@@ -93,12 +93,12 @@ describe("ExplorePage", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 
 	it("Fetches the requested topic when a different topic id is used", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -122,7 +122,7 @@ describe("ExplorePage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/explore/T200?page=1&limit=15&sort=citations",
 				{
 					credentials: "include"
@@ -135,7 +135,7 @@ describe("ExplorePage", () => {
 	it("Handles failure to fetch topic information", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -166,7 +166,7 @@ describe("ExplorePage", () => {
 	// ---------- SCROLL TEST ----------
 
 	it("Scrolls to the top when the page mounts", () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -193,7 +193,7 @@ describe("ExplorePage", () => {
 	// ---------- RENDERING TESTS ----------
 	
 	it("Displays the topic information", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -217,7 +217,7 @@ describe("ExplorePage", () => {
 
 
 	it("Displays the papers returned by the API", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -245,7 +245,7 @@ describe("ExplorePage", () => {
 
 
 	it("Uses Most cited sorting initially", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -272,7 +272,7 @@ describe("ExplorePage", () => {
 	it("Fetches recently sorted papers when Recent is selected", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -280,7 +280,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -308,7 +308,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: "Recent" }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenLastCalledWith(
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
 				"/api/explore/T100?page=1&limit=15&sort=recent",
 				{
 					credentials: "include"
@@ -329,7 +329,7 @@ describe("ExplorePage", () => {
 	it("Fetches papers using Popular sorting when selected", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -337,7 +337,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -358,7 +358,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: "Popular" }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenLastCalledWith(
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
 				"/api/explore/T100?page=1&limit=15&sort=popular",
 				{
 					credentials: "include"
@@ -373,7 +373,7 @@ describe("ExplorePage", () => {
 	// ---------- PAGINATION TESTS ----------
 
 	it("Displays pagination when more than one page exists", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -401,7 +401,7 @@ describe("ExplorePage", () => {
 
 
 	it("Does not display pagination when only one page exists", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -430,7 +430,7 @@ describe("ExplorePage", () => {
 	it("Fetches another page when a page number is selected", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -438,7 +438,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -470,7 +470,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: "2" }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/explore/T100?page=2&limit=15&sort=citations",
 				{
 					credentials: "include"
@@ -478,7 +478,7 @@ describe("ExplorePage", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(2);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(2);
 
 		expect(await screen.findByText("Page Two Paper")).toBeInTheDocument();
 
@@ -487,7 +487,7 @@ describe("ExplorePage", () => {
 
 
 	it("Displays pagination ellipses when pages are far apart", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -516,7 +516,7 @@ describe("ExplorePage", () => {
 	it("Moves to the previous page when Prev is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -543,7 +543,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: /Prev/i }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenLastCalledWith(
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
 				"/api/explore/T100?page=1&limit=15&sort=citations",
 				{
 					credentials: "include"
@@ -558,7 +558,7 @@ describe("ExplorePage", () => {
 	it("Moves to the next page when Next is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -579,7 +579,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: /Next/i }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenLastCalledWith(
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
 				"/api/explore/T100?page=2&limit=15&sort=citations",
 				{
 					credentials: "include"
@@ -594,7 +594,7 @@ describe("ExplorePage", () => {
 	it("Returns to page 1 when the sorting option changes", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -602,7 +602,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -621,7 +621,7 @@ describe("ExplorePage", () => {
 		});
 
 		// Changing sort while already on page 2 causes another request because setPage(1) changes page.
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -646,7 +646,7 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: "Recent" }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenLastCalledWith(
+			expect(globalThis.fetch).toHaveBeenLastCalledWith(
 				"/api/explore/T100?page=1&limit=15&sort=recent",
 				{
 					credentials: "include"

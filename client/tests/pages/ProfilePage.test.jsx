@@ -81,7 +81,7 @@ describe("ProfilePage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockUseAuth.mockReturnValue({
 			user: mockUser,
@@ -106,7 +106,7 @@ describe("ProfilePage", () => {
 
         expect(screen.getByText("Loading profile...")).toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -123,14 +123,14 @@ describe("ProfilePage", () => {
 		);
 
         expect(container).toBeEmptyDOMElement();
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
 	// ---------- PROFILE FETCHING TESTS ----------
 
 	it("Fetches the authenticated user's profile information", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -145,7 +145,7 @@ describe("ProfilePage", () => {
 		);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/profile",
                 {
                     credentials: "include",
@@ -154,14 +154,14 @@ describe("ProfilePage", () => {
             );
         });
 
-        expect(global.fetch).toHaveBeenCalledTimes(1);
+        expect(globalThis.fetch).toHaveBeenCalledTimes(1);
     });
 
 
 	it("Handles failure to fetch profile information", async () => {
         const consoleSpy = vi.spyOn(console, "error") .mockImplementation(() => {});
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: false,
             status: 500
         });
@@ -185,7 +185,7 @@ describe("ProfilePage", () => {
 	// ---------- PROFILE HEADER TESTS ----------
 
 	it("Displays the user's profile information", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -214,7 +214,7 @@ describe("ProfilePage", () => {
 
 
 	it("Displays the user's initials when no avatar exists", () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -243,7 +243,7 @@ describe("ProfilePage", () => {
             authLoading: false
         });
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -276,7 +276,7 @@ describe("ProfilePage", () => {
             authLoading: false
         });
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -301,7 +301,7 @@ describe("ProfilePage", () => {
 
 
     it("Links to the account settings page", () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -323,7 +323,7 @@ describe("ProfilePage", () => {
 	// ---------- STATISTICS TEST ----------
 
 	it("Displays the user's profile statistics", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -357,7 +357,7 @@ describe("ProfilePage", () => {
 	// ---------- RECENT ACTIVITY TESTS ----------
 
 	it("Displays recently viewed papers by default", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -382,7 +382,7 @@ describe("ProfilePage", () => {
 
 
     it("Renders recently viewed papers using the profile PaperCard variant", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -411,7 +411,7 @@ describe("ProfilePage", () => {
 	it("Displays saved papers when the Saved Papers tab is selected", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -442,7 +442,7 @@ describe("ProfilePage", () => {
 	it("Displays research topics in the About tab", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -471,7 +471,7 @@ describe("ProfilePage", () => {
     it("Displays the user's affiliation in the About tab", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -496,7 +496,7 @@ describe("ProfilePage", () => {
 	// ---------- LIBRARY SIDEBAR ----------
 
 	it("Displays preview collections in the library sidebar", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -521,7 +521,7 @@ describe("ProfilePage", () => {
 
 
     it("Links the library shortcut to My Library", () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -543,7 +543,7 @@ describe("ProfilePage", () => {
 	// ---------- FOLLOWING AUTHORS TEST ----------
 
     it("Passes followed authors to FollowingAuthors", async () => {
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({

@@ -41,34 +41,39 @@ function ExploreTopicPage() {
 	const [page, setPage] = useState(1);
 
 
-	async function loadExploreTopic() {
-		try {
-			const response = await fetch(`/api/explore/${topicId}?page=${page}&limit=15&sort=${sort}`, {
-				credentials: "include"
-			});
+	useEffect(() => {
+		async function loadExploreTopic() {
+			try {
+				const response = await fetch(
+					`/api/explore/${topicId}?page=${page}&limit=15&sort=${sort}`,
+					{
+						credentials: "include"
+					}
+				);
 
-			if (!response.ok) {
-				throw new Error(`Request failed with status ${response.status}`);
+				if (!response.ok) {
+					throw new Error(
+						`Request failed with status ${response.status}`
+					);
+				}
+
+				const result = await response.json();
+				setTopicInfo(result?.data ?? {});
+
+			} catch (error) {
+				console.error("Failed to fetch topic info:", error);
+				setTopicInfo({});
 			}
-
-			const result = await response.json();
-			setTopicInfo(result?.data ?? {});
-			
-
-		} catch (error) {
-			console.error("Failed to fetch topic info:", error);
-			setTopicInfo({});
 		}
-	}
+
+		loadExploreTopic();
+
+	}, [topicId, page, sort]);
 
 	// Scroll to the top of the page
 	useEffect(() => {
 		window.scrollTo({ top: 0, left: 0, behavior: "instant"});
 	}, []);
-	
-	useEffect(() => {
-		loadExploreTopic();
-	}, [topicId, page, sort]);
 
 
 	const totalPapers = topicInfo?.totalResults ?? 0;

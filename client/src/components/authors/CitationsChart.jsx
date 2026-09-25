@@ -10,33 +10,32 @@ function formatNumber(n) {
 }
 
 
+// Recharts supplies those props automatically
+// active -> whether tooltip should be shown
+// label -> x-axis value year
+// payload -> contains the values for all chart series for the current year
+function CustomTooltip({active, payload, label}) {
+	if (!active || !payload?.length) {
+		return null;
+	}
+	
+	return (
+		<div id="custom-tooltip">
+			<p id="custom-tooltip-label">{label}</p>
+			{payload.map((p) => (
+				<p key={p.name} className="custom-tooltip-payload" style={{ color: p.color }}>
+					{p.name}: <strong>{typeof p.value === "number" && p.value >= 1000 ? formatNumber(p.value) : p.value}</strong>
+				</p>
+			))}
+		</div>
+		);
+}
+
 
 function CitationsChart({ data = [] }) {
 	
 	// Sorting citation data chronologically
 	const sortedData = [...data].sort((a,b) => a.year - b.year);
-
-
-	// Recharts supplies those props automatically
-	// active -> whether tooltip should be shown
-	// label -> x-axis value year
-	// payload -> contains the values for all chart series for the current year
-	function CustomTooltip({active, payload, label}) {
-		if (!active || !payload?.length) {
-  			return null;
-		}
-		
-		return (
-			<div id="custom-tooltip">
-				<p id="custom-tooltip-label">{label}</p>
-				{payload.map((p) => (
-					<p key={p.name} className="custom-tooltip-payload" style={{ color: p.color }}>
-						{p.name}: <strong>{typeof p.value === "number" && p.value >= 1000 ? formatNumber(p.value) : p.value}</strong>
-					</p>
-				))}
-			</div>
-			);
-	}
 
 
 	return (

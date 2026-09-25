@@ -7,27 +7,29 @@ import { Link } from "react-router-dom";
 function FolderDetails({ folder, onClose }) {
 	const [folderPapers, setFolderPapers] = useState([]);
 	
-	async function loadFolder() {
-		try {
-			const response = await fetch(`/api/users/me/folders/${folder.id}/papers`, {
-				credentials: "include"
-			});
-
-			if (!response.ok) {
-				throw new Error(`Request failed with status ${response.status}`);
-			}
-
-			const result = await response.json();
-			
-			setFolderPapers(result?.data);
-
-		} catch (error) {
-			console.error("Failed to fetch folder data:", error);
-			setFolderPapers([]);
-		}
-	}
-
 	useEffect(() => {
+		async function loadFolder() {
+			try {
+				const response = await fetch(
+					`/api/users/me/folders/${folder.id}/papers`, {
+						credentials: "include"
+					}
+				);
+
+				if (!response.ok) {
+					throw new Error(`Request failed with status ${response.status}`);
+				}
+
+				const result = await response.json();
+
+				setFolderPapers(result?.data);
+
+			} catch (error) {
+				console.error("Failed to fetch folder data:", error);
+				setFolderPapers([]);
+			}
+		}
+
 		loadFolder();
 	}, [folder.id]);
 

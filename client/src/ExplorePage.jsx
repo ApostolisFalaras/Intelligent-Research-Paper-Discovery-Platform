@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigationType } from "react-router-dom";
 import { useExplore } from "./hooks/useExplore.jsx";
 import TopicRow from "./components/explore/TopicRow.jsx";
@@ -17,8 +17,10 @@ function ExplorePage() {
     const navigationType = useNavigationType();
     const { cachedTopics, setCachedTopics } = useExplore();
 
+    const initializedRef = useRef(false);
+
     // Fetch random topics
-    async function loadRandomTopics() {
+    const loadRandomTopics = useCallback(async () => {
         try {
             setTopicsStatus("loading");
 
@@ -44,10 +46,16 @@ function ExplorePage() {
             setTopicsStatus("error");
 
         }
-    }
+    }, [setCachedTopics]);
 
     // Decide whether to use the cached topics or load a new random set of topics
     useEffect(() => {
+        if (initializedRef.current) {
+            return;
+        }
+
+        initializedRef.current = false;
+        
         if (navigationType === "POP" && cachedTopics !== null) {
             setTopics(cachedTopics);
             setTopicsStatus("success");
@@ -55,7 +63,7 @@ function ExplorePage() {
         }
 
         loadRandomTopics();
-    }, []);
+    }, [navigationType, cachedTopics, loadRandomTopics]);
 
 
     // Shuffle topics

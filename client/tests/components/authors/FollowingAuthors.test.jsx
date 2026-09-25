@@ -42,15 +42,6 @@ const mockAuthors = [
 ];
 
 
-function renderFollowingAuthors(authors = mockAuthors) {
-	return render(
-		<MemoryRouter>
-			<FollowingAuthors authors={authors} />
-		</MemoryRouter>
-	);
-}
-
-
 describe("FollowingAuthors", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

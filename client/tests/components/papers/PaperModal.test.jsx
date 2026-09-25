@@ -28,14 +28,14 @@ describe("PaperModal", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 	});
 
 
 	// ---------- RENDERING TESTS ----------
 	
 	it("Loads all folders and existing paper memberships when opened", async () => {
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -67,14 +67,14 @@ describe("PaperModal", () => {
         expect(await screen.findByText("Machine Learning")).toBeInTheDocument();
         expect(screen.getByText("Databases")).toBeInTheDocument();
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/users/me/folders",
             {
                 credentials: "include"
             }
         );
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/papers/W123/folders",
             {
                 credentials: "include"
@@ -86,7 +86,7 @@ describe("PaperModal", () => {
 
 
     it("Displays singular and plural paper counts correctly", async () => {
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -126,7 +126,7 @@ describe("PaperModal", () => {
     it("Allows a folder to be selected and deselected", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -174,7 +174,7 @@ describe("PaperModal", () => {
     it("Adds the paper to a newly selected folder", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -205,15 +205,15 @@ describe("PaperModal", () => {
         await user.click(await screen.findByText("Machine Learning"));
 
         // Folder membership request
-        global.fetch.mockResolvedValueOnce({ ok: true });
+        globalThis.fetch.mockResolvedValueOnce({ ok: true });
 
         // Global save activity request
-        global.fetch.mockResolvedValueOnce({ ok: true });
+        globalThis.fetch.mockResolvedValueOnce({ ok: true });
 
         await user.click(screen.getByRole("button", { name: "Save" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/folders/1/papers/W123",
                 {
                     method: "POST",
@@ -222,7 +222,7 @@ describe("PaperModal", () => {
             );
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/papers/42/save",
             {
                 method: "POST",
@@ -238,7 +238,7 @@ describe("PaperModal", () => {
     it("Removes the paper from its final folder and records an unsave activity", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -268,14 +268,14 @@ describe("PaperModal", () => {
 
         await user.click(await screen.findByText("Machine Learning"));
 
-        global.fetch.mockResolvedValueOnce({ ok: true });
+        globalThis.fetch.mockResolvedValueOnce({ ok: true });
 
-        global.fetch.mockResolvedValueOnce({ ok: true });
+        globalThis.fetch.mockResolvedValueOnce({ ok: true });
 
         await user.click(screen.getByRole("button", { name: "Save" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/folders/1/papers/W123",
                 {
                     method: "DELETE",
@@ -284,7 +284,7 @@ describe("PaperModal", () => {
             );
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/papers/42/unsave",
             {
                 method: "POST",
@@ -299,7 +299,7 @@ describe("PaperModal", () => {
      it("Does not record global save or unsave activity when moving between saved folders", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -335,14 +335,14 @@ describe("PaperModal", () => {
         // Add folder 2
         await user.click(screen.getByText("Databases"));
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({ ok: true })
             .mockResolvedValueOnce({ ok: true });
 
         await user.click(screen.getByRole("button", { name: "Save" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/folders/1/papers/W123",
                 expect.objectContaining({
                     method: "DELETE"
@@ -350,19 +350,19 @@ describe("PaperModal", () => {
             );
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/users/me/folders/2/papers/W123",
             expect.objectContaining({
                 method: "POST"
             })
         );
 
-        expect(global.fetch).not.toHaveBeenCalledWith(
+        expect(globalThis.fetch).not.toHaveBeenCalledWith(
             "/api/papers/42/save",
             expect.anything()
         );
 
-        expect(global.fetch).not.toHaveBeenCalledWith(
+        expect(globalThis.fetch).not.toHaveBeenCalledWith(
             "/api/papers/42/unsave",
             expect.anything()
         );
@@ -376,7 +376,7 @@ describe("PaperModal", () => {
 
         const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -406,7 +406,7 @@ describe("PaperModal", () => {
 
         await user.click(await screen.findByText("Machine Learning"));
 
-        global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
+        globalThis.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
 
         await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -426,7 +426,7 @@ describe("PaperModal", () => {
     it("Creates a new collection", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -462,13 +462,13 @@ describe("PaperModal", () => {
         await user.type(input, "AI Papers");
 
         // Create request
-        global.fetch.mockResolvedValueOnce({
+        globalThis.fetch.mockResolvedValueOnce({
             ok: true,
             json: vi.fn().mockResolvedValue({})
         });
 
         // loadFolders() runs again after creation
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -496,7 +496,7 @@ describe("PaperModal", () => {
         await user.click(screen.getByRole("button", { name: "Create" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/folders",
                 {
                     method: "POST",
@@ -518,7 +518,7 @@ describe("PaperModal", () => {
     it("Deletes a collection after confirmation", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({
@@ -554,12 +554,12 @@ describe("PaperModal", () => {
 
         expect(screen.getByText('Delete "Machine Learning"?')).toBeInTheDocument();
 
-        global.fetch.mockResolvedValueOnce({ ok: true });
+        globalThis.fetch.mockResolvedValueOnce({ ok: true });
 
         await user.click(screen.getByRole("button", { name: "Delete" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/users/me/folders/1",
                 {
                     method: "DELETE",
@@ -575,7 +575,7 @@ describe("PaperModal", () => {
     it("Closes when Cancel is clicked", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockResolvedValueOnce({
                 ok: true,
                 json: vi.fn().mockResolvedValue({

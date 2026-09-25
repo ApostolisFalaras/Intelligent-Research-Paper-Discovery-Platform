@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"; 
+import { useState, useEffect, useRef, useCallback } from "react"; 
 import { X, Folder, Check, FolderPlus, Trash2 } from "lucide-react";
 import "../../styles/papers.css";
 
@@ -27,7 +27,7 @@ function PaperModal({ paperId, paperInternalId, paperTitle, onClose, onSaved }) 
 	// Load either:
     // i) every folder owned by the user
     // ii) folders that already contain this paper
-	async function loadFolders() {
+	const loadFolders = useCallback(async () => {
 
 		try {
 			setLoading(true);
@@ -71,7 +71,7 @@ function PaperModal({ paperId, paperInternalId, paperTitle, onClose, onSaved }) 
 		finally {
 			setLoading(false);
 		}
-	}
+	}, [paperId]);
 
 	useEffect(() => {
 		if (!paperInternalId) {
@@ -79,7 +79,7 @@ function PaperModal({ paperId, paperInternalId, paperTitle, onClose, onSaved }) 
 		}
 
 		loadFolders();
-	}, [paperInternalId]);
+	}, [paperInternalId, loadFolders]);
 
 
 	// Toggle folder storage for a paper

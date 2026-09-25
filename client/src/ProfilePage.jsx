@@ -39,9 +39,11 @@ function ProfilePage() {
         }
     }
 
+    const userId = user?.userId;
+
     // Don't load user profile statistics until user is authenticated
     useEffect(() => {
-        if (authLoading || !user) {
+        if (authLoading || !userId) {
             return;
         }
 
@@ -69,7 +71,7 @@ function ProfilePage() {
 
         fetchProfileInfo();
 
-    }, [authLoading, user?.userId]);
+    }, [authLoading, userId]);
     
     if (authLoading) {
         return <div>Loading profile...</div>;

@@ -76,7 +76,7 @@ describe("HomePage", () => {
 
 		mockUser = null;
 
-		global.fetch = vi.fn().mockResolvedValue({
+		globalThis.fetch = vi.fn().mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -100,7 +100,7 @@ describe("HomePage", () => {
 	// ---------- INITIAL LOADING STATE ----------
 
     it("Starts recommendations in the loading state", () => {
-        global.fetch.mockImplementation(() => new Promise(() => {}));
+        globalThis.fetch.mockImplementation(() => new Promise(() => {}));
 
         render(<HomePage />);
 
@@ -114,7 +114,7 @@ describe("HomePage", () => {
         render(<HomePage />);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/recommendations/home",
                 {
                     credentials: "include"
@@ -138,7 +138,7 @@ describe("HomePage", () => {
 	// ---------- ERROR TEST CASES ----------
 
 	it("Shows an error state when fetching recommendations fails", async () => {
-        global.fetch.mockRejectedValue(new Error("Network failure"));
+        globalThis.fetch.mockRejectedValue(new Error("Network failure"));
 
         render(<HomePage />);
 
@@ -154,7 +154,7 @@ describe("HomePage", () => {
 
 
 	it("Shows an error when the API request fails", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: false,
 			status: 500
 		});
@@ -175,7 +175,7 @@ describe("HomePage", () => {
 	it("Retries loading recommendations", async () => {
         const user = userEvent.setup();
 
-        global.fetch
+        globalThis.fetch
             .mockRejectedValueOnce(new Error("Network failure"))
             .mockResolvedValueOnce({
                 ok: true,
@@ -194,7 +194,7 @@ describe("HomePage", () => {
         await user.click(screen.getByRole("button", { name: "Retry" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(2);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(2);
         });
 
         await waitFor(() => {
@@ -211,7 +211,7 @@ describe("HomePage", () => {
         const { rerender } = render(<HomePage />);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
 		// User logs in, so we re-render the page
@@ -224,7 +224,7 @@ describe("HomePage", () => {
         rerender(<HomePage />);
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(2);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(2);
         });
     });
 });

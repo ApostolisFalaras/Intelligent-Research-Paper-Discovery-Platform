@@ -77,7 +77,7 @@ describe("ExplorePage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		// Simulate a fresh navigation to the Explore page
 		mockNavigationType.mockReturnValue("PUSH");
@@ -92,7 +92,7 @@ describe("ExplorePage", () => {
 	// ---------- INITIAL TOPICS FETCHING ----------
 
 	it("Displays the loading state while topics are being fetched", () => {
-		global.fetch.mockResolvedValue(new Promise(() => {}));
+		globalThis.fetch.mockResolvedValue(new Promise(() => {}));
 
 		render(
 			<MemoryRouter>
@@ -105,7 +105,7 @@ describe("ExplorePage", () => {
 
 
 	it("Fetches random topics when the page mounts", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -120,7 +120,7 @@ describe("ExplorePage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/explore",
 				{
 					credentials: "include"
@@ -128,14 +128,14 @@ describe("ExplorePage", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 
 	// ---------- SUCCESSFUL RENDERING TESTS ----------
 
 	it("Displays the topics returned by the API", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -158,7 +158,7 @@ describe("ExplorePage", () => {
 
 
 	it("Removes the loading state after topics are loaded", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -179,7 +179,7 @@ describe("ExplorePage", () => {
 
 
 	it("Displays the number of loaded topics", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -198,7 +198,7 @@ describe("ExplorePage", () => {
 
 
 	it("Displays zero topics when the API returns an empty array", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -225,7 +225,7 @@ describe("ExplorePage", () => {
 	// ---------- HEADER TESTS ----------
 
 	it("Displays the Explore page header", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -249,7 +249,7 @@ describe("ExplorePage", () => {
 
 
 	it("Displays the Shuffle topics button", async () => {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -274,7 +274,7 @@ describe("ExplorePage", () => {
 	it("Displays an error message when fetching topics fails", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -300,7 +300,7 @@ describe("ExplorePage", () => {
 	it("Displays an error message when the request rejects", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockRejectedValueOnce(new Error("Network error"));
+		globalThis.fetch.mockRejectedValueOnce(new Error("Network error"));
 
 		render(
 			<MemoryRouter>
@@ -321,7 +321,7 @@ describe("ExplorePage", () => {
 	it("Fetches a new set of topics when Shuffle topics is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -329,7 +329,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -348,10 +348,10 @@ describe("ExplorePage", () => {
 		await user.click(screen.getByRole("button", { name: /Shuffle topics/i }));
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledTimes(2);
+			expect(globalThis.fetch).toHaveBeenCalledTimes(2);
 		});
 
-		expect(global.fetch).toHaveBeenNthCalledWith(
+		expect(globalThis.fetch).toHaveBeenNthCalledWith(
 			2,
 			"/api/explore",
 			{
@@ -364,7 +364,7 @@ describe("ExplorePage", () => {
 	it("Replaces the displayed topics after shuffling", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -372,7 +372,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -403,7 +403,7 @@ describe("ExplorePage", () => {
 	it("Updates the topic count after shuffling", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -411,7 +411,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -436,7 +436,7 @@ describe("ExplorePage", () => {
 	it("Shows the shuffling state while new topics are being fetched", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -448,7 +448,7 @@ describe("ExplorePage", () => {
 		let resolveShuffle;
 		const pendingShuffle = new Promise((resolve) => { resolveShuffle = resolve; });
 
-		global.fetch.mockReturnValueOnce(pendingShuffle);
+		globalThis.fetch.mockReturnValueOnce(pendingShuffle);
 
 		render(
 			<MemoryRouter>
@@ -484,7 +484,7 @@ describe("ExplorePage", () => {
 	it("Displays the loading component while shuffling topics", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -496,7 +496,7 @@ describe("ExplorePage", () => {
 		let resolveShuffle;
 		const pendingShuffle = new Promise((resolve) => { resolveShuffle = resolve; });
 
-		global.fetch.mockReturnValueOnce(pendingShuffle);
+		globalThis.fetch.mockReturnValueOnce(pendingShuffle);
 
 		render(
 			<MemoryRouter>
@@ -531,7 +531,7 @@ describe("ExplorePage", () => {
 
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -539,7 +539,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -586,7 +586,7 @@ describe("ExplorePage", () => {
 		expect(screen.getByText("Quantum Computing")).toBeInTheDocument();
 		expect(screen.getByText("Discovery feed • 3 topics")).toBeInTheDocument();
 
-		expect(global.fetch).not.toHaveBeenCalled();
+		expect(globalThis.fetch).not.toHaveBeenCalled();
 
 		expect(mockSetCachedTopics).not.toHaveBeenCalled();
 	});
@@ -600,7 +600,7 @@ describe("ExplorePage", () => {
 			setCachedTopics: mockSetCachedTopics
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -616,9 +616,9 @@ describe("ExplorePage", () => {
 
 		expect(await screen.findByText("Machine Learning")).toBeInTheDocument();
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 
-		expect(global.fetch).toHaveBeenCalledWith(
+		expect(globalThis.fetch).toHaveBeenCalledWith(
 			"/api/explore",
 			{
 				credentials: "include"
@@ -632,7 +632,7 @@ describe("ExplorePage", () => {
 	it("Updates the cached topics after shuffling", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -640,7 +640,7 @@ describe("ExplorePage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({

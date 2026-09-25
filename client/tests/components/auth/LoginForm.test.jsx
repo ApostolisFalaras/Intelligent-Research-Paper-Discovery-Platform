@@ -3,7 +3,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import LoginForm from "../../../src/components/auth/LoginForm.jsx";
-import { useNavigate } from "react-router-dom";
 
 const mockRefreshUser = vi.fn();
 const mockNavigate = vi.fn();
@@ -35,7 +34,7 @@ describe("LoginForm", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockRefreshUser.mockResolvedValue({
 			id: 123,
@@ -62,7 +61,7 @@ describe("LoginForm", () => {
 	 it("Submits the login credentials to the API", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 200,
             json: vi.fn().mockResolvedValue({
@@ -80,10 +79,10 @@ describe("LoginForm", () => {
         await user.click(screen.getByRole("button", { name: "Sign in" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/auth/login",
             {
                 method: "POST",
@@ -103,7 +102,7 @@ describe("LoginForm", () => {
 	it("Refreshes the authenticated user after successful login", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({
                 message: "Logged in"
@@ -127,7 +126,7 @@ describe("LoginForm", () => {
 	it("Shows success feedback and navigates home after login", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({})
         });
@@ -156,7 +155,7 @@ describe("LoginForm", () => {
 	it("Shows the server error when login is rejected", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: false,
             status: 401,
             json: vi.fn().mockResolvedValue({
@@ -184,7 +183,7 @@ describe("LoginForm", () => {
 	 it("Handles network errors", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockRejectedValue(new Error("Network failure"));
+        globalThis.fetch.mockRejectedValue(new Error("Network failure"));
 
         render(<LoginForm />);
 
@@ -204,7 +203,7 @@ describe("LoginForm", () => {
 	it("Treats failure to refresh the user as a login failure", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             json: vi.fn().mockResolvedValue({})
         });

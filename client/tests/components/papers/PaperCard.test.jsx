@@ -32,7 +32,7 @@ describe("PaperCard", () => {
     beforeEach(() => {
         vi.clearAllMocks();
 
-        global.fetch = vi.fn();
+        globalThis.fetch = vi.fn();
     });
 
 	// ---------- RENDERING TESTS ----------
@@ -176,7 +176,7 @@ describe("PaperCard", () => {
 
         expect(mockNavigate).toHaveBeenCalledWith("/papers/W123456");
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -185,7 +185,7 @@ describe("PaperCard", () => {
     it("Records a recommendation click before navigating from a recommendation card", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 200
         });
@@ -200,7 +200,7 @@ describe("PaperCard", () => {
         await user.click(screen.getByText(mockPaper.title));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(
+            expect(globalThis.fetch).toHaveBeenCalledWith(
                 "/api/papers/42/recommendation-click",
                 {
                     method: "POST",
@@ -218,7 +218,7 @@ describe("PaperCard", () => {
 
         const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-        global.fetch.mockRejectedValue(new Error("Network error"));
+        globalThis.fetch.mockRejectedValue(new Error("Network error"));
 
         render(
             <PaperCard

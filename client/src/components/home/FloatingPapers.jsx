@@ -1,19 +1,21 @@
 import "../../styles/home.css";
 
+// Floating Papers animation in the Home Page, in the hero section
+// Each paper is defined as an an object of mathematically randomized features:
+// dimensions (width,height), timing of animation (delay,duration), opacity, position(x, rotation)
+const papers = Array.from({ length: 22 }, (_, i) => ({
+	id: i,
+	x: Math.random() * 100,
+	delay: Math.random() * 8,
+	duration: 14 + Math.random() * 10,
+	width: 80 + Math.random() * 60,
+	height: 100 + Math.random() * 70,
+	opacity: 0.06 + Math.random() * 0.10,
+	rotation: -15 + Math.random() * 30,
+}));
+
+
 function FloatingPapers() {
-	// Floating Papers animation in the Home Page, in the hero section
-	// Each paper is defined as an an object of mathematically randomized features:
-	// dimensions (width,height), timing of animation (delay,duration), opacity, position(x, rotation)
-	const papers = Array.from({ length: 22 }, (_, i) => ({
-		id: i,
-		x: Math.random() * 100,
-		delay: Math.random() * 8,
-		duration: 14 + Math.random() * 10,
-		width: 80 + Math.random() * 60,
-		height: 100 + Math.random() * 70,
-		opacity: 0.06 + Math.random() * 0.10,
-		rotation: -15 + Math.random() * 30,
-	}));
 
 	return (
 		<div id="floating-papers">

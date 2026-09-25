@@ -97,7 +97,7 @@ describe("LibraryPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockUseAuth.mockReturnValue({
 			user: mockUser,
@@ -116,7 +116,7 @@ describe("LibraryPage", () => {
 
 		// Current LibraryPage still executes loadFolders()
 		// on mount, even while auth is loading.
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -138,7 +138,7 @@ describe("LibraryPage", () => {
 			authLoading: false
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -157,7 +157,7 @@ describe("LibraryPage", () => {
 	// ---------- FOLDER FETCHING TESTS ----------
 
 	it("Fetches the authenticated user's folders", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -170,7 +170,7 @@ describe("LibraryPage", () => {
 		render(<LibraryPage />);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/users/me/folders",
 				{
 					credentials: "include"
@@ -178,12 +178,12 @@ describe("LibraryPage", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 
 	it("Displays the folders returned by the API", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -205,7 +205,7 @@ describe("LibraryPage", () => {
 	it("Handles failure to fetch folders", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -228,7 +228,7 @@ describe("LibraryPage", () => {
 	// ---------- HEADER RENDERING TESTS ----------
 
 	it("Displays the authenticated user's information", () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -246,7 +246,7 @@ describe("LibraryPage", () => {
 
 
 	it("Displays the number of collections and total papers", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -263,7 +263,7 @@ describe("LibraryPage", () => {
 
 
 	it("Displays zero totals when no folders exist", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -284,7 +284,7 @@ describe("LibraryPage", () => {
 	it("Filters folders by folder name", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -310,7 +310,7 @@ describe("LibraryPage", () => {
 	it("Filters folders by folder summary", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -336,7 +336,7 @@ describe("LibraryPage", () => {
 	it("Filters folders case-insensitively", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -360,7 +360,7 @@ describe("LibraryPage", () => {
 	it("Displays a message when no folders match the filter", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -387,7 +387,7 @@ describe("LibraryPage", () => {
 	it("Restores all folders when the filter is cleared", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -420,7 +420,7 @@ describe("LibraryPage", () => {
 	it("Opens the new folder modal", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -441,7 +441,7 @@ describe("LibraryPage", () => {
 	it("Closes the new folder modal", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -468,7 +468,7 @@ describe("LibraryPage", () => {
 	it("Opens folder details when a folder is selected", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -493,7 +493,7 @@ describe("LibraryPage", () => {
 	it("Opens the details for the selected folder", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -518,7 +518,7 @@ describe("LibraryPage", () => {
 	it("Closes the selected folder details", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({

@@ -3,7 +3,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import SignupForm from "../../../src/components/auth/SignupForm.jsx";
-import { useNavigate } from "react-router-dom";
 
 const mockRefreshUser = vi.fn();
 const mockNavigate = vi.fn();
@@ -35,7 +34,7 @@ describe("SignupForm", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockRefreshUser.mockResolvedValue({
 			id: 123,
@@ -82,7 +81,7 @@ describe("SignupForm", () => {
         expect(screen.getByText("Enter a valid email address.")).toBeInTheDocument();
         expect(screen.getByText("At least 8 characters required.")).toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     }); 
 
 
@@ -98,7 +97,7 @@ describe("SignupForm", () => {
         expect(screen.getByText("3–20 characters, letters, numbers, and underscores only."))
             .toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -113,7 +112,7 @@ describe("SignupForm", () => {
 
         expect(screen.getByText("Enter a valid email address.")).toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -131,7 +130,7 @@ describe("SignupForm", () => {
 
         expect(screen.getByText("At least 8 characters required.")).toBeInTheDocument();
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
 
@@ -177,7 +176,7 @@ describe("SignupForm", () => {
     it("Submits registration data to the API", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 201,
             json: vi.fn().mockResolvedValue({})
@@ -196,10 +195,10 @@ describe("SignupForm", () => {
         await user.click(screen.getByRole("button", { name: "Create account" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledTimes(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         });
 
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(globalThis.fetch).toHaveBeenCalledWith(
             "/api/auth/register",
             {
                 method: "POST",
@@ -225,7 +224,7 @@ describe("SignupForm", () => {
     it("Sends optional affiliation and role as null when omitted", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 201,
             json: vi.fn().mockResolvedValue({})
@@ -238,10 +237,10 @@ describe("SignupForm", () => {
         await user.click(screen.getByRole("button", { name: "Create account" }));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalled();
+            expect(globalThis.fetch).toHaveBeenCalled();
         });
 
-        const [, options] = global.fetch.mock.calls[0];
+        const [, options] = globalThis.fetch.mock.calls[0];
 
         expect(JSON.parse(options.body)).toMatchObject({
             affiliation: null,
@@ -253,7 +252,7 @@ describe("SignupForm", () => {
     it("Refreshes the user and navigates home after registration", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: true,
             status: 201,
             json: vi.fn().mockResolvedValue({})
@@ -278,7 +277,7 @@ describe("SignupForm", () => {
     it("Shows server registration errors", async () => {
         const user = userEvent.setup();
 
-        global.fetch.mockResolvedValue({
+        globalThis.fetch.mockResolvedValue({
             ok: false,
             status: 409,
             json: vi.fn().mockResolvedValue({

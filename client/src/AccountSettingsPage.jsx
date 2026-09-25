@@ -69,6 +69,8 @@ function validateEmail(email) {
 
 function AccountSettingsPage() {
     const { user, authLoading, updateUser } = useAuth();
+    const userId = user?.userId;
+
     const [profileInfo, setProfileInfo] = useState(null);
 
     // Active tab state
@@ -136,12 +138,12 @@ function AccountSettingsPage() {
             username: user.username ?? ""
         });
 
-    }, [user]);
+    }, [user, authLoading]);
 
 
     // Don't load user profile statistics until user is authenticated
 	useEffect(() => {
-		if (authLoading || !user) {
+		if (authLoading || !userId) {
 			return;
 		}
 
@@ -169,7 +171,7 @@ function AccountSettingsPage() {
 
 		fetchProfileInfo();
 
-	}, [authLoading, user?.userId]);
+	}, [authLoading, userId]);
 		
 
     // Validate avatar file's type and size

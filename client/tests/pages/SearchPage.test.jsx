@@ -104,7 +104,7 @@ describe("SearchPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn().mockResolvedValue({
+		globalThis.fetch = vi.fn().mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -138,7 +138,7 @@ describe("SearchPage", () => {
 		);
 
 		expect(screen.getByText("Start your search")).toBeInTheDocument();
-		expect(global.fetch).not.toHaveBeenCalled();
+		expect(globalThis.fetch).not.toHaveBeenCalled();
 	});
 
 
@@ -151,10 +151,10 @@ describe("SearchPage", () => {
 
 		// Wait for some time until the assertion is validated or fails
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
-		expect(global.fetch).toHaveBeenCalledWith(
+		expect(globalThis.fetch).toHaveBeenCalledWith(
 			expect.stringContaining("/api/search?"),
 			{
 				credentials: "include"
@@ -171,10 +171,10 @@ describe("SearchPage", () => {
 		);
 		
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
-		const calls = global.fetch.mock.calls;
+		const calls = globalThis.fetch.mock.calls;
 		const url = calls[calls.length - 1][0];
 
 		expect(url).toContain("machine+learning");
@@ -196,7 +196,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		expect(await screen.findByText("Attention Is All You Need")).toBeInTheDocument();
@@ -215,7 +215,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		expect(await screen.findByText("Attention Is All You Need")).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe("SearchPage", () => {
 
 	it("Displays the returned total result count", async () => {
 		// Keeping the papers as a preview of the 42 papers
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -255,7 +255,7 @@ describe("SearchPage", () => {
 	// ---------- LOADING STATE TESTS ----------
 
 	it("Renders five skeleton cards while the request is loading", async () => {
-		global.fetch.mockImplementation(() => new Promise(() => {}));
+		globalThis.fetch.mockImplementation(() => new Promise(() => {}));
 
 		render(
 			<MemoryRouter initialEntries={["/search?query=machine%20learning"]}>
@@ -270,7 +270,7 @@ describe("SearchPage", () => {
 	// ---------- ERRORS ----------
 
 	it("Shows an error when the API request fails", async ()=> {
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: false,
 			status: 500
 		});
@@ -288,7 +288,7 @@ describe("SearchPage", () => {
 
 
 	it("Shows an error when fetch rejects", async () => {
-		global.fetch.mockRejectedValue(new Error("Network failure"));
+		globalThis.fetch.mockRejectedValue(new Error("Network failure"));
 
 		render(
 			<MemoryRouter initialEntries={["/search?query=machine%20learning"]}>
@@ -305,7 +305,7 @@ describe("SearchPage", () => {
 	it("Retries the search when Retry is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch
+		globalThis.fetch
 			.mockResolvedValueOnce({ ok: false, status: 500 })
 			.mockResolvedValueOnce({
 				ok: true,
@@ -332,7 +332,7 @@ describe("SearchPage", () => {
 		await user.click(retryButton);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledTimes(2);
+			expect(globalThis.fetch).toHaveBeenCalledTimes(2);
 		});
 
 		expect(await screen.findByText("Attention Is All You Need")).toBeInTheDocument();
@@ -351,14 +351,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const button = screen.getByRole("button", { name: "Open access only" });
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).not.toContain("isOpenAccess=true");
@@ -378,14 +378,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const button = screen.getByRole("button", { name: "PDF Available" });
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("hasContentPDF=true");
@@ -407,13 +407,13 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		await user.click(screen.getByText("Journal article"));
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("paperType=article");
@@ -435,7 +435,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const languageSelect = container.querySelector("#lang-dropdown");
@@ -443,7 +443,7 @@ describe("SearchPage", () => {
 		await user.selectOptions(languageSelect, "English");
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("language=English");
@@ -465,7 +465,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const input = screen.getByPlaceholderText("1800");
@@ -486,7 +486,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const yearInputs = container.querySelectorAll(".input-filter.years")
@@ -508,10 +508,10 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
-		const initialRequestCount = global.fetch.mock.calls.length;
+		const initialRequestCount = globalThis.fetch.mock.calls.length;
 
 		const input = screen.getByPlaceholderText("1800");
 		await user.type(input, "1700");
@@ -520,7 +520,7 @@ describe("SearchPage", () => {
 			expect(screen.getByText("Min 1800")).toBeInTheDocument();
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(initialRequestCount);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(initialRequestCount);
 	});
 
 
@@ -536,14 +536,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const input = screen.getByPlaceholderText("e.g., 1000");
 		await user.type(input, "500");
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("minCitations=500");
@@ -554,7 +554,6 @@ describe("SearchPage", () => {
 
 
 	it("shows an error for negative minimum citations", async () => {
-        const user = userEvent.setup();
 
         render(
 			<MemoryRouter initialEntries={["/search?query=machine%20learning"]}>
@@ -563,7 +562,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
         const input = screen.getByPlaceholderText("e.g., 1000");
@@ -590,14 +589,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const button = screen.getByRole("button", { name: "Select mock topic" });
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("topicId=T123");
@@ -619,14 +618,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const button = screen.getByRole("button", { name: "Include retracted" });
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).not.toContain("isRetracted=false");
@@ -648,14 +647,14 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		const button = screen.getByRole("button", { name: "citations" });
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("sort=citations");
@@ -677,7 +676,7 @@ describe("SearchPage", () => {
 		);
 
         await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
         const paginationSelect = container.querySelector("#pagination-overview select");
@@ -685,7 +684,7 @@ describe("SearchPage", () => {
         await user.selectOptions(paginationSelect, "50");
 
         await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
             expect(url).toContain("limit=50");
@@ -700,7 +699,7 @@ describe("SearchPage", () => {
 		const user = userEvent.setup();
 
 		// Keeping the papers as a preview of the 100 papers
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -726,7 +725,7 @@ describe("SearchPage", () => {
 		await user.click(button);
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
 			expect(url).toContain("page=2");
@@ -742,7 +741,7 @@ describe("SearchPage", () => {
 
 	it("Disables Previous on the first page", async () => {
         // Keeping the papers as a preview of the 100 papers
-		global.fetch.mockResolvedValue({
+		globalThis.fetch.mockResolvedValue({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -780,7 +779,7 @@ describe("SearchPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalled();
+			expect(globalThis.fetch).toHaveBeenCalled();
 		});
 
 		// Activate a filter first
@@ -801,7 +800,7 @@ describe("SearchPage", () => {
 		expect(screen.queryByText("PDF only")).not.toBeInTheDocument();
 
 		await waitFor(() => {
-			const calls = global.fetch.mock.calls;
+			const calls = globalThis.fetch.mock.calls;
 			const url = calls[calls.length - 1][0];
 
             expect(url).not.toContain("hasContentPDF=true");
@@ -822,7 +821,7 @@ describe("SearchPage", () => {
 			</MemoryRouter>
 		);
 
-		expect(global.fetch).not.toHaveBeenCalled();
+		expect(globalThis.fetch).not.toHaveBeenCalled();
 
 		const button = screen.getByRole("button", { name: "PDF Available" });
         await user.click(button);
@@ -835,7 +834,7 @@ describe("SearchPage", () => {
             })
         );
 
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(globalThis.fetch).not.toHaveBeenCalled();
 
 		expect(button).toHaveAttribute("aria-pressed", "false");
     });

@@ -128,7 +128,7 @@ describe("AuthorPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		global.fetch = vi.fn();
+		globalThis.fetch = vi.fn();
 
 		mockUseAuth.mockReturnValue({
 			user: {
@@ -142,7 +142,7 @@ describe("AuthorPage", () => {
 	// ---------- INITIAL FETCHING TESTS ----------
 	
 	it("Displays the loading state while the author is being fetched", () => {
-		global.fetch.mockReturnValue(new Promise(() => {}));
+		globalThis.fetch.mockReturnValue(new Promise(() => {}));
 
 		render(
 			<MemoryRouter initialEntries={["/authors/A5029524538"]}>
@@ -160,7 +160,7 @@ describe("AuthorPage", () => {
 
 
 	it("Fetches the author using the route parameter", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -180,7 +180,7 @@ describe("AuthorPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/authors/A5029524538",
 				{
 					credentials: "include"
@@ -188,12 +188,12 @@ describe("AuthorPage", () => {
 			);
 		});
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
 	});
 
 
 	it("Fetches a different author when a different route id is used", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -217,7 +217,7 @@ describe("AuthorPage", () => {
 		);
 
 		await waitFor(() => {
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(globalThis.fetch).toHaveBeenCalledWith(
 				"/api/authors/A999",
 				{
 					credentials: "include"
@@ -233,7 +233,7 @@ describe("AuthorPage", () => {
 	it("Handles failure to fetch author information", async () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -265,7 +265,7 @@ describe("AuthorPage", () => {
 	// ---------- RENDERING TESTS ----------
 
 	it("Displays the author's name and initials", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -290,7 +290,7 @@ describe("AuthorPage", () => {
 
 
 	it("Displays the author's current institution", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -318,7 +318,7 @@ describe("AuthorPage", () => {
 
 
 	it("Displays the author's ORCID link", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -348,7 +348,7 @@ describe("AuthorPage", () => {
 
 
 	it("Does not display an ORCID link when the author has no ORCID", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -379,7 +379,7 @@ describe("AuthorPage", () => {
 	// ---------- AUTHOR STATISTICS ----------
 
 	it("Displays the author's statistics", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -420,7 +420,7 @@ describe("AuthorPage", () => {
 	// ---------- CHILD COMPONENTS TESTS ----------
 
 	it("Passes the author's topics to AuthorTopics", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -446,7 +446,7 @@ describe("AuthorPage", () => {
 
 
 	it("Passes citation history to CitationsChart", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -472,7 +472,7 @@ describe("AuthorPage", () => {
 
 
 	it("Displays the author's top papers", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -501,7 +501,7 @@ describe("AuthorPage", () => {
 	// ---------- AFFILIATIONS TESTS ----------
 
 	it("Displays the author's career history", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -533,7 +533,7 @@ describe("AuthorPage", () => {
 
 
 	it("Sorts career affiliations from most recent to oldest", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -566,7 +566,7 @@ describe("AuthorPage", () => {
 	// ---------- TOPIC SHARES ----------
 
 	it("Displays the author's top research interests", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -595,7 +595,7 @@ describe("AuthorPage", () => {
 
 
 	it("Normalizes topic shares into percentages", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -626,7 +626,7 @@ describe("AuthorPage", () => {
 	// ---------- FOLLOWING TESTS ----------
 
 	it("Displays Follow when the author is not followed", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -653,7 +653,7 @@ describe("AuthorPage", () => {
 
 
 	it("Displays Following when the author is already followed", async () => {
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -682,7 +682,7 @@ describe("AuthorPage", () => {
 	it("Disables the follow button for an unauthenticated user", async () => {
 		mockUseAuth.mockReturnValue({ user: null });
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -708,7 +708,7 @@ describe("AuthorPage", () => {
 	it("Follows an author when Follow is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -720,7 +720,7 @@ describe("AuthorPage", () => {
 		});
 
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200
 		});
@@ -740,7 +740,7 @@ describe("AuthorPage", () => {
 
 		await user.click(followButton);
 
-		expect(global.fetch).toHaveBeenLastCalledWith(
+		expect(globalThis.fetch).toHaveBeenLastCalledWith(
 			"/api/authors/A5029524538/follow",
 			{
 				method: "POST",
@@ -757,7 +757,7 @@ describe("AuthorPage", () => {
 	it("Unfollows an author when Following is clicked", async () => {
 		const user = userEvent.setup();
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -768,7 +768,7 @@ describe("AuthorPage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200
 		});
@@ -787,7 +787,7 @@ describe("AuthorPage", () => {
 		const followingButton = await screen.findByRole("button", { name: "Following" });
 		await user.click(followingButton);
 
-		expect(global.fetch).toHaveBeenLastCalledWith(
+		expect(globalThis.fetch).toHaveBeenLastCalledWith(
 			"/api/authors/A5029524538/unfollow",
 			{
 				method: "POST",
@@ -806,7 +806,7 @@ describe("AuthorPage", () => {
 
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -817,7 +817,7 @@ describe("AuthorPage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
@@ -853,7 +853,7 @@ describe("AuthorPage", () => {
 
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
 			json: vi.fn().mockResolvedValue({
@@ -864,7 +864,7 @@ describe("AuthorPage", () => {
 			})
 		});
 
-		global.fetch.mockResolvedValueOnce({
+		globalThis.fetch.mockResolvedValueOnce({
 			ok: false,
 			status: 500
 		});
