@@ -69,7 +69,7 @@ function validateEmail(email) {
 
 function AccountSettingsPage() {
     const { user, authLoading, updateUser } = useAuth();
-    const userId = user?.userId;
+    const userId = user?.id;
 
     const [profileInfo, setProfileInfo] = useState(null);
 
@@ -266,7 +266,20 @@ function AccountSettingsPage() {
                 throw new Error(`Request failed with status ${response.status}`);
             }
 
+            updateUser({
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                bio: profile.bio,
+                affiliation: profile.affiliation,
+                location: profile.location,
+                role: profile.role
+            });
+
             setProfileSaved(true);
+
+            setTimeout(() => {
+                setProfileSaved(false);
+            }, 2000);
 
         } catch (error) {
             console.error("Failed to update profile info:", error);
@@ -290,6 +303,9 @@ function AccountSettingsPage() {
 
         setAccountErrors(errors);
 
+        if (Object.keys(errors).length > 0) {
+            return;
+        }
 
         setAccountLoading(true);
         setAccountSaved(false);
@@ -311,7 +327,16 @@ function AccountSettingsPage() {
                 throw new Error(`Request failed with status ${response.status}`);
             }
 
+            updateUser({
+                email: account.email,
+                username: account.username
+            });
+
             setAccountSaved(true);
+
+            setTimeout(() => {
+                setAccountSaved(false);
+            }, 2000);
 
         } catch (error) {
             console.error("Failed to update profile info:", error);
@@ -358,6 +383,10 @@ function AccountSettingsPage() {
             }
 
             setPasswordSaved(true);
+
+            setTimeout(() => {
+                setPasswordSaved(false);
+            }, 2000);
     
         } catch (error) {
             console.error("Failed to update profile info:", error);
@@ -569,6 +598,7 @@ function AccountSettingsPage() {
                                         <select 
                                             id="role-dropdown"
                                             className={profile.role ? "form-role": ""}
+                                            value={profile.role}
                                             onChange={(event) => 
                                                 setProfile((prev) =>({
                                                     ...prev,
@@ -610,7 +640,7 @@ function AccountSettingsPage() {
                                                 email
                                             }))
                                         }
-                                        hasError={!!accountErrors.username}
+                                        hasError={!!accountErrors.email}
                                     />
                                 </Field>
 

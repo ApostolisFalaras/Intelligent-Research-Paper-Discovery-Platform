@@ -80,7 +80,7 @@ vi.mock("../../src/components/profile/DeleteModal.jsx", () => ({
 
 // Mock data
 const mockUser = {
-    userId: 123,
+    id: 123,
     firstName: "John",
     lastName: "Doe",
     bio: "Machine learning researcher",
