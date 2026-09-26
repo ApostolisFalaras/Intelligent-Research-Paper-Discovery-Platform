@@ -54,7 +54,7 @@ function ExplorePage() {
             return;
         }
 
-        initializedRef.current = false;
+        initializedRef.current = true;
         
         if (navigationType === "POP" && cachedTopics !== null) {
             setTopics(cachedTopics);

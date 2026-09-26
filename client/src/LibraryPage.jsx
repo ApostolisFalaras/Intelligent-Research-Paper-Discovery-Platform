@@ -54,7 +54,7 @@ function LibraryPage() {
         }
     }
 
-    const userId = user?.userId;
+    const userId = user?.id;
 
     useEffect(() => {
         if (authLoading || !userId) {

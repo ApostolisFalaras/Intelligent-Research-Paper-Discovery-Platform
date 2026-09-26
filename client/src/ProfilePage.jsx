@@ -39,7 +39,7 @@ function ProfilePage() {
         }
     }
 
-    const userId = user?.userId;
+    const userId = user?.id;
 
     // Don't load user profile statistics until user is authenticated
     useEffect(() => {
