@@ -37,7 +37,7 @@ vi.mock("../../src/components/authors/FollowingAuthors.jsx", () => ({
 
 // Mock data
 const mockUser = {
-    userId: 123,
+    id: 123,
     firstName: "John",
     lastName: "Doe",
     affiliation: "MIT",

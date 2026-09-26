@@ -56,7 +56,7 @@ vi.mock("../../src/components/library/FolderDetails.jsx", () => ({
 
 // Mock data
 const mockUser = {
-	userId: 123,
+	id: 123,
 	firstName: "John",
 	lastName: "Doe"
 };
