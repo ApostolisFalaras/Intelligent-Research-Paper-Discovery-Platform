@@ -428,6 +428,7 @@
     align-items: center;
     gap: 8px;
     padding: 4px 0;
+    max-height: 40px;
 }
 
 .author-initials-container {
@@ -463,8 +464,10 @@
     text-decoration: none;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border: none;
+    border: none !important;
     background: none;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
     transition: color 0.15s ease;
 }
 
