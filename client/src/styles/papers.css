@@ -232,7 +232,7 @@
     flex-direction: row;
     align-items: center;
     padding: 8px 4px; 
-    min-height: 75px;
+    min-height: 75px !important; 
 }
 
 .paper-topic.profile { font-size: 11px; }
@@ -260,6 +260,7 @@
     flex-direction: row;
     align-items: center;
     padding: 8px 4px; 
+    min-height: 75px;
 }
 
 .card-header.folder {flex: 1;}
