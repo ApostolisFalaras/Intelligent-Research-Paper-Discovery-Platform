@@ -15,7 +15,7 @@ function Footer() {
 					textColor="rgba(255,255,255,0.8)"
 					textSize="16px"
 				/>
-				<p id="footer-copyright">© Scholaris Research Intelligence · Built for the curious</p>
+				<p id="footer-copyright">© Mr. Scholar Research Intelligence · Built for the curious</p>
 			</footer>
 		)
 	);

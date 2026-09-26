@@ -16,7 +16,7 @@ function AppLabel({ iconSize, iconColor, textColor, textSize }) {
 					fontSize: textSize,
 				}}
 			>
-				Scholaris
+				Mr. Scholar
 			</span>
 		</div>
 	);

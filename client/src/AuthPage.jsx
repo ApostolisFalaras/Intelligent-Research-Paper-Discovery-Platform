@@ -58,7 +58,7 @@ function AuthPage() {
 						</div>
 
 						<h1 id="form-title">
-							{ selectedTab === "Sign in" ? "Welcome back" : "Join Scholaris" }
+							{ selectedTab === "Sign in" ? "Welcome back" : "Join Mr. Scholar" }
 						</h1>
 
 						<p id="form-message">

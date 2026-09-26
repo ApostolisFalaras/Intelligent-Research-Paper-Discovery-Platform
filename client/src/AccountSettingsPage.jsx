@@ -470,7 +470,7 @@ function AccountSettingsPage() {
                     {activeSection === "profile" && (
                         <ProfileSettingsSection
                             title="Public profile"
-                            description="This information is visible to other researchers on Scholaris."
+                            description="This information is visible to other researchers on Mr. Scholar."
                         >
                             <div className="section">
 
