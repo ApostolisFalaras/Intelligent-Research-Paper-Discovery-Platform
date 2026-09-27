@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor
-from utils.logging_utils import get_logger
+from scripts.utils.logging_utils import get_logger
 
 from scripts.ingestion.works_ingestion_utils import (
     insert_papers,
