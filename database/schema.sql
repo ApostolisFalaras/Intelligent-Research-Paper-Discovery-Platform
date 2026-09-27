@@ -648,9 +648,6 @@ CREATE INDEX idx_paper_counts_by_year_year ON paper_counts_by_year(year);
 CREATE INDEX idx_user_folders_user_id ON user_folders(user_id);
 CREATE INDEX idx_user_folder_papers_paper_id ON user_folder_papers(paper_id);
 
--- Indexes for user_search_history
-CREATE INDEX idx_user_search_history_user_id_created_at ON user_search_history(user_id, created_at DESC);
-
 -- Indexes for authors
 CREATE INDEX idx_authors_display_name ON authors(display_name);
 CREATE INDEX idx_authors_orcid ON authors(orcid) WHERE orcid IS NOT NULL;

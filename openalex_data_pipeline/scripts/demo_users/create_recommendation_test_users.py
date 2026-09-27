@@ -1,11 +1,11 @@
 
 import os
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from dataclasses import dataclass
 import psycopg2
-from psycopg2.extras import execute_values, Json
+from psycopg2.extras import execute_values
 from psycopg2.extensions import cursor
 from pathlib import Path
 from scripts.utils.logging_utils import get_logger
@@ -55,17 +55,6 @@ USER_COMMUNITIES = [
     {"field": "Computer Science", "user_count": 6}
 ]
 
-# Search templates used to model queries in the user_search_history tables 
-SEARCH_TEMPLATES = [
-    "{term}",
-    "{term}",
-    "{term}",
-    "{term}",
-    "{term} review",
-    "{term} survey",
-    "recent {term} papers",
-    "{term} methods",
-]
 
 # Python generates constructor __init__ automatically
 @dataclass
@@ -342,57 +331,7 @@ def insert_folder_and_saved_papers(cur: cursor, user_id: int, persona: Persona, 
         """,
         (folders,)
     )
-    
-
-# Insert user search history records
-def insert_search_history(cur: cursor, user_id: int, persona: Persona) -> None:
-    terms = [ persona.main_subfield, persona.secondary_subfield ]
-    
-    if persona.minor_subfield:
-        terms.append(persona.minor_subfield)
-        
-    search_count = random.randint(8, 18)
-    rows = []
-    
-    for _ in range(search_count):
-        term = random.choice(terms)
-        
-        # Since the search queries are a weaker recommendation signal,
-        # We use the simple search templates defined above,
-        query = random.choice(SEARCH_TEMPLATES).format(term=term).lower()
-        
-        # And the default search filters
-        filters = {
-            "fromYear": None,
-            "toYear": None,
-            "language": None,
-            "paperType": None,
-            "minCitations": None,
-            "topicId": None,
-            "authorName": None,
-            "isOpenAccess": True,
-            "hasContentPDF": None,
-            "isRetracted": False,
-            "sort": "relevance"
-        }
-        
-        result_count = random.randint(20, 500)
-        
-        created_at = datetime.now(timezone.utc) - timedelta(days=random.randint(1, 120))
-        
-        rows.append((user_id, query, Json(filters), result_count, created_at))
-        
-    execute_values(
-        cur,
-        """
-        INSERT INTO user_search_history (
-            user_id, query, filters, result_count, created_at
-        )
-        VALUES %s;
-        """,
-        rows
-    )
-        
+          
 
 # Global-level interaction metrics for each paper
 def update_paper_metrics(cur: cursor) -> None:
@@ -477,7 +416,6 @@ def delete_existing_user_dataset(cur: cursor) -> None:
 def reset_recommendation_activity(cur: cursor) -> None:
     # Per-user interaction/activity state
     cur.execute("DELETE FROM user_paper_interactions;")
-    cur.execute("DELETE FROM user_search_history;")
     cur.execute("DELETE FROM user_folder_papers;")
     cur.execute("DELETE FROM user_folders;")
 
@@ -550,10 +488,9 @@ def main() -> None:
             
             insert_interactions(cur, user_id, viewed_papers, saved_papers)
             insert_folder_and_saved_papers(cur, user_id, persona, list(saved_papers))
-            insert_search_history(cur, user_id, persona)
         
             created_user_ids.append(user_id)
-            logger.info(f"User {index}/40, interactions, folders, search history created successfully")
+            logger.info(f"User {index}/40, interactions and folders created successfully")
             
         update_paper_metrics(cur)
         mark_popularity_state(cur)
