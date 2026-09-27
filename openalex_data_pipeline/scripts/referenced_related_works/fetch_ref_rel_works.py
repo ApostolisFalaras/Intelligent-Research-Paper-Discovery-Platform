@@ -9,6 +9,7 @@ import psycopg2
 from scripts.utils.logging_utils import get_logger
 from collections import defaultdict
 from typing import Generator
+from scripts.utils.openalex_utils import sanitize_params
 
 
 load_dotenv()
@@ -227,11 +228,11 @@ def request_json(batch_ids: list[str], timeout: int) -> dict:
             return response.json()
         
         except RequestException as e:
-            #logger.warning("Request attempted %s failed: %s", attempt, e)
+            logger.warning("Request attempted %s failed: %s", attempt, type(e).__name__)
             time.sleep(5 * attempt)
             
     # If all 4 attempts fail, the request ultimately fails
-    raise RuntimeError(f"Request failed after retries. params={params}")
+    raise RuntimeError(f"Request failed after retries. params={sanitize_params(params)}")
             
 
 # ---------- GENERATOR THAT RETRIEVES THE BATCHES OF OPENALEX IDS ----------

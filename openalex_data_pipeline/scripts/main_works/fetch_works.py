@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 from dotenv import load_dotenv
 from scripts.utils.logging_utils import get_logger
+from scripts.utils.openalex_utils import sanitize_params
 
 # Load environmental variables and OpenAlex api key
 load_dotenv()
@@ -110,11 +111,11 @@ def request_json(url: str, params: dict) -> dict:
             response.raise_for_status()
             return response.json()
         except RequestException as e:
-            logger.warning("Request attempted %s failed: %s", attempt, e)
+            logger.warning("Request attempted %s failed: %s", attempt, type(e).__name__)
             time.sleep(5 * attempt)
     
     # If all 4 attempts fail, the request ultimately fails
-    raise RuntimeError(f"Request failed after retries. URL={url}, params={params}")
+    raise RuntimeError(f"Request failed after retries. URL={url}, params={sanitize_params(params)}")
             
 
 # ---------- FETCH DATA - TOPICS ----------
@@ -179,7 +180,7 @@ def save_raw_batch(topic_id: str, bucket_name: str, batch_number: int,
         "topic_id": topic_id,
         "bucket": bucket_name,
         "batch_number": batch_number,
-        "request_params": request_params,
+        "request_params": sanitize_params(request_params),
         "response": response_data,
     }
     
