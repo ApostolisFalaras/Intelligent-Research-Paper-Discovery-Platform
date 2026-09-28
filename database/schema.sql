@@ -74,6 +74,74 @@ CREATE TABLE papers (
     openalex_updated_at TIMESTAMPTZ
 );
 
+-- Each Author in the database
+CREATE TABLE authors (
+    id BIGSERIAL PRIMARY KEY,
+    openalex_id TEXT NOT NULL UNIQUE,
+    orcid TEXT,
+    display_name TEXT NOT NULL,
+    raw_author_names TEXT[],
+    full_name TEXT,
+
+    works_count INTEGER DEFAULT 0,
+    cited_by_count INTEGER DEFAULT 0,
+    two_year_mean_citedness NUMERIC(20, 6),
+    h_index INTEGER,
+    i10_index INTEGER,
+
+    works_api_url TEXT,
+    openalex_created_at TIMESTAMPTZ,
+    openalex_updated_at TIMESTAMPTZ
+);
+
+CREATE TABLE topics (
+    id BIGSERIAL PRIMARY KEY,
+
+    openalex_id TEXT NOT NULL UNIQUE,
+    topic_display_name TEXT NOT NULL,
+    
+    topic_description TEXT,
+    topic_keywords TEXT[],
+
+    topic_wikipedia_url TEXT,
+
+    domain_openalex_id TEXT,
+    domain_display_name TEXT NOT NULL,
+    field_openalex_id TEXT,
+    field_display_name TEXT NOT NULL,
+    subfield_openalex_id TEXT,
+    subfield_display_name TEXT NOT NULL,
+
+    works_count INTEGER DEFAULT 0,
+    cited_by_count INTEGER DEFAULT 0,
+
+    works_api_url TEXT,
+
+    openalex_created_at TIMESTAMPTZ,
+    openalex_updated_at TIMESTAMPTZ 
+);
+
+-- Each individual User in the application
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    affiliation TEXT,
+    location TEXT,
+    role TEXT,
+    bio TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMPTZ
+);
+
+
+-- PAPER RELATIONSHIPS
+
 -- Each Paper is linked to multiple Authorships
 CREATE TABLE paper_authors (
     id BIGSERIAL PRIMARY KEY,
@@ -239,27 +307,7 @@ CREATE TABLE paper_counts_by_year (
     UNIQUE(paper_id, year)
 );
 
--- AUTHORS
-
--- Each Author in the database
-CREATE TABLE authors (
-    id BIGSERIAL PRIMARY KEY,
-    openalex_id TEXT NOT NULL UNIQUE,
-    orcid TEXT,
-    display_name TEXT NOT NULL,
-    raw_author_names TEXT[],
-    full_name TEXT,
-
-    works_count INTEGER DEFAULT 0,
-    cited_by_count INTEGER DEFAULT 0,
-    two_year_mean_citedness NUMERIC(20, 6),
-    h_index INTEGER,
-    i10_index INTEGER,
-
-    works_api_url TEXT,
-    openalex_created_at TIMESTAMPTZ,
-    openalex_updated_at TIMESTAMPTZ
-);
+-- AUTHOR RELATIONSHIPS
 
 -- Each Author is associated with a series of Affiliations
 CREATE TABLE author_affiliations (
@@ -292,7 +340,7 @@ CREATE TABLE author_last_known_institutions (
 
     FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE,
     UNIQUE(author_id, institution_openalex_id)
-)
+);
 
 
 -- Each Author is associated with a series of Topics
@@ -349,54 +397,8 @@ CREATE TABLE author_counts_by_year (
     UNIQUE (author_id, year)
 );
 
--- TOPICS
 
-CREATE TABLE topics (
-    id BIGSERIAL PRIMARY KEY,
-
-    openalex_id TEXT NOT NULL UNIQUE,
-    topic_display_name TEXT NOT NULL,
-    
-    topic_description TEXT,
-    topic_keywords TEXT[],
-
-    topic_wikipedia_url TEXT,
-
-    domain_openalex_id TEXT,
-    domain_display_name TEXT NOT NULL,
-    field_openalex_id TEXT,
-    field_display_name TEXT NOT NULL,
-    subfield_openalex_id TEXT,
-    subfield_display_name TEXT NOT NULL,
-
-    works_count INTEGER DEFAULT 0,
-    cited_by_count INTEGER DEFAULT 0,
-
-    works_api_url TEXT,
-
-    openalex_created_at TIMESTAMPTZ,
-    openalex_updated_at TIMESTAMPTZ 
-);
-
--- USERS / PROJECT FOLDERS
-
--- Each individual User in the application
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    first_name TEXT,
-    last_name TEXT,
-    affiliation TEXT,
-    location TEXT,
-    role TEXT,
-    bio TEXT,
-    avatar_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    last_login_at TIMESTAMPTZ
-);
+-- USERS / PROJECT FOLDERS RELATIONSHIPS
 
 -- Each user might create different paper groupings called Project Folders
 -- to store series of project-related papers
@@ -754,7 +756,3 @@ ON recommendation_refresh_queue(requested_at) WHERE processed_at IS NULL;
 
 CREATE INDEX idx_recommendation_refresh_queue_pending
 ON recommendation_refresh_queue(user_id, reason) WHERE processed_at IS NULL;
-
--- Indexes for paper_similarity_cache
-CREATE INDEX idx_paper_similarity_cache_paper_score
-ON paper_similarity_cache(paper_id, similarity_score DESC);
