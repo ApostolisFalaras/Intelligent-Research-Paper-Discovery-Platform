@@ -54,7 +54,7 @@ describe("AuthPage", () => {
 		expect(screen.getByTestId("signup-form")).toBeInTheDocument();
 		expect(screen.queryByTestId("login-form")).not.toBeInTheDocument();
 
-		expect(screen.getByRole("heading", { name: "Join Scholaris" })).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Join Mr. Scholar" })).toBeInTheDocument();
         expect(screen.getByText("Create a free account to save papers and get recommendations"))
 			.toBeInTheDocument();
 	});

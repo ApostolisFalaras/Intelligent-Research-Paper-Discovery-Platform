@@ -7,7 +7,7 @@ import Footer from "../../../src/components/common/Footer.jsx";
 vi.mock("../../../src/components/common/AppLabel.jsx", () => ({
 	default: () => (
 		<div data-testid="app-label">
-			Scholaris
+			Mr. Scholar
 		</div>
 	)
 }));
@@ -26,7 +26,7 @@ describe("Footer", () => {
 
         expect(screen.getByTestId("app-label")).toBeInTheDocument();
 
-        expect(screen.getByText("© Scholaris Research Intelligence · Built for the curious"))
+        expect(screen.getByText("© Mr. Scholar Research Intelligence · Built for the curious"))
 			.toBeInTheDocument();
     });
 
@@ -38,7 +38,7 @@ describe("Footer", () => {
 			</MemoryRouter>
 		);
 
-        expect(screen.queryByText("© Scholaris Research Intelligence · Built for the curious"))
+        expect(screen.queryByText("© Mr. Scholar Research Intelligence · Built for the curious"))
 			.not.toBeInTheDocument();
 
         expect(screen.queryByTestId("app-label")).not.toBeInTheDocument();
