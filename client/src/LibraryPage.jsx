@@ -21,8 +21,8 @@ function LibraryPage() {
 
     // Filter folders based on filter query
     const filteredFolders = folders.filter((folder) => (
-        folder.name.toLowerCase().includes(filterQuery.toLowerCase()) ||
-        folder.summary.toLowerCase().includes(filterQuery.toLowerCase())
+        (folder?.name ?? "").toLowerCase().includes(filterQuery.toLowerCase()) ||
+        (folder?.summary ?? "").toLowerCase().includes(filterQuery.toLowerCase())
     ));
 
     async function createFolder(name, description, color) {
