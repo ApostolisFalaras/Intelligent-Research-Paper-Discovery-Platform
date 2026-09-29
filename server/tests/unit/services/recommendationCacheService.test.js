@@ -8,7 +8,6 @@ vi.mock("../../../src/repositories/recommendationCandidateRepository.js", () => 
     fetchCandidatePapersByTopics: vi.fn(),
     fetchCandidatePapersBySubfields: vi.fn(),
     fetchCandidatePapersFromSimilarUsers: vi.fn(),
-    fetchCandidatePapersFromSavedPaper: vi.fn(),
     fetchCandidatePopularPapers: vi.fn(),
     fetchCandidateRecentPapers: vi.fn(),
     fetchExcludedPaperIds: vi.fn(),
@@ -42,7 +41,6 @@ import {
     fetchCandidatePapersByTopics,
     fetchCandidatePapersBySubfields,
     fetchCandidatePapersFromSimilarUsers,
-    fetchCandidatePapersFromSavedPaper,
     fetchCandidatePopularPapers,
     fetchCandidateRecentPapers,
     fetchExcludedPaperIds,
@@ -83,7 +81,6 @@ describe("rebuildUserRecommendationCache", () => {
         const subfieldCandidates = [{ paper_id: 102 }, { paper_id: 103 }];
         const popularCandidates = [{ paper_id: 104 }];
         const recentCandidates = [{ paper_id: 105 }];
-        const savedPaperCandidates = [{ paper_id: 106 }];
 
         const collaborativeCandidates = [
             {
@@ -168,7 +165,6 @@ describe("rebuildUserRecommendationCache", () => {
         fetchCandidatePapersBySubfields.mockResolvedValue(subfieldCandidates);
         fetchCandidatePopularPapers.mockResolvedValue(popularCandidates);
         fetchCandidateRecentPapers.mockResolvedValue(recentCandidates);
-        fetchCandidatePapersFromSavedPaper.mockResolvedValue(savedPaperCandidates);
         fetchCandidatePapersFromSimilarUsers.mockResolvedValue(collaborativeCandidates);
         fetchExcludedPaperIds.mockResolvedValue(excludedIds);
         fetchCandidatePaperScoringRows.mockResolvedValue(hydratedPapers);
@@ -185,10 +181,9 @@ describe("rebuildUserRecommendationCache", () => {
         expect(fetchCandidatePapersBySubfields).toHaveBeenCalledWith(["SF1", "SF2"], 1500);
         expect(fetchCandidatePopularPapers).toHaveBeenCalledWith(1000);
         expect(fetchCandidateRecentPapers).toHaveBeenCalledWith(1000);
-        expect(fetchCandidatePapersFromSavedPaper).toHaveBeenCalledWith(42, 1000);
         expect(fetchCandidatePapersFromSimilarUsers).toHaveBeenCalledWith(42, 5000);
         expect(fetchExcludedPaperIds).toHaveBeenCalledWith(42);
-        expect(fetchCandidatePaperScoringRows).toHaveBeenCalledWith([101, 102, 104, 106, 105, 107]);
+        expect(fetchCandidatePaperScoringRows).toHaveBeenCalledWith([101, 102, 104, 105, 107]);
 
         const excludedPaperIds = new Set([103]);
 
@@ -242,7 +237,6 @@ describe("rebuildUserRecommendationCache", () => {
         fetchCandidatePopularPapers.mockResolvedValue([{ paper_id: 103 }]);
 
         fetchCandidateRecentPapers.mockResolvedValue([]);
-        fetchCandidatePapersFromSavedPaper.mockResolvedValue([]);
         fetchCandidatePapersFromSimilarUsers.mockResolvedValue([]);
         fetchExcludedPaperIds.mockResolvedValue([102]);
         fetchCandidatePaperScoringRows.mockResolvedValue([
@@ -276,7 +270,6 @@ describe("rebuildUserRecommendationCache", () => {
         fetchCandidatePapersBySubfields.mockResolvedValue([]);
         fetchCandidatePopularPapers.mockResolvedValue([{ paper_id: 101 }]);
         fetchCandidateRecentPapers.mockResolvedValue([]);
-        fetchCandidatePapersFromSavedPaper.mockResolvedValue([]);
         fetchCandidatePapersFromSimilarUsers.mockResolvedValue([]);
         fetchExcludedPaperIds.mockResolvedValue([]);
         fetchCandidatePaperScoringRows.mockResolvedValue(hydratedPapers);
@@ -317,7 +310,6 @@ describe("rebuildUserRecommendationCache", () => {
         expect(fetchCandidatePapersBySubfields).not.toHaveBeenCalled();
         expect(fetchCandidatePopularPapers).not.toHaveBeenCalled();
         expect(fetchCandidateRecentPapers).not.toHaveBeenCalled();
-        expect(fetchCandidatePapersFromSavedPaper).not.toHaveBeenCalled();
         expect(fetchCandidatePapersFromSimilarUsers).not.toHaveBeenCalled();
         expect(fetchExcludedPaperIds).not.toHaveBeenCalled();
         expect(fetchCandidatePaperScoringRows).not.toHaveBeenCalled();

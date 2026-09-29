@@ -75,60 +75,6 @@ export async function fetchCandidatePapersFromSimilarUsers(userId, limit = 5000)
 	return results.rows;
 }
 
-// It fetches "limit" candidate papers that are similar to the papers the user saved in folders
-// It's used for similar-to-saved-paper, home, hybrid recommendation scores
-// Now that a paper stored in more folders should be a stronger signal, 
-// the folder count for each source paper is fetched and uses a diminishing folder boost.
-export async function fetchCandidatePapersFromSavedPaper(userId, limit = 5000) {
-	const sqlQuery = `
-		SELECT
-			psc.similar_paper_id AS paper_id,
-
-			MAX(
-				psc.similarity_score *
-				(
-					1 + LN(1 + COALESCE(folder_data.saved_folder_count, 0))
-				)
-			) AS weighted_similarity_score
-
-		FROM user_paper_interactions upi
-
-		JOIN paper_similarity_cache psc
-		  ON psc.paper_id = upi.paper_id
-
-		JOIN paper_recommendation_features prf
-		  ON prf.paper_id = psc.similar_paper_id
-
-		LEFT JOIN LATERAL (
-			SELECT COUNT(*) AS saved_folder_count
-			FROM user_folder_papers ufp
-
-			JOIN user_folders uf
-			  ON uf.id = ufp.folder_id
-
-			WHERE uf.user_id = upi.user_id
-			  AND ufp.paper_id = upi.paper_id
-		) folder_data ON true
-
-		WHERE upi.user_id = $1
-		  AND upi.is_saved = true
-
-		  AND psc.similar_paper_id NOT IN (
-		  	SELECT paper_id
-			FROM user_paper_interactions
-			WHERE user_id = $1
-		  )
-
-		GROUP BY psc.similar_paper_id
-
-		ORDER BY weighted_similarity_score DESC
-
-		LIMIT $2;
-	`;
-
-	const results = await pool.query(sqlQuery, [userId, limit]);
-	return results.rows;
-}
 
 // It fetches "limit" most popular papers based on the popularity score, stored in the paper metrics.
 // It's used for popular paper, cold-start, & fallback recommendations

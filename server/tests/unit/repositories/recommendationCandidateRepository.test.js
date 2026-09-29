@@ -10,7 +10,6 @@ vi.mock("../../../src/config/db.js", () => ({
 import pool from "../../../src/config/db.js";
 import {
 	fetchCandidatePapersFromSimilarUsers,
-	fetchCandidatePapersFromSavedPaper,
 	fetchCandidatePaperScoringRows,
 	fetchExcludedPaperIds } from "../../../src/repositories/recommendationCandidateRepository.js";
 
@@ -61,54 +60,6 @@ describe("fetchCandidatePapersFromSimilarUsers", () => {
 		expect(query).toContain("LIMIT $2");
 
 		expect(params).toEqual([42, 5000]);
-		expect(result).toEqual(rows);
-	});
-});
-
-
-describe("fetchCandidatePapersFromSavedPaper", () => {
-	beforeEach(() => {
-		vi.resetAllMocks();
-	});
-
-	it("Fetches unseen papers similar to saved papers using folder-count-weighted similarity", async () => {
-		const rows = [
-			{
-				paper_id: 201,
-				weighted_similarity_score: 1.17
-			},
-			{
-				paper_id: 202,
-				weighted_similarity_score: 0.94
-			}
-		];
-
-		pool.query.mockResolvedValue({ rows });
-
-		const result = await fetchCandidatePapersFromSavedPaper(
-			42,
-			1000
-		);
-
-		const [query, params] = pool.query.mock.calls[0];
-
-		expect(query).toContain("psc.similar_paper_id AS paper_id");
-		expect(query).toContain("MAX(");
-		expect(query).toContain("psc.similarity_score");
-		expect(query).toContain("LN(1 + COALESCE(folder_data.saved_folder_count, 0))");
-		expect(query).toContain("AS weighted_similarity_score");
-		expect(query).toContain("JOIN paper_similarity_cache psc");
-		expect(query).toContain("JOIN paper_recommendation_features prf");
-		expect(query).toContain("LEFT JOIN LATERAL");
-		expect(query).toContain("FROM user_folder_papers ufp");
-		expect(query).toContain("JOIN user_folders uf");
-		expect(query).toContain("upi.is_saved = true");
-		expect(query).toContain("psc.similar_paper_id NOT IN");
-		expect(query).toContain("GROUP BY psc.similar_paper_id");
-		expect(query).toContain("ORDER BY weighted_similarity_score DESC");
-		expect(query).toContain("LIMIT $2");
-
-		expect(params).toEqual([42, 1000]);
 		expect(result).toEqual(rows);
 	});
 });

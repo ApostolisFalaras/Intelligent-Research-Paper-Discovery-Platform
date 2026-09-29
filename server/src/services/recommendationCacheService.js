@@ -3,7 +3,6 @@ import {
 	fetchCandidatePapersByTopics,
 	fetchCandidatePapersBySubfields,
 	fetchCandidatePapersFromSimilarUsers,
-	fetchCandidatePapersFromSavedPaper,
 	fetchCandidatePopularPapers,
 	fetchCandidateRecentPapers,
 	fetchExcludedPaperIds,
@@ -56,7 +55,6 @@ export async function rebuildUserRecommendationCache(userId) {
 		subfieldCandidates,
 		popularCandidates,
 		recentCandidates,
-		savedPaperCandidates,
 		collaborativeCandidates,
 		excludedIds
 	] = await Promise.all([
@@ -64,7 +62,6 @@ export async function rebuildUserRecommendationCache(userId) {
 		fetchCandidatePapersBySubfields(topSubfieldIds, 1500),
 		fetchCandidatePopularPapers(1000),
 		fetchCandidateRecentPapers(1000),
-		fetchCandidatePapersFromSavedPaper(parsedUserId, 1000),
 		fetchCandidatePapersFromSimilarUsers(parsedUserId, 5000),
 		fetchExcludedPaperIds(parsedUserId)
 	]);
@@ -75,7 +72,6 @@ export async function rebuildUserRecommendationCache(userId) {
 		...topicCandidates,
 		...subfieldCandidates,
 		...popularCandidates,
-		...savedPaperCandidates,
 		...recentCandidates,
 		...collaborativeCandidates
 	]).filter(paperId => !excludedPaperIds.has(paperId));
