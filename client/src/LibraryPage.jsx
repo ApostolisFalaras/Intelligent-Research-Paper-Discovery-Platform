@@ -17,7 +17,7 @@ function LibraryPage() {
     const [folders, setFolders] = useState([]);
     const [filterQuery, setFilterQuery] = useState("");
 
-    const totalPapers = folders?.reduce((acc, curr) => acc + curr?.paperCount, 0);
+    const totalPapers = folders?.reduce((acc, folder) => acc + (folder?.paperCount ?? 0), 0);
 
     // Filter folders based on filter query
     const filteredFolders = folders.filter((folder) => (
