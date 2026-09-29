@@ -205,19 +205,38 @@ function ProfilePage() {
                             <h3>Research interests</h3>
 
                             <div id="topic-pills">
-                                {profileInfo?.researchTopics?.map((topic) => (
-                                    <span
-                                        key={topic.id}
-                                        className="profile-topic-pill"
-                                    >
-                                        {topic.name}
-                                    </span>
-                                ))}
+                                {profileInfo?.researchTopics?.length > 0
+                                    ? (profileInfo?.researchTopics?.map((topic) => (
+                                            <span
+                                                key={topic.id}
+                                                className="profile-topic-pill"
+                                            >
+                                                {topic.name}
+                                            </span>
+                                        )))
+                                    : (
+                                        <p className="profile-about-empty">
+                                            Research interests will appear as you explore papers.
+                                        </p>
+                                    )
+                                        
+                                }
                             </div>
 
                             <div>
                                 <h3 id="affiliation-title">Affiliation</h3>
-                                <p id="affiliation-description">{user?.affiliation}</p>
+                                <p 
+                                    id="affiliation-description"
+                                    className={
+                                        (!user?.affiliation || user.affiliation === "None")
+                                            ? "profile-about-empty"
+                                            : ""
+                                    }
+                                >
+                                    {(user?.affiliation && user.affiliation !== "None")
+                                        ? user.affiliation
+                                        : "No affiliation has been added yet."}
+                                </p>
                             </div>
                         </div>
                     )}

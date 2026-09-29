@@ -204,7 +204,7 @@
 
 /* ---------- Profile Page > Tabs Content > Main Column ---------- */
 
-#main-column { display: 1; min-width: 0; }
+#main-column { flex: 1; min-width: 0; }
 
 #recent-activity-tab, #saved-papers-tab {
     display: flex;
@@ -238,6 +238,15 @@
     font-weight: 600;
     color: #212529;
     margin-bottom: 10px; 
+}
+
+.profile-about-empty {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-style: italic;
+    color: #9B9B8A;
+    line-height: 1.6;
 }
 
 #topic-pills {
